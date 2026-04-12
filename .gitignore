@@ -1,0 +1,12 @@
+# 编译产物
+*.o
+*.out
+build/
+bin/
+
+# 编辑器配置
+.vscode/
+.idea/
+
+# 系统临时文件
+.DS_Store
