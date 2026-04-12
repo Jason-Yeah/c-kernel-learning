@@ -1,0 +1,4 @@
+We consider MANETs operating in dynamic and potentially threatening environments and define the threat model as follows. We focus on the wireless link plane, multi-hop forwarding module, routing control plane, and local node execution context, because these surfaces directly affect the metrics and evidence streams observable to RiskScope.
+
+\subsection{Adversary Model}
+Let $N$ be the set of all nodes and $N_{\mathrm{adv}} \subset N$ the set of compromised nodes. Adversaries can eavesdrop, tamper with, drop packets, forge routing information, and collude. They know the network topology and the basic logic of the detection mechanisms (e.g., per Kerckhoffs' principle), but do not know internal randomness or secret keys. Their goals are to maximize performance disruption (e.g., reduce PDR, increase delay) or exfiltrate data while keeping observable metric deviations below typical detection thresholds.

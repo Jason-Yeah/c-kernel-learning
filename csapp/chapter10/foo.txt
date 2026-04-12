@@ -1,0 +1,9 @@
+dirent_test
+dirent_test.c
+fgetc_test
+fgetc_test.c
+foo.txt
+stat_test
+stat_test.c
+test.txt
+test_dir

@@ -1,0 +1,3 @@
+/home/jason/cplusplus/basement/base_code/src/build/CMakeFiles/math_main.dir
+/home/jason/cplusplus/basement/base_code/src/build/CMakeFiles/edit_cache.dir
+/home/jason/cplusplus/basement/base_code/src/build/CMakeFiles/rebuild_cache.dir

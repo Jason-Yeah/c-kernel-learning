@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/math_main.dir/math_main.cpp.o CMakeFiles/math_main.dir/math_utils.cpp.o -o math_main 
