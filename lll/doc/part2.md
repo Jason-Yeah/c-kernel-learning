@@ -191,3 +191,43 @@ clang -S -emit-llvm hello.c -o hello.ll
 IR：平台无关，保留类型，方便优化器进行数字计算和逻辑简化。
 
 ## 链接器
+
+### 目标文件格式
+
+目标文件格式和可执行文件格式差不多，在Windows下是PE-COFF，在Linux下是ELF。
+
+可在Linux下用File命令查看
+
+```bash
+$ file hello.o
+hello.o: ELF 64-bit LSB relocatable, x86-64, version 1 (SYSV), not stripped
+```
+
+## ELF 文件
+
+示例
+
+```bash
+$ objdump -h hello.o
+
+hello.o:     file format elf64-x86-64
+
+Sections:
+Idx Name          Size      VMA               LMA               File off  Algn
+  0 .text         0000002a  0000000000000000  0000000000000000  00000040  2**0
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .data         00000000  0000000000000000  0000000000000000  0000006a  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          00000000  0000000000000000  0000000000000000  0000006a  2**0
+                  ALLOC
+  3 .rodata       0000000d  0000000000000000  0000000000000000  0000006a  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .comment      0000002e  0000000000000000  0000000000000000  00000077  2**0
+                  CONTENTS, READONLY
+  5 .note.GNU-stack 00000000  0000000000000000  0000000000000000  000000a5  2**0
+                  CONTENTS, READONLY
+  6 .note.gnu.property 00000020  0000000000000000  0000000000000000  000000a8  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  7 .eh_frame     00000038  0000000000000000  0000000000000000  000000c8  2**3
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
+```
