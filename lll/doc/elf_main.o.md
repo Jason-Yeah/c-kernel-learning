@@ -95,6 +95,7 @@ Disassembly of section .text:
 首先看elf文件中header部分`readelf -h main.o`
 
 ```bash
+jason@Jason:~/ck_study/lll/code/part2$ readelf -h hello
 ELF Header:
   Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
   Class:                             ELF64
@@ -102,19 +103,19 @@ ELF Header:
   Version:                           1 (current)
   OS/ABI:                            UNIX - System V
   ABI Version:                       0
-  Type:                              REL (Relocatable file)
+  Type:                              EXEC (Executable file)
   Machine:                           Advanced Micro Devices X86-64
   Version:                           0x1
-  Entry point address:               0x0
-  Start of program headers:          0 (bytes into file)
-  Start of section headers:          1000 (bytes into file)
+  Entry point address:               0x401050
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          13952 (bytes into file)
   Flags:                             0x0
   Size of this header:               64 (bytes)
-  Size of program headers:           0 (bytes)
-  Number of program headers:         0
+  Size of program headers:           56 (bytes)
+  Number of program headers:         13
   Size of section headers:           64 (bytes)
-  Number of section headers:         14
-  Section header string table index: 13
+  Number of section headers:         31
+  Section header string table index: 30
 ```
 
 主要是Magic: 7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 （魔数：用于确认文件类型）
@@ -128,6 +129,16 @@ ELF Header:
   - 0x02大端
 - 01ELF文件版本号，一般为1
 - 00 00 ... 00 最后9B中无定义用0填充
+
+文件类型TYPE：有EXEC可执行和REL重定位和DYN共享目标文件。
+
+Entry point address程序入口点，这是程序被加载到内存后，CPU执行的第一条指令的VM地址（`_start函数`）。
+
+HEADERS:
+
+- Start of program headers: 64。表示程序头表紧跟着在文件头后面（第64B开始）
+- Start of section headers: 13952。段头表在文件的很后面，在文件的第13952字节处开始。
+- Size of this header: 64。再次确认文件头本身占了64B。
 
 ### 有哪些可以进入ELF段
 
@@ -285,9 +296,7 @@ int sum (func参数) // 通过寄存器传参（%edi）
 
 ```bash
 readelf -s main.o
-```
 
-```asm
 Symbol table '.symtab' contains 13 entries:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND
@@ -337,4 +346,3 @@ Idx Name          Size      VMA               LMA               File off  Algn
   7 .eh_frame     00000038  0000000000000000  0000000000000000  000000c8  2**3
                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
 ```
-
