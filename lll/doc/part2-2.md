@@ -236,3 +236,11 @@ $ gcc -o ab a.o b.o
 /usr/bin/ld: b.o:(.bss+0x4): multiple definition of `z'; a.o:(.bss+0x4): first defined here
 collect2: error: ld returned 1 exit status
 ```
+
+## 链接脚本
+
+手动控制内存布局的。平时写普通应用不需要它（因为 GCC 有默认规则），但当你需要精确控制内存（如写操作系统、驱动、嵌入式程序）或者想搞点黑客技术（如书中演示的极简程序）就可以用`.lds`文件。
+
+## BFD库
+
+BFD 是 Binutils 的核心引擎。它通过“屏蔽差异”，让 Linux 下的各种分析工具能够横跨各种平台。
