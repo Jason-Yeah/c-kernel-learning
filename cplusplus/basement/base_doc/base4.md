@@ -381,3 +381,336 @@ void change_vec(std::vector<int> & vec)
               ↑         ↑
             write      read
 ```
+
+# ARRAY
+
+```cpp
+//ptrs是含有10个整数指针的数组
+int *ptrs[10];
+//错误, 不存在引用的数组
+//int& refs[10] = /*?*/;
+//Parray指向一个含有10个整数的数组
+int arr[10] ={0,1,2,3,4,5,6,7,8,9};
+int (*Parray)[10] = &arr;
+//arrRef 引用一个含有10个整数的数组
+int (&arrRef)[10] = arr;
+```
+
+由内向外看数组，对于`int *ptrs[10];`意思是ptrs是大小为10个元素的数组，每个元素类型是int*也就是整形指针型的；`int (&arrRef)[10] = arr;`首先左边`&`表示arrRef是一个引用，再看右边10，说明引用的是一个大小为10的数组，最左边int表示数组里元素是整型变量，也就是说arrRef是数组arr的别名。它和原来的数组 arr 共享同一块内存。
+
+`int (*Parr)[10] = arr;`指向数组的指针，首先`*Parry`表示这是个指针，右边10表示大小，最左边int表示说明数组里是整型变量，Parr是一个指针，里面是整个数组arr的地址，这里括号不能少，不然会变成第一种情况。
+
+数组大小可以用sizeof确定
+
+```cpp
+int arr[10];
+printf("%ld\n", sizeof(arr)); // 40 = 4 * 10
+printf("%ld\n", sizeof(arr) / sizeof(int)); // 10
+```
+
+## C++11改进
+
+为方便遍历数组，C++11提供了获取最后元素的下一个位置的指针，和指向首元素的指针
+
+```cpp
+/*
+template<typename _Tp, size_t _Nm>
+    [[__nodiscard__, __gnu__::__always_inline__]]
+    inline _GLIBCXX14_CONSTEXPR _Tp*
+    begin(_Tp (&__arr)[_Nm]) noexcept
+    { return __arr; }
+template<typename _Tp, size_t _Nm>
+    [[__nodiscard__, __gnu__::__always_inline__]]
+    inline _GLIBCXX14_CONSTEXPR _Tp*
+    end(_Tp (&__arr)[_Nm]) noexcept
+    { return __arr + _Nm; }
+*/
+int ia[] = {1, 2, 3, 4, 5};
+int *iabeg = std::begin(ia);
+int *iaend = std::end(ia);
+
+for (auto it = iabeg; it != iaend; it ++ )
+    std::cout << *it << " ";
+std::cout << std::endl;
+
+// calculating the element number of an array.
+auto n = std::end(arr) - std::begin(arr);
+std::cout << "n is " << n << std::endl;
+```
+
+## 使用array init vector
+
+```cpp
+auto n = std::end(ia) - std::begin(ia);
+std::cout << "n is " << n << std::endl;
+std::cout << "last element is " << *(std::begin(ia) + n - 1) << std::endl;
+
+std::vector<int> vec(std::begin(ia), std::end(ia));
+```
+
+# 运算符
+
+## 特殊运算符
+
+`::*`用于声明一个指向类**成员**的指针
+
+普通的指针（如 int*）直接指向内存中的某个具体地址，而`::*`声明的“成员指针”并不存储具体的内存地址，它存储的更像是一个“偏移量”。告诉你某个成员在类对象的内部“哪个位置”，但必须结合一个具体的对象，才能真正找到并访问那个成员。
+
+用法：
+
+```cpp
+Type ClassName::* pointer_name = &ClassName::member_name;
+```
+
+示例
+
+```cpp
+class Person
+{
+    public:
+        std::string name;
+        int age;
+        void sayhi()
+        {
+            std::cout << "Hi, I'm " << name << std::endl;
+        }
+};
+
+int main()
+{
+    int Person::* prt_age = &Person::age;
+    Person person1 = {"Jason", 23};
+    Person person2 = {"Bob", 30};
+
+    void (Person::*ptr_func)() = &Person::sayhi;
+
+    std::cout << person1.age << std::endl;
+    std::cout << person1.*prt_age << std::endl;
+    std::cout << person2.*prt_age << std::endl;
+
+    (person1.*ptr_func)();
+}
+```
+
+对于`void (Person::*ptr_func)() = &Person::sayhi;`，在声明成员函数指针时，括号是为了把`*`和指针名ptr_func绑定在一起。如果不加，首先`()`优先级很高，编译器会认为，ptr_func是个普通成员函数，函数名就叫prt_fun，而返回类型是`void Person::*`
+
+## 运算符重载
+
+允许开发者为自定义类型（如类和结构体）定义或改变运算符的行为，使其表现得像内置类型一样
+
+规则：
+
+1. 几乎所有运算符都可以重载，但`:: ?: sizeof`等不可
+2. 至少一个操作数必须是用户定义类型：即至少有一个操作数是类、结构体或联合体类型
+3. 不修改原运算符优先级等等原性质
+
+运算符可以作为成员函数或友元函数进行重载。对于成员函数：
+
+```cpp
+bool operator < (const Person& other) const{
+    return this->age < other.age;
+}
+```
+
+首先bool是类型，`operator <`是C++规定重载某个运算符的关键字，此时重载的是`<`；`const Person& other`参数使用常量引用，避免拷贝整个对象的开销，又保证不会在函数内部意外修改到被比较的对象other；末尾的const，加在函数参数列表后，表示改预算操作不会修改调用者自身（即this指针指向的对象）。
+
+如果不加，当你在 std::set 等标准库容器中使用 Person 对象，或者比较的对象本身是 const 时，编译器就会直接报错。
+
+## goto
+
+`goto`允许无条件跳转到程序中指定的标签。虽然`goto`可简化代码，但不推荐使用，因为会使程序流程难以维护理解。示例：
+
+```cpp
+int n = 0;
+std::cout << "n: ";
+std::cin >> n;
+if (n > 8) goto end;
+std::cout << "fku" << std::endl;
+
+end:
+    std::cout << "n > 8, yeah." << std::endl;
+```
+
+# 异常处理
+
+- try 块用于包含可能引发异常的代码（接锅侠）。
+- throw 用于抛出异常（甩锅），可以在任何需要引发异常的位置使用，包括函数内部、嵌套调用中等。。
+- catch 块用于捕获并处理异常（擦屁股）。
+
+```cpp
+double div(double a, double b)
+{
+    if (b == 0) throw std::invalid_argument("Denominator cannot be zero."); // 抛出异常
+    return a / b;
+}
+
+try {
+    double result = div(a, b);
+    std::cout << "Result: " << result << std::endl;
+} catch (std::invalid_argument &e) { // 捕获 std::invalid_argument 异常
+    std::cerr << "Error: " << e.what() << std::endl;
+}
+```
+
+其中`invalid_argument`是在`stdexcept`文件中定义的类，`e.what()`是标准异常类自带的一个函数，用来提取出里面的错误描述文字。
+
+## rethrow异常
+
+可以在 catch 块中使用 throw 语句重新抛出捕获的异常，以便其他部分处理。
+
+```cpp
+void func1() {
+    throw std::runtime_error("Error in func1.");
+}
+
+// 函数，调用 func1 并重新抛出异常
+void func2() {
+    try {
+        func1();
+    } catch (...) { // 捕获所有异常
+        std::cout << "func2() caught an exception and is rethrowing it." << std::endl;
+        throw; // 重新抛出当前异常(func1的异常)
+    }
+}
+```
+
+# 函数重载
+
+规则
+
+- 函数名相同。
+- 参数列表（类型、数量或顺序）不同。
+- 返回类型不参与重载的区分
+
+注意：
+
+- 仅返回类型不同的重载是非法的。
+- 默认参数可能会与重载产生冲突，使用时需谨慎。
+
+## 默认参数
+
+函数参数可以指定默认值，调用函数时可以省略这些参数，默认值将被使用。
+
+规则
+
+- 默认参数从右到左设置（←），不能部分设置。
+- 函数声明和定义中默认参数只需在声明中指定。
+
+```cpp
+#include <iostream>
+
+// 函数声明时指定默认参数
+void displayInfo(std::string name, int age = 18, std::string city = "Unknown");
+
+// 函数定义
+void displayInfo(std::string name, int age, std::string city) {
+    std::cout << "Name: " << name 
+              << ", Age: " << age 
+              << ", City: " << city << std::endl;
+}
+
+int main() {
+    displayInfo("Bob", 25, "New York"); // 全部参数传递
+    displayInfo("Charlie", 30);         // 省略city
+    displayInfo("Diana");               // 省略age和city
+    return 0;
+}
+```
+
+# 内联函数
+
+内联函数通过在函数前加inline关键字，建议编译器将函数代码嵌入到调用处，减少函数调用的开销。
+
+适用于函数体积小、调用频繁的函数，如访问器（getter）和修改器（setter）等。
+
+```cpp
+inline double div(double a, double b)
+{
+    if (b == 0) throw std::invalid_argument("Denominator cannot be zero."); // 抛出异常
+    return a / b;
+}
+try {
+    double result = div(a, b);
+    std::cout << "Result: " << result << std::endl;
+} catch (std::invalid_argument &e) { // 捕获 std::invalid_argument 异常
+    std::cerr << "Error: " << e.what() << std::endl;
+}
+```
+
+好：
+
+- 减少函数调用开销（栈操作）
+- 提高性能
+  
+坏：
+
+- 代码体积增大，可能影响缓存性能
+- 编译器可能忽略内联请求，特别是对于复杂函数
+
+# 尾递归：递归优化
+
+尾递归是指递归调用在函数的最后一步，可以被编译器优化为循环，减少堆栈消耗（**函数在递归调用自身之后，不再执行任何其他的计算或操作**）。
+
+```cpp
+#include <iostream>
+
+// 辅助函数，用于尾递归
+long long factorialHelper(int n, long long accumulator) {
+    if(n == 0)
+        return accumulator;
+    return factorialHelper(n - 1, n * accumulator);
+}
+
+// 尾递归函数
+long long factorial(int n) {
+    return factorialHelper(n, 1);
+}
+
+int main() {
+    int number = 5;
+    std::cout << number << "! = " << factorial(number) << std::endl;
+    return 0;
+}
+```
+
+factorialHelper函数的递归调用是函数的最后一步，编译器可以将其优化为迭代，减少堆栈消耗。
+
+> 普通递归的隐患：每次递归都会在内存的“调用栈”上压入一个新的栈帧。如果递归层数太深（比如计算一百万的阶乘），栈空间会被耗尽，导致栈溢出（Stack Overflow），程序直接崩溃。
+尾递归的优化：因为尾递归在调用下一步时，当前栈帧已经没用了，编译器会聪明地复用当前的栈帧，而不是开辟新的。这就相当于把递归转换成了一个高效的循环（while 或 for），无论递归多少次，占用的内存空间都是恒定的，彻底避免了栈溢出。
+
+# Lambda表达式
+
+Lambda表达式是C++11引入的匿名函数，便于在需要函数对象的地方快速定义和使用函数。它允许定义内联的、小型的可调用对象，无需单独定义函数。
+
+语法：
+
+```cpp
+[ capture_list ] ( parameter_list ) -> return_type {
+    // function body
+}
+```
+
+其中`[ capture_list] `是让函数能够使用外部作用域的变量
+
+- `[]` 不捕获任何外部变量，完全独立
+- `[=]` 以拷贝（传值）方式捕获外部所有局部变量
+- `[&]` 以引用方式捕获
+- `[a, &b]` 混合捕获，拷贝外部变量a，引用外部变量b
+
+示例
+
+其中`std::for_each`是C++标准库 <algorithm> 头文件中提供的一个遍历算法，一个专门用来遍历容器（比如 std::vector、std::list 等）算法，只需要告诉它起点、终点，以及“对每个元素要做什么”，它就会自动帮你把容器里的每个元素都处理一遍。
+
+基本用法：接受三个参数：it_start, it_end, op(Lambda)。
+
+```cpp
+for_each(_InputIterator __first, _InputIterator __last, _Function __f)
+{
+    // concept requirements
+    __glibcxx_function_requires(_InputIteratorConcept<_InputIterator>)
+    __glibcxx_requires_valid_range(__first, __last);
+    for (; __first != __last; ++__first)
+        __f(*__first);
+    return __f; // N.B. [alg.foreach] says std::move(f) but it's redundant.
+}
+```

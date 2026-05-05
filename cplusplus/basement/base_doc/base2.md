@@ -301,8 +301,8 @@ const int sz = GetSize();
 constexpr int mf = 20;
 //mf+1是一个常量表达式
 constexpr int limit = mf + 10;
-//错误，GetSize()不是一个常量表达式，需要运行才能返回
-//constexpr int sz = GetSize();
+
+//constexpr int sz = GetSize(); //错误，GetSize()不是一个常量表达式，需要运行才能返回
 ```
 
 ### 指针和constexpr
@@ -337,6 +337,30 @@ const 告诉编译器“这个变量在运行时不能被修改”，而 constex
     }
     // 如果这个函数返回值不小心改成了负数，编译直接报错，根本生成不了可执行文件
     static_assert(get_max_connections() > 0, "连接数必须为正数！"); 
+    ```
+
+3. 实现编译期间计算：用`constexpr`修饰的函数，如果传入的参数都是编译期间的常量，那么函数的计算会在编译阶段完成，生成的二进制代码中直接就是计算结果，运行时无额外计算开销
+
+    ```cpp
+    constexpr int factorial(int n)
+    {
+        return (n <= 1) ? 1: (n * factorial(n - 1));
+    }
+
+    constexpr int val = factorial(5);
+    // constexpr 函数非常灵活，如果传入的是普通变量（运行时才能确定的值），它也会退化成普通函数在运行时执行
+    ```
+
+4. 编译器创建对象：如果类的构造函数是constexpr，且传入的都是常量，那编译器就可以构造出一个常量对象
+
+    ```cpp
+    struct Point
+    {
+        double x, y;
+        constexpr Point(double x_, double y_) : x(x_), y(y_) {}
+    }
+
+    constexpr Point p(1, 2);
     ```
 
 ## inline
