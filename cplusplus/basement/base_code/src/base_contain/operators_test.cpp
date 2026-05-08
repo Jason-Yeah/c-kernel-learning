@@ -3,6 +3,13 @@
 #include <vector>
 #include <algorithm>
 
+// callback_func
+typedef void (*CallBack)();
+
+using callback = void(*)();
+
+// 给 "返回void且无参数的函数指针" 起个名字叫 FuncPtr
+using funcptr = void(*)();
 class Person
 {
     public:
@@ -23,6 +30,28 @@ inline double div(double a, double b)
     return a / b;
 }
 
+void execute_f(funcptr func_p)
+{
+    func_p();
+}
+
+void greet()
+{
+    printf("...............\n");
+}
+
+void register_callback(callback cb)
+{
+    std::cout << "before callback" << std::endl;
+    cb();
+    std::cout << "After callback" << std::endl;
+}
+
+// 回调函数
+void myCallback() {
+    std::cout << "Callback executed!" << std::endl;
+}
+
 int main()
 {
     int Person::* prt_age = &Person::age;
@@ -41,16 +70,16 @@ int main()
 
     // ==========
     
-    {
-        int n = 0;
-        std::cout << "n: ";
-        std::cin >> n;
-        if (n > 8) goto end;
-        std::cout << "fku" << std::endl;
+    // {
+    //     int n = 0;
+    //     std::cout << "n: ";
+    //     std::cin >> n;
+    //     if (n > 8) goto end;
+    //     std::cout << "fku" << std::endl;
 
-        end:
-            std::cout << "n > 8, yeah." << std::endl;
-    }
+    //     end:
+    //         std::cout << "n > 8, yeah." << std::endl;
+    // }
 
     double a, b;
     std::cout << "Enter: ";
@@ -65,11 +94,40 @@ int main()
 
     // ====================
 
-    std::vector<int> nums = {1, 2, 3, 4, 5};
+    std::vector<int> nums = {1, 3, 2, 5, 4};
 
     std::for_each(nums.begin(), nums.end(), [](int x){
         std::cout << x << " ";
     });
+    puts("");
+
+    std::sort(nums.begin(), nums.end(), [](int a, int b) -> bool {
+        return a > b;
+    });
+
+    std::for_each(nums.begin(), nums.end(), [](int x){
+        std::cout << x << " ";
+    });
+    puts("");
+
+    // =====================================
+
+    void (*func_greet_ptr)() = greet;
+
+    func_greet_ptr();
+    execute_f(func_greet_ptr);
+
+    register_callback(myCallback);
+
+    {
+        callback cb = []() -> void {
+            std::cout << "Lambda callback!" << std::endl;
+        };
+        execute_f(cb);
+        execute_f([]() -> void {
+            std::cout << "Lambda callback!" << std::endl;
+        });
+    }
 
     return 0;
 }

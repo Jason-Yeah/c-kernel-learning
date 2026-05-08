@@ -512,7 +512,7 @@ bool operator < (const Person& other) const{
 }
 ```
 
-首先bool是类型，`operator <`是C++规定重载某个运算符的关键字，此时重载的是`<`；`const Person& other`参数使用常量引用，避免拷贝整个对象的开销，又保证不会在函数内部意外修改到被比较的对象other；末尾的const，加在函数参数列表后，表示改预算操作不会修改调用者自身（即this指针指向的对象）。
+首先bool是类型，`operator <`是C++规定重载某个运算符的关键字，此时重载的是`<`；`const Person& other`参数使用常量引用，避免拷贝整个对象的开销，又保证不会在函数内部意外修改到被比较的对象other；末尾的const，加在函数参数列表后，**表示操作不会修改调用者自身（即this指针指向的对象）**。
 
 如果不加，当你在 std::set 等标准库容器中使用 Person 对象，或者比较的对象本身是 const 时，编译器就会直接报错。
 
@@ -710,7 +710,69 @@ for_each(_InputIterator __first, _InputIterator __last, _Function __f)
     __glibcxx_function_requires(_InputIteratorConcept<_InputIterator>)
     __glibcxx_requires_valid_range(__first, __last);
     for (; __first != __last; ++__first)
-        __f(*__first);
+    __f(*__first);
     return __f; // N.B. [alg.foreach] says std::move(f) but it's redundant.
 }
+```
+
+# 函数指针
+
+指向函数的指针变量，保存函数的地址，可以通过指针调用函数。
+
+声明与使用
+
+```cpp
+void execute_f(void (*func_p)())
+{
+    func_p();
+}
+void greet()
+{
+    printf("...............\n");
+}
+
+void (*func_greet_ptr)() = greet;
+func_greet_ptr();
+execute_f(func_greet_ptr);
+```
+
+由于C/C++优先级，函数调用符号`()`比`*`高，如果写成`void *func_p()`编译器会先看到`func_p()`认为func_p是一个函数，然后看到`*`认为这个函数的返回值是一个通用指针`void *`，这就成指针函数了。加上括号成`void (*func_p)()`才是函数指针，告诉编译器func_p是一个指针不是函数，然后看括号外面发现它指向的是一个返回void的函数
+
+## 别名方式不费劲
+
+采用`typedef`或者`using`方式可以不太费劲
+
+```cpp
+// 给 "返回void且无参数的函数指针" 起个名字叫 FuncPtr
+// FuncPtr <==> void(*FuncPtr)()
+using funcptr = void(*)();
+void execute_f(funcptr func_p)
+{
+    func_p();
+}
+void greet()
+{
+    printf("...............\n");
+}
+
+// typedef是：（比较反人类不如using）
+typedef void (*funcptr)();
+```
+
+## 回调函数
+
+通过函数指针传递的函数，通常用于在特定事件发生时执行自定义操作。
+
+## 与Lambda表达式结合
+
+函数指针也可以指向Lambda表达式，但仅限于不捕获外部变量的Lambda。
+
+```cpp
+callback cb = []() -> void {
+    std::cout << "Lambda callback!" << std::endl;
+};
+execute_f(cb);
+execute_f([]() -> void {
+    std::cout << "Lambda callback!" << std::endl;
+})
 ```
