@@ -29,6 +29,44 @@ Point operator-(const Point& a, const Point& b)
     return Point(a.x_ - b.x_, a.y_ - b.y_);
 }
 
+class Animal
+{
+    public:
+        void eat() const 
+        {
+            std::cout << "Animal eats." << std::endl;
+        }
+
+        virtual void speak() 
+        {
+            std::cout << "动物发出叫声" << std::endl;
+        }
+    protected:
+        int age_;
+};
+
+class Dog : public Animal
+{
+    public:
+        void bark() const {
+            std::cout << "Dog barks." << std::endl;
+        }
+
+        void setAge(int a) {
+            age_ = a; // 访问受保护成员
+        }
+
+        int getAge() const {
+            return age_;
+        }
+
+        // override重载父类函数
+        void speak() override 
+        {
+            std::cout << "汪汪汪！" << std::endl;
+        }
+};
+
 int main()
 {
     Point p1(1.5, 2.5);
@@ -39,6 +77,16 @@ int main()
 
     Point p4 = p2 - p1;
     p4.print(); // 输出： (1.5, 1.5)
+
+    Dog myDog;
+    myDog.eat();    // 继承自Animal
+    myDog.bark();   // Dog特有
+
+    myDog.setAge(5);
+    std::cout << "Dog's age: " << myDog.getAge() << std::endl;
+
+    Animal* ptr = &myDog;
+    ptr->speak();
 
     return 0;
 }

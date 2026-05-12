@@ -181,11 +181,108 @@ private:
 - 友元函数：单个函数可以被声明为友元。
 - 友元类：整个类可以被声明为友元。
 
-示例：
-
 ## 运算符重载
 
 - 只能对已有运算符进行重载，不能创建新运算符。
 - 至少有一个操作数必须是用户定义的类型。
 - 不能改变运算符的优先级或结合性。
+
+## 继承多态
+
+### 继承
+
+```cpp
+class Base {
+    public:
+        void baseFunction();
+    protected:
+        int protectedMember;
+    private:
+        int privateMember;
+};
+
+class Derived : public Base { // 公有继承
+    public:
+        void derivedFunction();
+};
+```
+
+### 虚函数
+
+`虚函数`允许派生类重新定义基类中的函数，以实现**多态性**。在运行时，根据对象的实际类型调用相应的函数版本（告诉编译器：“这个函数先别急着在编译时确定，等到程序真正运行时，看看实际是谁的对象，再决定调用哪个版本。”）。
+
+程序在运行时知道该调用谁，是有一套经典的机制，叫虚函数表（vtable）和虚表指针（vptr）
+
+- 虚函数表（vtable）：编译器会为每个包含虚函数的类，生成一张隐藏的“函数地址表”，里面按顺序存着这个类所有虚函数的实际地址。
+- 每个对象在创建时，内部会多出一个隐藏的指针（vptr），它指向该对象所属类的虚函数表。
+
+当你执行 ptr->speak() 时，程序会顺着 ptr 找到对象的 vptr，再通过 vptr 找到对应的 vtable，最后从表中查出 Dog::speak() 的真实地址去执行（`ptr->vptr->Class::func()`）。
+
+#### 注意
+
+1. 析构函数必须是虚函数，通过父类指针去 delete 一个子类对象，父类的析构函数一定要加 virtual。
+   - 如果不加：delete ptr; 时只会调用父类的析构函数，子类特有的资源（比如子类 new 出来的内存）得不到释放，导致内存泄漏。
+   - 加了之后：程序会先调用子类的析构，再调用父类的析构。
+2. 构造函数不能是虚函数：对象在构造的时候，虚表指针（vptr）还没初始化好，此时根本无法进行动态查找，所以 C++ 语法禁止构造函数为虚函数。
+3. 触发多态条件：
+   1. 存在继承关系。
+   2. 父类中的函数被声明为 virtual。
+   3. 通过**父类的指针或引用**去调用这个函数（如果是直接用对象调用 myDog.speak()，那只是普通的成员函数调用）。
+
+## 纯虚类与抽象基类
+
+纯虚函数 是在**基类中声明**但不提供实现的虚函数。包含至少一个**纯虚函数**的类称为 抽象基类（Abstract Base Class，ABC）。抽象基类不能被实例化，要求派生类必须实现所有纯虚函数才能被实例化。
+
+```cpp
+class Vehicle
+{
+    public:
+        //只声明不实现，强制子类实现该函数
+        virtual void start_engine() = 0;
+        
+        virtual ~Vehicle() {}
+};
+
+class Car : public Vehicle
+{
+    public:
+        void start_engine() override
+        {
+            printf("fk\n");
+        }
+};
+
+int main()
+{
+    Car car;
+    car.start_engine();
+
+    Vehicle *v1 = &car;
+    v1->start_engine();
+
+    return 0;
+}
+```
+
+## 继承后的访问控制
+
+继承时的`访问控制`决定了基类成员在派生类中的可访问性。继承方式主要有三种：public、protected 和 private。它们影响继承成员的访问级别
+
+- 公有继承（public inheritance）：
+  - 基类的 public 成员在派生类中保持 public。
+  - 基类的 protected 成员在派生类中保持 protected。
+  - 基类的 private 成员在派生类中不可访问。
+- 保护继承（protected inheritance）：
+  - 基类的 public 和 protected 成员在派生类中都变为 protected。
+- 私有继承（private inheritance）：
+  - 基类的 public 和 protected 成员在派生类中都变为 private。
+
+销毁对象时，顺序与构造完全相反。析构函数不需要手动调用基类的析构函数，编译器会自动在派生类析构函数执行完毕后，自动调用基类的析构函数。**对象按“后创建的先销毁”的顺序出栈**。
+
+## 容器与继承
+
+C++ 容器（如 std::vector、std::list 等） 通常存储对象的副本，而非指向对象的指针。因此，当与继承结合使用时，可能导致 切片（Object Slicing） 问题，即仅存储基类部分，丢失派生类特有的信息。为了实现多态性，推荐使用指针或智能指针存储对象。
+
+> **对象切片**
+
 
