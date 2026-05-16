@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vector>
+#include <memory>
 
 class Vehicle
 {
@@ -55,6 +57,25 @@ public:
     }
 };
 
+class BASE
+{
+    public:
+        virtual void show () const
+        {
+            std::cout << "BASE\n";
+        }
+        virtual ~BASE() {}
+};
+
+class CLAZZ : public BASE
+{
+    public:
+        void show () const override
+        {
+            std::cout << "Derived show" << std::endl;
+        }
+};
+
 int main()
 {
     Car car;
@@ -65,6 +86,18 @@ int main()
 
     PublicDerived pubDer;
     pubDer.publicMember = 10; // 可访问
+
+    std::vector<BASE> vecb;
+
+    CLAZZ clz;
+    vecb.push_back(clz);
+
+    vecb[0].show(); // 切片问题
+
+    std::vector<std::unique_ptr<BASE>> vecpb;
+    vecpb.emplace_back(std::make_unique<CLAZZ>());
+
+    vecpb[0]->show();
 
     return 0;
 }
