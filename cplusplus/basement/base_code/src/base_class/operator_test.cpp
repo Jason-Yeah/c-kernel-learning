@@ -21,12 +21,26 @@ class Point
             std::cout << "(" << x_ << ", " << y_ << ")\n";
         }
 
-        friend Point operator-(const Point& a, const Point& b);
+        friend Point operator - (const Point& a, const Point& b);
+        friend void set_info(Point& a, int x, int y);
+        friend std::ostream& operator << (std::ostream& os, const Point& point);
 };
 
 Point operator-(const Point& a, const Point& b) 
 {
     return Point(a.x_ - b.x_, a.y_ - b.y_);
+}
+
+void set_info(Point& a, int x, int y)
+{
+    a.x_ = x; 
+    a.y_ = y; 
+}
+
+std::ostream& operator << (std::ostream& os, const Point& point)
+{
+    os << "(" << point.x_ << ", " << point.y_ << ")";
+    return os;
 }
 
 class Animal
@@ -87,6 +101,10 @@ int main()
 
     Animal* ptr = &myDog;
     ptr->speak();
+
+    set_info(p1, 10, 20);
+    p1.print(); // 输出： (10, 20)
+    std::cout << p2 << std::endl; // 输出： (10, 20)
 
     return 0;
 }
