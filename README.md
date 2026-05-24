@@ -92,19 +92,12 @@ cd csapp/chapter9 && gcc -fno-stack-protector -no-pie -o vuln vuln.c
 
 ## 📅 最近更新
 
-*最后更新: 2025-05-24 22:15 CST*
+*最后更新: 2026-05-24 22:15 CST*
 
 - 完善 C++ 类与虚函数表相关 Demo
 - 新增 C++ 运算符重载、this 指针练习
 - CS:APP 并发编程线程示例整理
 - 底层链接 ELF 文件结构分析
+- 添加项目主页 README
 
----
 
-## 📖 参考资源
-
-- 《C++ Primer》—— C++ 基础学习
-- 《Effective C++》—— C++ 最佳实践
-- 《Computer Systems: A Programmer's Perspective》—— 系统编程圣经
-- 《程序员的自我修养——链接、装载与库》—— 底层链接参考
-- [GDB 官方文档](https://sourceware.org/gdb/current/onlinedocs/)
