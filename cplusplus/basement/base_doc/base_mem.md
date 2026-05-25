@@ -85,6 +85,28 @@ C++程序看到的不是物理内存，而是虚拟地址空间。
 
 `malloc/free`不是系统调用，它们是用户态的内存管理器。如`brk`，`mmap`这些是操作系统给的系统调用接口，malloc是C封装的在用户态。
 
+### ptmalloc 是什么？
+
+`ptmalloc`（Per-Thread malloc）是 glibc 中 `malloc/free` 的**具体实现**。你在 Linux 上调 `malloc(64)`，背后实际执行的就是 ptmalloc 的代码。
+
+```bash
+你写的代码                 底层实现
+─────────────────────────────────────────────────
+malloc(64)    ──►  ptmalloc 的 malloc() 函数
+free(p)       ──►  ptmalloc 的 free() 函数
+```
+
+ptmalloc 是**目前 Linux 上最主流的 malloc 实现**。它的前身是 dlmalloc（Doug Lea malloc），后来加了多线程支持（所以叫 ptmalloc）。其他常见的 malloc 实现还有：
+
+| 实现 | 所属 | 特点 |
+|------|------|------|
+| **ptmalloc** | glibc（Linux 默认） | 通用、多线程支持好、应用最广 |
+| tcmalloc | Google | 线程缓存优先，小对象快 |
+| jemalloc | FreeBSD / Facebook | 多线程下碎片少，常用于数据库 |
+| mimalloc | Microsoft | 追求极致性能，现代设计 |
+
+> 虽然实现不同，但它们对外都遵循 `malloc/free/realloc/calloc` 这套标准接口。所以你的代码不需要改，换一个 libc 或链接不同的分配器就能体验不同性能。下面都以 **ptmalloc** 为例讲解。
+
 ```bash
 堆结构（如面团从低向高延伸）
 低地址 ◄──────────────────────────────────────► 高地址
@@ -184,6 +206,267 @@ brk(+4096)
     │
     └── ... 循环直到进程结束
 ```
+
+---
+
+## 补充：内存池（Memory Pool）的概念
+
+### 为什么需要内存池？
+
+`malloc/free` 是**通用分配器**，什么大小、什么场景都能应付。但通用意味着有开销：
+
+- 每次 malloc 都要查链表 / bin / Top Chunk
+- 频繁分配释放会产生**内存碎片**
+- 小块分配有元数据开销（每个 chunk 头部要占 16 字节）
+
+如果你**只需要反复分配/释放固定大小的对象**（比如游戏中的子弹、粒子、网络连接对象），通用分配器就太重了。**内存池**就是专门解决这个问题的。
+
+### 基本原理
+
+```bash
+传统方式（每次 malloc/free）:
+    分配        释放       分配        释放
+    │           │          │           │
+    ▼           ▼          ▼           ▼
+   [obj]  →  [空闲]  →  [obj]  →  [空闲]  ...
+   每次都要查链表、可能触发系统调用
+
+内存池方式:
+    ┌──────────────────────────────┐
+    │    预分配一大块内存 (pool)    │
+    │  ┌──┬──┬──┬──┬──┬──┬──┬──┐   │
+    │  │  │  │  │  │  │  │  │  │   │  ← 切成固定大小的小块
+    │  └──┴──┴──┴──┴──┴──┴──┴──┘   │
+    └──────────────────────────────┘
+          ↑           ↑
+      拿走一块用    用完放回来
+      不需要 malloc  不需要 free
+```
+
+### 核心操作：分配与归还
+
+#### 分配：从空闲链表头部取一个
+
+```bash
+分配前空闲链表:  [块0] → [块1] → [块2] → ... → [块N]
+                        ↑
+                      头指针 (指向第一个空闲块)
+
+allocate():
+  ① 取头指针指向的块
+  ② 头指针移到下一个 → [块1]
+  ③ 返回 [块0] 给调用者
+
+O(1)，三步完成，不查表不遍历
+```
+
+#### 归还：插回空闲链表头部
+
+```bash
+归还前空闲链表:  [块1] → [块2] → ... → [块N]
+                  ↑
+                头指针
+
+deallocate(p)  // p 指向归还的块:
+  ① 把 p 的 next 指向当前头指针 → [块1]
+  ② 头指针指向 p
+  ③ 完成
+
+归还后空闲链表:  [归还块] → [块1] → [块2] → ... → [块N]
+                  ↑
+                头指针
+
+O(1)，三步完成，不合并不遍历
+```
+
+> 注意：内存池不检查你是否归还了"属于池里的块"。如果你 `deallocate` 一个不是从池里拿的地址，链表会被破坏——这是使用内存池需要自己保证的。
+
+#### 实际常用的实现：嵌入空闲链表
+
+上面用了单独的 `free_list_` 数组存指针，但更常见的做法是**在空闲块内部直接存 next 指针**（块空闲时，这块内存本身就是空闲的，拿它的前 8 字节存下一个地址完全不影响）：
+
+```cpp
+// 嵌入式空闲链表：不额外占用内存
+union Block {
+    T data;                     // 当块被分配时，用来存真正的对象
+    Block* next;                // 当块空闲时，前 8 字节存下一个空闲块的地址
+};
+
+class EmbeddedPool {
+    Block* free_head_;          // 空闲链表头指针
+    char* pool_mem_;            // 整块池内存
+    
+public:
+    EmbeddedPool(size_t n) {
+        pool_mem_ = new char[sizeof(Block) * n];
+        // 初始化空闲链表：每个空闲块的 next 指向下一个块
+        free_head_ = (Block*)pool_mem_;
+        Block* cur = free_head_;
+        for (size_t i = 0; i < n - 1; i++) {
+            cur->next = (Block*)(pool_mem_ + sizeof(Block) * (i + 1));
+            cur = cur->next;
+        }
+        cur->next = nullptr;           // 最后一个块 next = null
+    }
+    
+    T* allocate() {
+        if (!free_head_) return nullptr;
+        Block* b = free_head_;
+        free_head_ = free_head_->next; // 头指针移到下一个
+        return &b->data;               // 返回给用户（作为 T* 用）
+    }
+    
+    void deallocate(T* p) {
+        Block* b = (Block*)p;
+        b->next = free_head_;          // 归还块指向当前头
+        free_head_ = b;                // 头指针指向归还块
+    }
+    
+    ~EmbeddedPool() { delete[] pool_mem_; }
+};
+```
+
+```bash
+嵌入式空闲链表的内存布局:
+
+初始化后:
+┌──────┬──────┬──────┬──────┬──────┐
+│ next→│ next→│ next→│ next→│ null │
+│ ──── │ ──── │ ──── │ ──── │      │
+└──┴───└──┴───└──┴───└──┴───└──────┘
+   ↑
+free_head_
+
+分配两块后:
+┌──────┬──────┬──────┬──────┬──────┐
+│ objA │ objB │ next→│ next→│ null │
+│      │      │ ──── │ ──── │      │
+└──────┴──────┴──┴───└──┴───└──────┘
+                  ↑
+              free_head_
+
+归还 objA 后 (注意顺序无关):
+┌──────┬──────┬──────┬──────┬──────┐
+│ next→│ objB │ next→│ next→│ null │  ← objA 的前8字节存next
+│ ──── │      │ ──── │ ──── │      │
+└──┴───└──────└──┴───└──┴───└──────┘
+   ↑
+free_head_  链表: [A] → [C] → [D]
+```
+
+> 这种"嵌入式"技巧利用了**块空闲时里面的数据是无用的**这一事实，拿空闲块自身的内存来存链表指针，不需要额外的指针数组。很多真实的内存池（如 tcmalloc、内核 slab 分配器）都用了类似思路。
+
+### 池满了怎么办？
+
+内存池的大小是固定的，如果所有块都用完了（`free_head_ == nullptr`），有三种处理策略：
+
+```bash
+策略 1: 返回 nullptr（最简单）
+  allocate() → nullptr
+  调用者自己处理（如用 fallback malloc）
+
+策略 2: 挂载新池（常见做法）
+  ┌────────────┐    ┌────────────┐    ┌────────────┐
+  │  Pool 0    │ →  │  Pool 1    │ →  │  Pool 2    │
+  │  100 blocks │    │  100 blocks│    │  100 blocks│
+  └────────────┘    └────────────┘    └────────────┘
+  ↑                 ↑                 ↑
+  active           reserve           reserve
+  当前池满了 → 切到下一个池 → 还不够 → 再 new 一个 Pool 挂链表尾部
+
+策略 3: 回退到 malloc（保底）
+  if (pool 空) return malloc(sizeof(T));
+  deallocate 时如果发现是 pool 外来的，直接用 free(p)
+```
+
+### 池的创建与销毁
+
+```cpp
+// 创建内存池
+// ① 确定块大小（sizeof(T)，对齐到 alignof(T)）
+// ② 确定块数量（根据场景预估峰值
+// ③ 分配 pool_mem_ = new char[sizeof(Block) * N]
+// ④ 初始化空闲链表
+
+// 销毁内存池
+// ① 如果对象有析构函数，需要对所有已分配对象手动调用析构
+// ② 释放 pool_mem_ = delete[] pool_mem_
+// ⚠️ 注意：如果池没销毁而对象还在用，对象持有的指针全是野指针
+
+// 一个更完整的示例
+template<typename T>
+class Pool {
+    union Block {
+        T data;
+        Block* next;
+    };
+    Block* free_head_;
+    char* pool_mem_;            // 对于char*变量 pool_mem_ + 1实际上地址只多了1B(int * + 1 -> + 4B)
+                                // 当需要按任意偏移量切割内存时（例如计算第n个 Block 的地址），只有 char* 能给出精确的字节级寻址
+    size_t capacity_;
+    size_t used_ = 0;           // 记录当前已分配了多少块
+    
+public:
+    Pool(size_t n) : capacity_(n) {
+        pool_mem_ = new char[sizeof(Block) * n];
+        free_head_ = (Block*)pool_mem_;
+        Block* cur = free_head_;
+        for (size_t i = 0; i < n - 1; i++) {
+            cur->next = (Block*)(pool_mem_ + sizeof(Block) * (i + 1));
+            cur = cur->next;
+        }
+        cur->next = nullptr;
+    }
+    
+    T* allocate() {
+        if (!free_head_) return nullptr;   // 池空
+        used_++;
+        Block* b = free_head_;
+        free_head_ = free_head_->next;
+        return &b->data;
+    }
+    
+    void deallocate(T* p) {
+        // 检查 p 是否属于这个池（地址在 pool_mem_ ~ pool_mem_ + 容量之间）
+        if ((char*)p < pool_mem_ || (char*)p >= pool_mem_ + capacity_ * sizeof(Block))
+            return;  // 不是本池的内存，不做处理
+        used_--;
+        Block* b = (Block*)p;
+        b->next = free_head_;
+        free_head_ = b;
+    }
+    
+    ~Pool() {
+        // 如果 used_ > 0，说明还有对象在使用池内存
+        // 正常情况下应由调用者保证所有对象已归还
+        delete[] pool_mem_;
+    }
+};
+```
+
+### 内存池 vs ptmalloc 对比
+
+| 特性 | ptmalloc（通用分配器） | 内存池 |
+|------|---------------------|--------|
+| 分配速度 | O(log n) ~ O(n) 查链表 | **O(1)** 直接取 |
+| 释放速度 | 可能合并、可能缩堆 | **O(1)** 直接归还 |
+| 外部碎片 | 容易产生 | 零碎片（固定大小） |
+| 元数据开销 | 每块约 16 字节头部 | **几乎为 0**（空闲时用嵌入指针） |
+| 适用场景 | 任意大小、任意模式 | **固定大小、频繁分配释放** |
+| 灵活性 | 高 | 低（只适合特定大小） |
+| 线程安全 | 内置支持 | 需自己加锁 |
+| 池满处理 | 自动向内核扩展 | 需手动处理或回退 |
+
+### 实际中的内存池
+
+- **C++ std::allocator**：很多 STL 实现的默认分配器内部对固定大小（如 list 节点）做了池化
+- **游戏引擎**：每帧大量创建/销毁的对象（粒子、子弹）几乎必用内存池
+- **网络库**：连接对象、缓冲区用内存池管理
+- **Linux 内核 Slab 分配器**：本质就是个内存池——为每种内核对象（inode、dentry）维护专用缓存
+
+> **一句话总结**：内存池就是提前借一笔钱放兜里，每次花的时候直接从兜里掏，不用每次都去银行（内核）取。
+
+---
 
 # C风格内存管理
 
@@ -620,20 +903,106 @@ int *arr = new int[10];     // 分配 10 个 int
 delete[] arr;               // ❗ 必须用 delete[]，不是 delete
 ```
 
-> ⚠️ **重要**：`new[]` 必须配 `delete[]`，`new` 配 `delete`。混用会导致未定义行为（可能崩溃或内存泄漏）。因为 `new[]` 会在内存头部记录数组长度，`delete[]` 需要读取这个长度来逐个析构。
+> ⚠️ **重要**：`new[]` 必须配 `delete[]`，`new` 配 `delete`。混用是未定义行为。
+
+#### 是否需要记录数组长度？—— 看类型
+
+`new[]` 是否在内存头部存数组长度，取决于元素类型**有没有非平凡析构函数**：
 
 ```bash
-new int[3] 的内存布局:
-┌─────────┬─────────┬─────────┬─────────┐
-│ [计数n] │ arr[0]  │ arr[1]  │ arr[2]  │
-│ 4或8B   │         │         │         │
-└─────────┴─────────┴─────────┴─────────┘
-▲         ▲
-│         └── new 返回的地址（程序员看到的）
-└──────────── 隐藏的数组长度（delete[] 需要用到）
+new[3] 的两种行为:
+
+情况 A: 元素是 int / double / POD结构体（纯旧式数据完全和C的结构体等价），没有析构函数
+  ┌──────────┬──────────┬──────────┐
+  │ arr[0]   │ arr[1]   │ arr[2]   │
+  └──────────┴──────────┴──────────┘
+  ▲
+  └── new 返回的地址
+  delete[] 只需释放整块内存，不需要调用任何析构，所以不需要存长度 ✅
+
+情况 B: 元素是 std::string / 有析构函数的类
+  ┌──────┬──────────┬──────────┬──────────┐
+  │ [3]  │ arr[0]   │ arr[1]   │ arr[2]   │  ← 需要逐个调用析构
+  └──────┴──────────┴──────────┴──────────┘
+  ▲      ▲
+  │      └── new 返回的地址（程序员看到的）
+  └── 隐藏的数组长度（delete[] 用来确定析构次数）
 ```
 
-### 1.4 `new` 失败怎么办？
+这就是为什么：
+
+```cpp
+// 对 int 数组，delete 和 delete[] 可能"碰巧都能运行"
+// ——但 delete 依然是未定义行为，不要这样写！
+int *a = new int[10];
+delete a;      // ❌ 未定义行为（虽然可能不崩，因为不需要析构）
+delete[] a;    // ✅ 正确
+
+// 对有析构函数的类型，delete 没加 [] 一定出问题
+std::string *b = new std::string[10];
+delete b;      // ❌ 只析构了 b[0]，剩下 9 个泄漏
+delete[] b;    // ✅ 正确
+```
+
+> **规则**：`new[]` 永远配 `delete[]`，不管什么类型。编译器会根据类型自动选择要不要存长度。
+
+### 1.4 Placement New —— 在已存在的内存上构造对象
+
+`new` 通常做两件事：① 分配内存 ② 调用构造函数。但有时候你已经有了一块内存（比如从内存池拿的、从共享内存获得的），只想**在这块现成的内存上调用构造函数**——这就是 placement new。
+
+```cpp
+#include <new>    // placement new 需要这个头文件
+
+void* mem = malloc(sizeof(Stu));      // 只分配内存，不构造
+Stu* p   = new(mem) Stu("Jason", 23); // ✅ 在 mem 这块内存上构造 Stu
+// 此时 p == mem，p->name_ = "Jason", p->age_ = 23
+
+// 用完：手动调用析构，用 free 释放内存
+p->~Stu();                            // ✅ 析构对象
+free(mem);                            // 释放内存
+// ⚠️ 不能 delete p！delete 会尝试释放 p 指向的内存，
+//    但内存不是你用 new 分配的，释放行为未定义
+```
+
+#### 用在模拟内存池中
+
+```cpp
+// 从内存池拿一块裸内存
+void* mem = pool.allocate();
+
+// 在这块内存上构造对象（placement new）
+auto obj = new(mem) Stu("Jason", 23);
+
+// 使用 obj ...
+obj->print();
+
+// 手动析构（内存池不负责析构）
+obj->~Stu();
+
+// 归还裸内存给池
+pool.deallocate(mem);
+```
+
+#### 和普通 `new` 对比
+
+```bash
+普通 new:               Stu* p = new Stu("Jason", 23);
+                        ① malloc(sizeof(Stu))  ← 分配内存
+                        ② Stu::Stu("Jason",23) ← 构造对象
+
+Placement new:          void* mem = malloc(sizeof(Stu));
+                        Stu* p = new(mem) Stu("Jason", 23);
+                        ① 跳过分配，直接用 mem 这块地址
+                        ② Stu::Stu("Jason",23) ← 只构造，不分配
+
+释放对比:
+普通 new →  delete p;       // ① 析构 ② free
+Placement new → p->~Stu();   // ① 只析构（内存谁分配谁释放）
+```
+
+> **本质**：placement new 不是"分配内存"，它只是一个**语法糖**，让你在指定地址上调用构造函数。对应的"释放"也不是 `delete`，而是手动调用析构函数，然后由分配内存的那一方去释放。
+
+### 1.5 `new` 失败怎么办？⭐
 
 ```c
 // C 风格：malloc 返回 NULL → 检查
@@ -648,7 +1017,7 @@ try {
 }
 
 // 如果非要 C 风格的 NULL 返回，用 nothrow
-int *p = new (std::nothrow) int[100];
+int *p = new (std::nothrow) int[100]; // 表明构造int[100]时，如果有异常不报错 p = nullptr返回空指针
 if (!p) { /* 处理 */ }
 ```
 
