@@ -1,15 +1,14 @@
-# 编译产物
-*.o
+# Compiled binaries
+*.exe
 *.out
-build/
-bin/
 
-# 编辑器配置
+# Temp files
+*.o
+*.obj
+
+# GDB history
+.gdb_history
+
+# IDE
 .vscode/
 .idea/
-
-# 系统临时文件
-.DS_Store
-
-#其他文件
-operation_git.md
