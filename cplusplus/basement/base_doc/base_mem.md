@@ -1465,6 +1465,8 @@ std::unique_ptr<Foo> createFoo() {
 
 #### 自定义删除器
 
+有时，默认的 delete 操作不适用于所有资源管理场景。此时，可以使用自定义删除器来指定资源释放的方式。例如，管理文件句柄、网络资源或自定义清理逻辑。
+
 ```cpp
 // 默认 delete，但可以改成其他释放方式
 auto fileDeleter = [](FILE *f) { fclose(f); };
@@ -1525,6 +1527,88 @@ auto p1 = std::make_shared<int>(42);  // 引用计数 = 1
 // p1 出作用域析构，引用计数 = 0 → 释放 int
 ```
 
+#### `make_shared` 用法
+
+`make_shared` 是创建 `shared_ptr` 的首选方式（C++11 引入），它在一次堆分配中同时创建对象和控制块。
+
+##### 基本语法
+
+```cpp
+#include <memory>
+
+// 创建基本类型
+auto p1 = std::make_shared<int>(42);
+// 类型: shared_ptr<int>，值为 42
+
+// 创建对象（完美转发参数）
+auto p2 = std::make_shared<Foo>(arg1, arg2);
+// 等价于 shared_ptr<Foo>(new Foo(arg1, arg2))，但更高效
+
+// 创建数组 (C++20)
+auto p3 = std::make_shared<int[]>(10);  // 10 个 int，值默认初始化
+// C++17 及以前推荐用 vector 代替
+```
+
+##### 常用场景
+
+```cpp
+// ① 简单创建
+auto sp = std::make_shared<std::string>("hello");
+std::cout << *sp << '\n';          // 解引用
+std::cout << sp->size() << '\n';   // 调成员函数
+
+// ② 配合容器
+std::vector<std::shared_ptr<Foo>> vec;
+vec.push_back(std::make_shared<Foo>(1, 2));  // ✅ 可以直接 push
+// 不需要 move，shared_ptr 可以拷贝
+
+// ③ 作为函数返回值
+std::shared_ptr<Foo> create() {
+    return std::make_shared<Foo>(10, 20);  // 自动移动或拷贝
+}
+
+// ④ 配合 weak_ptr 观察
+std::weak_ptr<Foo> w = std::make_shared<Foo>();
+if (auto sp = w.lock()) {
+    sp->method();  // 对象还在
+}
+```
+
+##### 什么时候不能用 `make_shared`？
+
+```cpp
+// ① 需要自定义删除器时，只能用 shared_ptr 构造函数
+std::shared_ptr<FILE> p(fopen("a.txt", "r"), fclose);
+// make_shared 不支持自定义删除器
+
+// ② 需要控制对象和控制块的生命周期分离时（见下方原理）
+// 这时用 shared_ptr(new T())，但需要承担两次分配的开销
+```
+
+##### 和 `shared_ptr<T>(new T())` 对比
+
+| 对比项 | `make_shared` | `shared_ptr<T>(new T())` |
+|-------|--------------|------------------------|
+| 分配次数 | **1 次**（对象+控制块一起） | 2 次（对象和控制块分开） |
+| 内存碎片 | 更少 | 可能更多 |
+| 缓存局部性 | 更好（紧挨着） | 较差 |
+| 异常安全 | ✅ 安全 | ❌ 可能泄漏（new 后构造 shared_ptr 前抛异常） |
+| 自定义删除器 | ❌ 不支持 | ✅ 支持 |
+| 对象内存释放时机 | 等 weak 也归零 | 强引用归零立即释放 |
+
+##### 选型建议
+
+```cpp
+// ✅ 默认用 make_shared（快、安全）
+auto p = std::make_shared<Foo>(args...);
+
+// ✅ 需要自定义删除器时
+std::shared_ptr<Foo> p(new Foo(args...), custom_deleter);
+
+// ✅ 需要精确控制对象内存释放时机（不让 weak 拖累对象内存）
+std::shared_ptr<Foo> p(new Foo(args...));
+```
+
 #### 原理：为什么 `shared_ptr` 比 `unique_ptr` 多占一倍内存？
 
 ##### 核心矛盾
@@ -1561,88 +1645,236 @@ auto p2 = p1;                        // p2 和 p1 指向同一个 Foo
 
 ##### 现在能说清 `shared_ptr` 为什么是 16 字节了
 
-```bash
-                 每个 shared_ptr<Foo> 对象本身
+`shared_ptr` 栈对象内部存了两个指针：
 
-┌─────────────────────┐  ┌─────────────────────┐
-│  ptr: Foo*          │  │  ctrl: ControlBlock* │
-│  指向真正的 Foo 对象  │  │  指向控制块(计数器)  │
-│  8 字节              │  │  8 字节              │
-└─────────────────────┘  └─────────────────────┘
-▲                       ▲
-│                       └── 这第二个指针是 shared_ptr 独有的
-│                           unique_ptr 没有它（因为不需要计数）
-└── 这个指针 unique_ptr 也有
+```bash
+                 每个 shared_ptr<Foo> 栈对象（16 字节）
+
+┌──────────────────────┐  ┌──────────────────────┐
+│  ptr: T*              │  │  ctrl: ControlBlock*  │
+│  指向真正的 Foo 对象    │  │  指向堆上的控制块     │
+│  （用于快速解引用）     │  │                      │
+│  8 字节               │  │  8 字节               │
+└──────────────────────┘  └──────────────────────┘
 ```
 
-##### 控制块到底多大？大约16字节
+- **`ptr`**：指向真正的对象，你调用 `sp->method()`、`*sp`、`sp.get()` 时直接读这个指针，**不需要去堆上查控制块**，所以解引用性能和裸指针一样快。
+- **`ctrl`**：指向堆上的控制块（存引用计数等信息），用于判断何时释放。
 
-控制块不是凭空想象的，它在堆上是真实存在的一块内存。用测试代码可以直接读到：
+#### 控制块里有什么？
+
+控制块是一个**多态基类**——不同的构造方式派生出不同的控制块子类，通过虚函数实现类型擦除的销毁逻辑。
+
+##### 为什么控制块需要 vtable？
+
+控制块有虚函数表（vtable），是因为 **"销毁对象"的方式对控制块来说是未知的**：
+
+| 构造方式 | 需要什么销毁操作 | 对应的控制块子类 |
+|---------|----------------|----------------|
+| `new Foo` + `shared_ptr` | `delete ptr` | `_Sp_counted_ptr<Foo>` |
+| `make_shared<Foo>()` | 析构内嵌对象 → 释放整块内存 | `_Sp_counted_ptr_inplace<Foo>` |
+| 自定义删除器 | `my_deleter(ptr)` | `_Sp_counted_deleter<Foo, Deleter>` |
+
+控制块通过虚函数 `dispose()` / `destroy()` 来执行正确的销毁逻辑。当引用计数归零时：
+
+```cpp
+// 控制块内部（伪代码）
+void release() {
+    if (--refcount == 0) {
+        dispose();      // 虚函数调用 → 不同类型的控制块执行不同的销毁
+        if (--weakcount == 0)
+            destroy();  // 虚函数调用 → 释放自身
+    }
+}
+
+// _Sp_counted_ptr 的 dispose：
+void dispose() override { delete ptr; }
+
+// _Sp_counted_ptr_inplace 的 dispose：
+void dispose() override { storage->~T(); }
+```
+
+**这就是类型擦除**：`shared_ptr<T>` 不需要知道 `T` 的具体删除方式，虚函数把这一切隐藏在了 vtable 里。
+
+##### 控制块内部结构
+
+```bash
+控制块内部结构（libstdc++ 实测）:
+
+┌────────────────────────────────────────┐
+│  控制块头部 (Control Block Header)      │
+│  ┌──────────┬──────────┬──────────────┐ │
+│  │ vtable   │ refcount │ weakcount    │ │
+│  │ (8字节)  │ (4字节)  │ (4字节)      │ │
+│  │ 指向虚表 │ 强引用计数│ 弱引用计数   │ │
+│  │          │ int      │ int          │ │
+│  └──────────┴──────────┴──────────────┘ │
+│   总大小：libstdc++ 上 16 字节            │
+│   （不同标准库实现可能不同）               │
+├────────────────────────────────────────┤
+│  对象存储区域                            │
+│  ┌────────────────────────────────────┐ │
+│  │ 取决于构造方式:                      │ │
+│  │ • make_shared → Foo 对象内嵌在此    │ │
+│  │ • new方式     → 指向 Foo 的指针    │ │
+│  └────────────────────────────────────┘ │
+└────────────────────────────────────────┘
+```
+
+> 引用计数的大小：**libstdc++ 上 `_Atomic_word` 是 `int`（4 字节）**，GDB 实测 `_M_use_count` 和 `_M_weak_count` 各 4 字节。不同标准库（MSVC STL 等）可能使用 8 字节的原子类型，控制块总大小会有所不同。
+> refcount是表示多少个shared_ptr指向对象，weakcount表示有多少个weak_ptr指向对象（不增加强引用计数）
+
+##### 控制块自己存一份指针
+
+关键：**控制块里也存了指向对象的指针（或者对象本身）**。
+
+为什么？因为引用计数归零时，**删除操作是在控制块的析构逻辑中触发的**，而不是由栈上的 `shared_ptr` 触发的：
+
+```cpp
+// 伪代码：当 refcount 从 1 → 0 时，控制块内部做：
+this->ptr_to_object->~T();   // 析构对象
+operator delete(this->ptr_to_object);  // 释放内存
+```
+
+如果控制块不保存指向对象的指针，它就没法知道该 delete 谁。
+
+#### 两种构造方式，两种布局
+
+##### 方式 A：`make_shared` —— 一次分配，对象内嵌
+
+```cpp
+auto p = std::make_shared<Foo>();
+```
+
+```bash
+堆上一次性 malloc:
+
+┌──────────────┬──────────────────────┐
+│  控制块头部    │  Foo 对象            │
+│ (v+ref+weak) │  (内嵌存储)           │
+│   16 字节     │   sizeof(Foo)        │
+└──────────────┴──────────────────────┘
+▲               ▲
+│               └── p.ptr 指向这里
+└── p.ctrl 指向这里
+```
+
+优点：**一次分配**，对象和控制块在一起，缓存友好。
+缺点：当所有 `shared_ptr` 销毁后，**对象的析构函数会执行**，但**对象占用的内存不会归还给系统**。这块内存要等到 `weak_ptr` 也全部销毁、控制块自身释放时才一并回收。如果对象持有大块内存（如 `vector<char>(100MB)`），即使所有 `shared_ptr` 都不用了，只要还有一个 `weak_ptr` 存在，这 100MB 就无法被复用，可能造成内存峰值。
+
+##### 方式 B：`new` + `shared_ptr` —— 两次分配，控制块存指针
+
+```cpp
+std::shared_ptr<Foo> p(new Foo());
+```
+
+```bash
+第一次分配 (new Foo):
+┌──────────────────────┐
+│   Foo 对象            │  ← 独立分配
+└──────────────────────┘
+
+第二次分配 (shared_ptr 构造):
+┌──────────────┬──────────────────────┐
+│  控制块头部    │  ptr: 指向 Foo 的指针│  ← 控制块自己存一份指针
+│ (v+ref+weak) │  (8 字节)            │
+│   16 字节     │                      │
+└──────────────┴──────────────────────┘
+```
+
+```cpp
+// 控制块内部的伪代码
+template<typename T>
+struct Sp_counted_ptr {
+    long refcount;   // 引用计数
+    long weakcount;  // 弱计数
+    T* ptr;          // ⭐ 控制块自己存一份指针！
+    
+    void dispose() {
+        delete ptr;  // 引用计数归零时，控制块通过自己的 ptr 删除对象
+    }
+};
+```
+
+优点：对象和控制块解耦，`weak_ptr` 不影响对象内存释放。
+缺点：**两次分配**，地址不一定连续，缓存局部性差。
+
+#### 为什么控制块要自己存指针，不能直接用栈上 `shared_ptr` 的 `ptr`？
+
+因为当最后一个 `shared_ptr` 销毁时：
+
+```cpp
+auto p1 = std::make_shared<Foo>();
+auto p2 = p1;
+
+// p1 先析构：
+//   p1 的析构函数调用 ctrl->release()
+//   控制块计数从 2 → 1，不释放
+
+// p2 析构：
+//   p2 的析构函数调用 ctrl->release()
+//   控制块计数从 1 → 0
+//   控制块内部调用 delete(自己存的指针)  ← 此时 p2 已经销毁了！
+```
+
+当"删除对象"这个动作执行时，所有的 `shared_ptr` 栈对象都已经销毁了。只有控制块还在堆上活着，所以**只能由控制块来执行删除**，控制块必须自己存着指向对象的指针。
+
+#### 实测：验证两种布局
+
+```cpp
+// test: make_shared
+auto p1 = std::make_shared<Foo>();
+cout << "p1.ptr  = " << p1.get() << endl;   // 0x...
+// 控制块在 p1.ptr 前面，紧挨着
+
+// test: new + shared_ptr
+auto p2 = std::shared_ptr<Foo>(new Foo());
+cout << "p2.ptr  = " << p2.get() << endl;   // 0x...
+// 控制块在另一个地址，和 p2.ptr 地址无固定关系
+// 因为控制块里的 ptr 和 p2 的 ptr 是同一个地址的两次拷贝
+```
+
+#### 控制块大小实测
 
 ```cpp
 auto p = std::make_shared<Foo>();
 auto raw = (char*)p.get();
 
-// 读 Foo 对象前面的内存，判断控制块从哪里开始
 void* vtable = nullptr;
-memcpy(&vtable, raw - 16, 8);    // Foo 前 16 字节处 → vtable 指针
-// 输出: vtable = 0x6179f82cbc80  ← 指向代码段的有效地址
+memcpy(&vtable, raw - 16, 8);    // Foo 前 16 字节处 → vtable 指针 ✅
+// vtable = 0x6179f82cbc80  ← 指向代码段的有效地址
 
 void* not_vtable = nullptr;
-memcpy(&not_vtable, raw - 24, 8); // Foo 前 24 字节处 → 0x61（不是指针）
-memcpy(&not_vtable, raw - 32, 8); // Foo 前 32 字节处 → 0（不是指针）
+memcpy(&not_vtable, raw - 24, 8); // Foo 前 24 字节处 → 0x61 ❌ 不是指针
+memcpy(&not_vtable, raw - 32, 8); // Foo 前 32 字节处 → 0    ❌
 ```
 
-可以看出控制块**在 Foo 对象前面**（而非后面），大小 16 字节：
-
-```bash
-堆上的完整布局（make_shared 一次 malloc）:
-
-低地址                               高地址
-◄──────────────────────────────────────────────────────►
-
-┌────────────────────────────┬──────────────────────┐
-│        控制块 (16 字节)      │    Foo 对象           │
-│  ┌───────┬───────┬────────┐ │   (真正的数据)        │
-│  │ vtable│refcount│weakcnt│ │                       │
-│  │ (8字节)│ (4字节)│ (4字节)│ │                       │
-│  └───────┴───────┴────────┘ │                       │
-└────────────────────────────┴──────────────────────┘
-▲                            ▲
-│                            │
-└── p.ctrl 指向这里           └── p.ptr 指向这里
-```
-
-所以 `make_shared<Foo>(args)` 每分配一个对象，额外开销就是 **16 字节**（控制块）。
-
-> 完整的实际内存布局见上方的"控制块 + Foo 对象"图（控制块在 Foo 前面）。
-
-##### 完整生命周期
+控制块头部（vtable + refcount + weakcount）在 **libstdc++ 上实测 16 字节**。不同标准库实现可能不同（如 MSVC STL 的引用计数可能使用 8 字节原子类型）。对于 `make_shared`，对象紧跟在控制块后面；对于 `new` 方式，控制块后面跟的是一个 8 字节指针，指向独立分配的对象。
 
 ##### 完整生命周期
 
 ```cpp
 auto p1 = std::make_shared<Foo>();
 // make_shared 内部:
-//   ① malloc 一块内存: |-- 控制块{计数=1} --|--- Foo ---|
+//   ① malloc 一块内存: |-- 控制块{vptr+ref+weak} --|--- Foo ---|
 //   ② 在 Foo 位置上调用 Foo() 构造函数
-// p1.ptr  → Foo 位置
-// p1.ctrl → 控制块位置
+// p1.ptr  → Foo 位置   (用于快速解引用)
+// p1.ctrl → 控制块位置 (用于计数)
 
 {
     auto p2 = p1;
     // p2.ptr  = p1.ptr  (指向同一个 Foo)
     // p2.ctrl = p1.ctrl (指向同一个控制块)
-    // 控制块.计数 = 2   (拷贝构造时 +1)
+    // 控制块.refcount = 2   (拷贝构造时 +1)
     // ... 用 Foo ...
 }
 // p2 析构:
-//   控制块.计数 = 1   (析构时 -1)
+//   控制块.refcount = 1   (析构时 -1)
 //   计数 > 0 → 不释放
 
 // p1 析构:
-//   控制块.计数 = 0   (析构时 -1)
-//   计数 == 0 → 释放整块内存：Foo 和控制块一起释放
+//   控制块.refcount = 0   (析构时 -1)
+//   计数 == 0 → 控制块调用 delete/析构，释放整块内存
 ```
 
 ##### 如果不用 `make_shared`，用 `new` + `shared_ptr` 呢？
@@ -1681,18 +1913,100 @@ auto p = std::shared_ptr<FILE>(fopen("a.txt", "r"), fclose);
 // 类型还是 shared_ptr<FILE>，删除器信息存在控制块里
 ```
 
-#### 注意循环引用
+#### 循环引用问题
+
+当两个对象用 `shared_ptr` 互相指向对方时，引用计数永远降不到 0，导致内存泄漏。
+
+先理清例子中的变量：
 
 ```cpp
 struct Node {
-    std::shared_ptr<Node> next;  // ❌ 循环引用泄漏
+    std::shared_ptr<Node> next;  // Node 内部有个 shared_ptr 成员
+};
+
+auto a = std::make_shared<Node>();  // a 是 shared_ptr<Node>（栈上）
+auto b = std::make_shared<Node>();  // b 是 shared_ptr<Node>（栈上）
+
+// a->next 等价于 (*a).next，访问 Node 对象的 next 成员
+// a->next = b  意思是：让 a 内部的 shared_ptr 指向 b 所指向的 Node 对象
+// 结果：a 和 b 两个 Node 对象的 next 成员互相指向对方
+a->next = b;  // a 的 next 指向 b 管理的 Node
+b->next = a;  // b 的 next 指向 a 管理的 Node
+```
+
+##### 为什么计数不会归零？
+
+```bash
+① a = make_shared<Node>()    →  a 的控制块 { refcount = 1 }
+② b = make_shared<Node>()    →  b 的控制块 { refcount = 1 }
+
+③ a->next = b  →  b 内部又多了一个 shared_ptr 指向它
+                    b 的控制块 { refcount = 2 }   ← a.next 也持有 b
+
+④ b->next = a  →  a 内部也多了一个 shared_ptr 指向它
+                    a 的控制块 { refcount = 2 }   ← b.next 也持有 a
+
+⑤ a 析构       →  a 的控制块 { refcount = 1 }   ← 还有 b.next 指着 a
+⑥ b 析构       →  b 的控制块 { refcount = 1 }   ← 还有 a.next 指着 b
+
+⑦ 没人了！两个控制块的计数都卡在 1，谁都没法释放谁
+```
+
+```bash
+循环引用图解:
+
+     a (栈上) ──────────→  a 控制块{ref=1}
+        │
+        │                    ▲
+        └── a.next ──→  b ──┘
+                        │
+                        └── b.next ──→  a ──→  a 控制块{ref=1}
+                                            ▲
+     b (栈上) ──────────→  b 控制块{ref=1} ──┘
+
+
+→ 出作用域时，a 和 b 栈对象析构，分别 -1
+→ a 控制块: ref=1（被 b.next 指着）→ 泄漏
+→ b 控制块: ref=1（被 a.next 指着）→ 泄漏
+```
+
+##### 典型的循环引用场景
+
+```cpp
+// 场景 1：双向链表 / 二叉树（父子相互指向）
+struct TreeNode {
+    std::shared_ptr<TreeNode> left;
+    std::shared_ptr<TreeNode> right;
+    std::shared_ptr<TreeNode> parent;  // ❌ 父指向子，子指向父 → 循环
+};
+
+// 场景 2：观察者模式（subject 和 observer 互相持有）
+struct Observer;
+struct Subject {
+    std::vector<std::shared_ptr<Observer>> observers;  // ❌
+};
+struct Observer {
+    std::shared_ptr<Subject> subject;  // ❌
+};
+```
+
+##### 解决办法：用 `weak_ptr` 打破其中一个方向
+
+```cpp
+struct Node {
+    std::weak_ptr<Node> next;  // ✅ 不增加引用计数
 };
 
 auto a = std::make_shared<Node>();
 auto b = std::make_shared<Node>();
 a->next = b;
-b->next = a;    // a 和 b 互相引用，引用计数永远到不了 0 → 泄漏！
+b->next = a;
+// a 控制块 refcount = 1（只有 a 自己持有）
+// b 控制块 refcount = 1（只有 b 自己持有）
+// 出作用域自动释放 ✅
 ```
+
+> **规则**：在双向引用中，把**非所有权方向**（如 parent、观察者、缓存）设为 `weak_ptr`。谁"拥有"谁，就用 `shared_ptr`；谁"观察"谁，就用 `weak_ptr`。
 
 ---
 

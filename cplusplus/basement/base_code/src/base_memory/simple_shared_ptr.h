@@ -3,18 +3,24 @@
 
 #include <iostream>
 #include <string>
+#include <atomic>
 
 class Stu
 {
     public:
+        Stu() {}
         Stu(const std::string name, int age): name_(name), age_(age){}
+        ~Stu()
+        {
+            std::cout << "Stu " << name_ << "~" << std::endl;
+        }
         std::string name_;
         int age_;
 };
 
 struct ControlBlock
 {
-    int _ref_cnt;
+    std::atomic<int> _ref_cnt;
     ControlBlock() : _ref_cnt(1) {}
 };
 
@@ -152,7 +158,7 @@ T* SimpleSharedPtr<T>::get() const
 template <typename T>
 int SimpleSharedPtr<T>::use_cnt() const
 {
-    return (_control) ? _control->_ref_cnt : 0;
+    return (_control) ? _control->_ref_cnt.load() : 0;
 }
 
 template <typename T>
