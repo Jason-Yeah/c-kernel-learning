@@ -388,6 +388,7 @@ struct Gt20 {
 │  • 函数指针不带状态，也无法携带状态                              │
 │  • 调用时必须通过地址间接跳转 (call [rax])                       │
 └────────────────────────────────────────────────────────────────┘
+```
 
 总结差异：
 
@@ -400,6 +401,7 @@ struct Gt20 {
 | 代码在 | 代码段，所有实例共用 | 代码段，函数指针指向它 |
 | 识别哪个实例 | 靠 this 指针（rdi） | 无此概念 |
 
+
 ---
 
 ## 3. Lambda 表达式
@@ -408,7 +410,15 @@ struct Gt20 {
 
 Lambda 表达式是 C++11 引入的**匿名仿函数**的语法糖。编译器会将每个 lambda 表达式展开为一个**匿名的仿函数类**（closure type），并生成该类的实例（closure object）。
 
+基本用法：
+
+```cpp
+[captures](parameters) -> return_type {
+    // the body of function
+}
 ```
+
+```cpp
 编译器视角：你的 Lambda
     [capture](params) -> ret { body }
                 ↓
@@ -528,7 +538,23 @@ int main() {
 
 ### 3.5 `mutable` lambda
 
-默认 lambda 的 `operator()` 是 `const` 的——不能修改按值捕获的变量。加 `mutable` 可解除限制：
+`mutable` 是 C++ 中用来**在 const 语境下解除特定成员修改限制**的关键字，有两种用法：
+
+**① `mutable` 成员变量**（C++98）：标记成员变量即使在 `const` 成员函数中也能被修改。
+
+```cpp
+class Cache {
+    mutable int hit_count_ = 0;  // 即使 const 方法也能修改
+    std::string compute(int key) const {
+        ++hit_count_;            // ✅ 可以，因为 mutable
+        return /* 耗时计算结果 */;
+    }
+};
+```
+
+常见用途：mutex（`mutable std::mutex m_;` const 函数中也要能加锁）、引用计数、缓存、调试计数器。
+
+**② `mutable` lambda**（C++11）：默认 lambda 的 `operator()` 是 `const` 的——不能修改按值捕获的变量。加 `mutable` 可解除限制：
 
 ```cpp
 void demo_mutable_lambda() {
@@ -582,13 +608,122 @@ void demo_lambda_to_fptr() {
 
 有捕获的 lambda **不能**转为函数指针，因为它的调用需要访问存储在对象中的捕获变量。
 
+### 3.8 Lambda + `shared_ptr`：跨线程生命周期安全
+
+这是 C++ 并发编程中的一个经典模式——用 **lambda 按值捕获 `shared_ptr`** 来保证对象在另一个线程中执行时不会被销毁。
+
+#### 问题场景
+
+```cpp
+// ❌ 危险：原始指针/引用捕获
+struct Task {
+    void run() { /* ... */ }
+};
+
+std::thread bad_example() {
+    Task t;
+    // lambda 捕获了 t 的地址，但函数返回后 t 就销毁了
+    return std::thread([&]() {   // [&] 捕获了局部变量的引用！
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        t.run();  // ❌ t 已销毁 → 野指针 → 未定义行为
+    });
+}  // t 在这里析构，而线程还在睡梦中...
+```
+
+#### 解决方案：`shared_ptr` 按值捕获
+
+```cpp
+#include <iostream>
+#include <memory>
+#include <thread>
+#include <chrono>
+
+struct _adder {
+    int __to_add;
+    _adder(int val) : __to_add(val) {}
+    void add(int x) { std::cout << x + __to_add << '\n'; }
+};
+
+void demo_lambda_thread_safety() {
+    std::thread t;
+    {
+        auto add_p = std::make_shared<_adder>(10);
+
+        // 按值捕获 shared_ptr → 引用计数 +1
+        auto lambda2 = [add_p](int x) {
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            add_p->add(x);
+            std::cout << "use_count: " << add_p.use_count() << '\n';
+        };
+
+        // 启动线程，lambda（含 shared_ptr 副本）被移到线程中
+        t = std::thread(lambda2, 5);
+
+        // 离开作用域，原始 add_p 析构
+        // 但 _adder 对象不会销毁 → 线程里的 add_p 副本还在持有一份引用
+    }  // 引用计数从 2 → 1（线程中的副本仍在）
+
+    t.join();  // join 后线程结束，lambda 析构，引用计数归零，_adder 自动销毁
+}
+```
+
+#### 原理
+
+```
+线程创建时：
+                                引用计数 = 2
+add_p (栈上, 即将消亡) ──────┐
+                             ├──→  _adder 对象 (堆上)
+lambda 内的 add_p 副本 ─────┘       地址: 0x5566...
+(在线程的 lambda 对象里)
+
+作用域结束时：
+add_p 析构 → 引用计数 = 1    ──→  _adder 对象 仍然存活！
+                                       ↑
+线程内的 lambda 副本继续持有 add_p
+
+t.join() 后：
+线程结束 → lambda 析构 → 引用计数 = 0 → _adder 自动 delete
+```
+
+#### 关键要点
+
+| 要点 | 说明 |
+|------|------|
+| **核心思想** | 不是用互斥锁保护临界区，而是用 `shared_ptr` 的引用计数保证**对象寿命足够长** |
+| **为什么安全** | `shared_ptr` 按值捕获时，lambda 持有自己的副本（引用计数 +1），原作用域销毁不影响堆上对象 |
+| **对比裸指针** | `[&obj]` 或 `[p]`（原始指针）：作用域结束对象销毁，线程拿到悬空指针 → 未定义行为 |
+| **对比 `std::ref`** | `[&obj]` 捕获引用：同样有悬挂风险，除非你能保证线程在对象销毁前 join |
+| **适用场景** | 线程池任务提交、异步回调、定时器任务——任何**调用者不等结果**的场景 |
+| **注意** | 这只解决生命周期安全，不解决数据竞争（多个线程同时读写仍需互斥锁或原子操作） |
+
+```cpp
+// ─── 更通用的模式：类成员函数抛到线程 ───
+class Worker {
+public:
+    void doWork() { /* 耗时操作 */ }
+};
+
+void safe_thread_launch() {
+    auto worker = std::make_shared<Worker>();
+
+    // 捕获 shared_ptr，线程安全地调用成员函数
+    std::thread t([worker]() {
+        worker->doWork();
+    });
+
+    t.detach();  // 放心 detach，worker 在线程结束前绝不会销毁
+    // worker 出了作用域也没关系——线程还在持有它
+}
+```
+
 ---
 
 ## 4. `std::function`
 
 ### 4.1 概念
 
-`std::function` 是 C++11 引入的**多态函数包装器**，可以存储、复制和调用任何可调用对象——函数指针、仿函数、lambda、`std::bind` 表达式等，只要它们的签名兼容。
+`std::function` 是 C++11 引入的**多态函数包装器**，可以存储、复制和调用任何可调用对象——函数指针、仿函数、lambda、`std::bind` 表达式等，只要它们的签名兼容。并且实现了类型擦除，使得不同类型的可调用对象可通过统一的接口进行操作。
 
 ```
 std::function<void(int)> 的内存布局（典型实现）：
