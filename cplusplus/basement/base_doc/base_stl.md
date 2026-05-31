@@ -144,7 +144,7 @@ v.shrink_to_fit();           // 请求收缩容量到等于 size
 
 ### 底层实现——连续内存的三指针
 
-```
+```cpp
 /* 源码：libstdc++ bits/stl_vector.h */
 
 template<typename _Tp, typename _Alloc>
@@ -224,6 +224,8 @@ _GLIBCXX_MOVE_IF_NOEXCEPT_SPEC
 
 ## 2. list —— 双向链表
 
+list是一个实现了双向链表的数据结构，适合在容器中间频繁**插入和删除元素**。与vector不同，list不支持随机访问，但在任何位置的插入和删除操作都是常数时间
+
 ### 基本用法
 
 ```cpp
@@ -246,7 +248,7 @@ lst.splice(lst.end(), another_lst); // 将另一个 list 拼接到尾部 O(1)
 
 ### 底层实现——带头双向循环链表
 
-```
+```cpp
 /* 源码：libstdc++ bits/stl_list.h */
 
 struct _List_node_base {

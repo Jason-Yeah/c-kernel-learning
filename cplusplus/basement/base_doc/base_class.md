@@ -183,6 +183,146 @@ private:
 - 友元函数：单个函数可以被声明为友元。
 - 友元类：整个类可以被声明为友元。
 
+友元函数是一个非成员函数，但可以访问类的私有和保护成员。
+
+```cpp
+#include <iostream>
+
+class Point {
+private:
+    int x, y;
+
+public:
+    Point(int a, int b) : x(a), y(b) {}
+
+    // 声明友元函数（只是声明，不是定义）
+    friend Point add(const Point& a, const Point& b);
+};
+
+// 友元函数的定义（不在类内部，没有 Point:: 前缀）
+Point add(const Point& a, const Point& b) {
+    // 可以访问 Point 的 private 成员 x, y
+    return Point(a.x + b.x, a.y + b.y);
+}
+
+int main() {
+    Point p1(3, 4), p2(1, 2);
+    Point p3 = add(p1, p2);  // 像普通函数一样调用
+    // p3.x = 10;  // ❌ 类外还是不能访问 private 成员
+    return 0;
+}
+```
+
+跨类友元函数
+
+一个函数可以是多个类的友元：
+
+```cpp
+#include <iostream>
+
+class B;  // 前置声明
+
+class A {
+private:
+    int secretA = 100;
+public:
+    friend void showSecrets(const A& a, const B& b);
+};
+
+class B {
+private:
+    int secretB = 200;
+public:
+    friend void showSecrets(const A& a, const B& b);
+};
+
+void showSecrets(const A& a, const B& b) {
+    std::cout << "A的秘密: " << a.secretA << std::endl;  // ✅
+    std::cout << "B的秘密: " << b.secretB << std::endl;  // ✅
+}
+```
+
+友元类（friend class）
+
+整个类成为另一个类的友元——B 的所有成员函数都可以访问 A 的私有成员。
+
+```cpp
+#include <iostream>
+
+class Engine {
+private:
+    int horsepower = 300;
+    int rpm = 0;
+
+    void ignite() {
+        rpm = 800;
+        std::cout << "Engine ignited, RPM = " << rpm << std::endl;
+    }
+
+    // 声明 Car 为友元类
+    friend class Car;
+};
+
+class Car {
+private:
+    Engine engine;
+
+public:
+    void start() {
+        // ✅ Car 的成员函数可以访问 Engine 的私有成员
+        engine.ignite();                     // 私有方法
+        std::cout << "Horsepower: "
+                << engine.horsepower       // 私有成员变量
+                << std::endl;
+        engine.rpm = 2000;                    // 甚至可以修改
+    }
+};
+
+int main() {
+    Car myCar;
+    myCar.start();
+    // myCar.engine.ignite();  // ❌ Car 的外部也不行，因为是 Car 的私有成员
+    return 0;
+}
+```
+
+友元成员函数
+
+只让另一个类的某个特定成员函数成为友元，而不是整个类：
+
+```cpp
+#include <iostream>
+
+class Matrix;  // 前置声明
+
+class Vector {
+private:
+    double data[3] = {1.0, 2.0, 3.0};
+
+public:
+    // 只声明 Matrix::multiply 为友元，而不是整个 Matrix
+    friend Vector Matrix::multiply(const Vector& v) const;
+};
+
+class Matrix {
+private:
+    double m[3][3] = {{1,0,0},{0,1,0},{0,0,1}};
+
+public:
+    Vector multiply(const Vector& v) const {
+        Vector result;
+        for (int i = 0; i < 3; i++) {
+            result.data[i] = 0;  // ✅ 可以访问 Vector 的私有 data
+            for (int j = 0; j < 3; j++)
+                result.data[i] += m[i][j] * v.data[j];  // ✅
+        }
+        return result;
+    }
+};
+```
+
+> 但是注意：友元成员函数的声明必须在目标类定义之后，因为编译器需要知道  Matrix::multiply  的签名。所以要么把  Matrix  定义在  Vector  前面（但multiply  又用了  Vector  的私有成员），要么用更复杂的分离方式。实践中友元类比友元成员函数更常见，因为声明顺序的约束更少。
+
 ## 运算符重载
 
 - 只能对已有运算符进行重载，不能创建新运算符。
