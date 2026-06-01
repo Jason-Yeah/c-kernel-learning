@@ -536,7 +536,7 @@ std::priority_queue<int, std::vector<int>, std::greater<int>> min_pq;
 
 ### 底层实现——二叉堆（vector + make_heap）
 
-```
+```cpp
 /* 源码：libstdc++ bits/stl_queue.h */
 
 template<typename _Tp, typename _Sequence = vector<_Tp>,
@@ -775,7 +775,7 @@ auto range = mm.equal_range("key");  // 返回 [begin, end) 覆盖所有 "key"
 
 ### 底层实现
 
-```
+```cpp
 /* 源码：libstdc++ bits/stl_map.h */
 
 template<typename _Key, typename _Tp, typename _Compare = less<_Key>,
@@ -1089,6 +1089,363 @@ std::copy(src.begin(), src.end(), std::back_inserter(dst));
 ```
 
 ---
+
+# 七、其他常用 STL 组件
+
+## 1. std::array —— 固定大小数组（C++11）
+
+### 基本用法
+
+```cpp
+#include <array>
+
+std::array<int, 5> arr = {1, 2, 3, 4, 5};  // 固定 5 个元素，编译期确定大小
+arr[0] = 10;                // 随机访问 O(1)
+arr.at(1) = 20;             // 带边界检查（越界抛 out_of_range）
+arr.front();                // 首元素
+arr.back();                 // 尾元素
+arr.size();                 // 始终返回 5（编译期常量）
+arr.data();                 // 返回裸指针 int*，可传给 C 接口
+
+// 遍历
+for (int x : arr) std::cout << x << " ";
+
+// 与 C 数组互操作
+void c_func(int* p, size_t len);
+c_func(arr.data(), arr.size());  // ✅ 直接传指针
+```
+
+### 底层实现
+
+```cpp
+/* 源码：libstdc++ bits/std_array.h */
+
+template<typename _Tp, std::size_t _Nm>
+struct array {
+    // 核心：就是一个裸 C 数组的封装，没有 vector 那套三指针
+    _Tp _M_elems[_Nm];  // 直接在栈上（或作为成员嵌入）
+
+    // 没有构造函数/析构函数开销（聚合初始化）
+    // 没有动态内存分配
+    // 没有 size/capacity 的区别（size == capacity 恒成立）
+};
+```
+
+```
+内存布局（栈上或作为对象成员嵌入）：
+
+    array<int, 5> arr：
+    ┌────┬────┬────┬────┬────┐
+    │ 10 │ 20 │ 30 │ 40 │ 50 │
+    └────┴────┴────┴────┴────┘
+     ↑
+     arr.data() 就是 &arr._M_elems[0]
+     
+    和 int arr[5] 的内存布局完全一样！
+```
+
+> ✅ **零开销抽象**：array 的性能和裸 C 数组完全一样，但提供了 STL 接口（迭代器、`.size()`、`at()` 等）
+> ❌ 大小必须在编译期确定，不能运行时动态改变
+> ❌ 没有 `push_back`/`insert`/`erase`
+
+### array 与 vector 对比
+
+| | array | vector |
+|---|---|---|
+| 大小 | 编译期固定 | 运行时动态 |
+| 内存位置 | 栈/嵌入对象内 | 堆 |
+| 效率 | 零开销 | 有堆分配开销 |
+| 适用场景 | 大小确定的轻量数组 | 需要动态增长的序列 |
+
+---
+
+## 2. std::forward_list —— 单向链表（C++11）
+
+### 基本用法
+
+```cpp
+#include <forward_list>
+
+std::forward_list<int> fl = {1, 2, 3, 4, 5};
+fl.push_front(0);           // 头部插入 O(1) —— 只有前插，没有 push_back！
+fl.pop_front();             // 头部删除 O(1)
+fl.insert_after(fl.before_begin(), 99);  // 在首元素之前插入
+fl.erase_after(fl.begin()); // 删除第二个元素
+
+// 没有 size() 成员！获取长度需要 std::distance(fl.begin(), fl.end()) O(n)
+// 没有 back() / push_back() / pop_back()
+```
+
+### 底层实现
+
+```cpp
+/* 源码：libstdc++ bits/forward_list.h */
+
+struct _Fwd_list_node_base {
+    _Fwd_list_node_base* _M_next;  // 只有 next，没有 prev！
+};
+
+template<typename _Tp>
+struct _Fwd_list_node : public _Fwd_list_node_base {
+    _Tp _M_storage;
+};
+
+// forward_list 只有一个指向哨兵节点的指针
+template<typename _Tp, typename _Alloc>
+class forward_list {
+    _Fwd_list_node_base _M_head;  // 哨兵节点（内嵌在对象中，不是指针）
+};
+```
+
+```
+内存结构：
+    
+    _M_head (哨兵，不存数据)
+    ┌──────┐    ┌──────┐    ┌──────┐    ┌──────┐
+    │ next─┼──→ │  10  │    │  20  │    │  30  │
+    └──────┘    ├──────┤    ├──────┤    ├──────┤
+                │ next─┼──→ │ next─┼──→ │ next─┼──→ null
+                └──────┘    └──────┘    └──────┘
+                
+before_begin() 指向哨兵
+begin() 指向第一个实际节点（10）
+end() = nullptr
+```
+
+> ✅ 比 list **省一个 prev 指针**（每个节点省 8 字节，64 位下）
+> ✅ 适合**内存极度敏感**的场景（如哈希表的桶内链）
+> ❌ 只能单向遍历，没有 `size()`（刻意设计，避免 O(1) size 带来的额外开销）
+
+---
+
+## 3. std::bitset —— 位集合
+
+### 基本用法
+
+```cpp
+#include <bitset>
+
+std::bitset<8> bs;           // 8 个二进制位，全 0
+bs.set(1);                   // 第 1 位置 1 → 00000010
+bs.set();                    // 全部置 1 → 11111111
+bs.reset(1);                 // 第 1 位置 0
+bs.flip(2);                  // 第 2 位取反
+bool b = bs.test(3);         // 测试第 3 位是否为 1（越界抛 out_of_range）
+bs[0] = 1;                   // 用 operator[] 访问（不抛异常，但越界 UB）
+
+size_t n = bs.count();       // 返回 1 的个数
+bool any = bs.any();         // 是否有任何位为 1
+bool none = bs.none();       // 是否全为 0
+bs = 0b10100101;             // C++14 可以直接赋二进制字面量
+
+// 与整数互转
+unsigned long val = bs.to_ulong();
+std::string str = bs.to_string();  // "10100101"
+
+// 位运算直接支持
+std::bitset<4> a("1010"), b("1100");
+auto c = a & b;   // 1000
+auto d = a | b;   // 1110
+auto e = a ^ b;   // 0110
+```
+
+### 底层实现
+
+```cpp
+/* 源码：libstdc++ bits/bitset.tcc */
+
+// 核心：用一个或多个 unsigned long 来存储位
+// 编译期大小，全部在栈上，无动态分配
+
+template<size_t _Nw>
+struct _Base_bitset {
+    unsigned long _M_w[_Nw];  // _Nw 在编译期计算 = (N + 63) / 64
+
+    // 比如 bitset<8> 只需要 1 个 unsigned long（64 位，只用低 8 位）
+    // bitset<128> 需要 2 个 unsigned long
+};
+```
+
+```text
+bitset<8> bs 的内存布局（64 位系统）：
+
+    unsigned long _M_w[1]：
+    ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐
+    │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │ 0 │
+    └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
+      ↑                                                           ↑
+      位 63                                                      位 0
+      
+    实际上只用了低 8 位（bitset<8>），高 56 位闲置
+
+bitset<200>：
+    unsigned long _M_w[4]：  // (200 + 63) / 64 = 4 个 unsigned long
+    ┌──────────────┐
+    │ _M_w[0]      │ ← 位 0~63
+    ├──────────────┤
+    │ _M_w[1]      │ ← 位 64~127
+    ├──────────────┤
+    │ _M_w[2]      │ ← 位 128~191
+    ├──────────────┤
+    │ _M_w[3]      │ ← 位 192~199（只用低 8 位）
+    └──────────────┘
+```
+
+### 位操作实现
+
+```cpp
+// test(pos) 的底层：
+bool test(size_t __pos) const {
+    return (_M_w[__pos / _S_word_bits] >> (__pos % _S_word_bits)) & 1UL;
+    // 1. 找到在哪个 unsigned long 中：__pos / 64
+    // 2. 找到在该 word 的哪一位：__pos % 64
+    // 3. 掩码取出该位
+}
+
+// set(pos) 的底层：
+_M_w[__pos / _S_word_bits] |= (1UL << (__pos % _S_word_bits));
+```
+
+> ✅ 比 `vector<bool>` 更高效：编译期大小、栈分配、直接位运算
+> ⚠️ `vector<bool>` 是特化，不是真正的容器（不满足容器的要求），bitset 是更好的选择
+
+---
+
+## 4. std::pair 与 std::tuple —— 对组与元组
+
+### pair（两个值）
+
+```cpp
+#include <utility>
+
+std::pair<int, std::string> p = {1, "hello"};
+p.first;   // 1
+p.second;  // "hello"
+
+// C++17 结构化绑定
+auto [id, name] = p;
+
+// 常用在 map 中（map 的 value_type 就是 pair<const Key, T>）
+std::map<int, std::string> m;
+for (const auto& [key, val] : m) { ... }
+
+// 比较：先比 first，再比 second
+std::pair<int, int> a = {1, 2}, b = {1, 3};
+if (a < b) { ... }  // first 相等(1==1)，比 second(2<3) → true
+
+// make_pair 自动推导类型
+auto p2 = std::make_pair(3.14, 42);  // pair<double, int>
+```
+
+### tuple（任意多个值，C++11）
+
+```cpp
+#include <tuple>
+
+std::tuple<int, double, std::string> t = {1, 3.14, "hello"};
+auto val = std::get<0>(t);     // 按索引取（编译期常量）
+auto val2 = std::get<double>(t); // 按类型取（C++14，类型须唯一）
+
+// C++17 结构化绑定
+auto [i, d, s] = t;
+
+// tie：解包到已有变量（C++11）
+int x; double y;
+std::tie(x, y) = std::make_tuple(10, 3.14);
+
+// make_tuple
+auto t2 = std::make_tuple(1, "hi", 3.14f);
+
+// tuple_cat 拼接
+auto t3 = std::tuple_cat(t, t2);
+```
+
+### 底层实现
+
+```cpp
+/* 源码：libstdc++ bits/stl_pair.h */
+
+template<typename _T1, typename _T2>
+struct pair {
+    _T1 first;     // 公开成员，直接访问
+    _T2 second;    // 没有封装，就是 public 数据成员
+
+    // 默认构造函数
+    pair() : first(), second() {}
+    
+    // 模板化构造函数（支持隐式类型转换）
+    template<typename _U1, typename _U2>
+    pair(_U1&& __x, _U2&& __y) 
+        : first(std::forward<_U1>(__x)), 
+          second(std::forward<_U2>(__y)) {}
+    
+    // 拷贝/移动构造...
+};
+```
+
+```text
+pair<int, double> 的内存布局：
+
+    ┌──────┬──────────┐
+    │ int  │  double  │
+    │  4B  │    8B    │
+    └──────┴──────────┘
+      ↑        ↑
+    first    second
+    
+    总计 16 字节（4 + 4 填充 + 8）
+    结构体对齐规则——double 需要 8 字节对齐！
+```
+
+```cpp
+/* 源码：libstdc++ bits/tuple.tcc */
+
+// tuple 的实现是递归继承（经典技巧）
+// 空基类优化（EBO）用于空的"元素"（如 std::allocator）
+
+template<typename... _Elements>
+class tuple : public _Tuple_impl<0, _Elements...> {};
+
+// 递归继承链：
+// tuple<int, double, string>
+//   → _Tuple_impl<0, int, double, string>
+//     → _Tuple_impl<1, double, string>
+//       → _Tuple_impl<2, string>
+//         → _Tuple_impl<3> （空基类，终止递归）
+
+// 每个 _Tuple_impl 存储一个元素（_M_head）并继承剩余元素
+// get<0>(t) 通过 this 指针偏移计算地址（编译期确定）
+```
+
+```text
+tuple<int, double, string> 的内存：
+
+    ┌──────┬──────────┬──────────────────────┐
+    │ int  │  double  │ std::string (32B)    │
+    │  4B  │    8B    │ (ptr + size + cap)   │
+    └──────┴──────────┴──────────────────────┘
+      ↑        ↑              ↑
+    get<0>   get<1>         get<2>
+    
+    由于对齐填充，实际可能比 sizeof(int)+sizeof(double)+sizeof(string) 略大
+```
+
+---
+
+## 5. 补充：std::string 与 STL 的关系
+
+`std::basic_string` 虽然不是严格意义上的"容器"，但它满足**容器的所有要求**（有迭代器、有 `begin/end`、有 `size`），可以搭配 STL 算法使用。
+
+```cpp
+std::string s = "hello";
+std::reverse(s.begin(), s.end());  // "olleh"
+std::sort(s.begin(), s.end());     // "ehllo"
+
+// string 的底层也是连续内存（类似 vector<char>）
+// 但有小字符串优化（SSO, Small String Optimization）
+```
+
+> string 的详细内容见 `base_iterator.md`。
 
 # 八、总结——各容器选择指南
 
