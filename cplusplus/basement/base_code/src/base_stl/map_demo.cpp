@@ -75,8 +75,44 @@ int main()
     */
     
     sen_std::bst_map::map<int, std::string> my_map;
+
+    my_map.insert({4, "four"});
+    my_map.insert({3, "three"});
+    my_map.erase(3);
+
+     auto node = my_map.find(3);
+     if (node)
+        std::cout << "find 3: " << node->_data.second << std::endl;
+    else
+        std::cout << "not find 3" << std::endl;
     my_map.insert({1, "one"});
-    my_map.insert(std::make_pair(2, "two"));
+    my_map.insert({2, "two"});
+    my_map.insert({5, "five"});
+    my_map.insert({6, "six"});
+
+    my_map.erase(4);
+
+    for (auto it = my_map.begin(); it != my_map.end(); ++ it)
+        std::cout << it->first << ": " << it->second << std::endl; 
+
+    std::cout << "----------------------\n";
+
+    sen_std::avl_map::map<int, std::string> avl_map;
+    avl_map.put(150, "apple");
+    avl_map.put(200, "peach");
+    avl_map.put(160, "banana");
+    avl_map.put(180, "pear");
+
+    auto res = avl_map.inorder_traversal();
+    for (auto& pair: res)
+        std::cout << pair.first << " " << pair.second << std::endl;
+
+    std::cout << avl_map.get_root()->_key << std::endl;
+    avl_map.remove(150);
+    res = avl_map.inorder_traversal();
+    for (auto& pair: res)
+        std::cout << pair.first << " " << pair.second << std::endl;
+    std::cout << avl_map.get_root()->_key << std::endl;
 
     return 0;
 }
