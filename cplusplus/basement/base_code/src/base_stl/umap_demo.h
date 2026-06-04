@@ -18,9 +18,9 @@ namespace sen_std
     template<typename K, typename V>
     struct hash_node
     {
-        std::pair<K, V> _data;
+        std::pair<const K, V> _data;
         hash_node<K, V>* _next;
-        hash_node(const K& key, const V& val): _data({key, val}), _next(nullptr) {}
+        hash_node(const K& key, const V& val): _data(key, val), _next(nullptr) {}
     };
 
     template<typename K, typename V, typename Hash = std::hash<K>>
@@ -43,6 +43,7 @@ namespace sen_std
             {
                 clear();
             }
+            
             unordered_map(const unordered_map& other) = delete;
             unordered_map& operator=(const unordered_map& other) = delete;
 
@@ -149,10 +150,10 @@ namespace sen_std
 
             iterator begin()
             {
-                for (size_type i = 0; i < _elem_count; ++ i)
+                for (size_type i = 0; i < _bucket_count; ++ i)
                     if (_buckets[i]) return iterator(this, i, _buckets[i]);
-                
-                    return end();
+
+                return end();
             }
 
             iterator end()
@@ -180,18 +181,48 @@ namespace sen_std
                     point operator->() const
                     {
                         if (_curr == nullptr) throw std::out_of_range("Iterator out of range");
+                            // return nullptr;
                         return &(_curr->_data);
                     }
-                    iterator& operator++();
-                    iterator operator++(int);
-                    bool operator==(const iterator& other) const;
-                    bool operator!=(const iterator& other) const;
+
+                    iterator& operator++()
+                    {
+                        advance();
+                        return *this;
+                    }
+                    iterator operator++(int)
+                    {
+                        iterator tmp = *this;
+                        advance();
+                        return tmp;
+                    }
+
+                    bool operator==(const iterator& other) const
+                    {
+                        return _map == other._map && _bucket_index == other._bucket_index
+                                        && _curr == other._curr;
+                    }
+                    bool operator!=(const iterator& other) const
+                    {
+                        return !(*this == other);
+                    }
 
                 private:
                     unordered_map* _map;
                     size_type _bucket_index;
                     hash_node<K, V>* _curr;
-                    void advance();
+                    void advance()
+                    {
+                        if (_curr)
+                            _curr = _curr->_next;
+                        while (_bucket_index + 1 < _map->_bucket_count && _curr == nullptr)
+                        {
+                            ++ _bucket_index;
+                            _curr = _map->_buckets[_bucket_index];
+                        }
+                        if (_curr == nullptr)
+                            _bucket_index = _map->_bucket_count;
+                    }
             };
 
         private:

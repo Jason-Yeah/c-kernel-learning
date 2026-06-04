@@ -51,6 +51,12 @@ int main()
     */
 
     sen_std::unordered_map<int, std::string> sumap;
-
+    sumap.insert(1, "one");
+    sumap.insert(2, "two");
+    sumap.insert(3, "three");
+    for (auto it = sumap.begin(); it != sumap.end(); ++ it)
+        std::cout << it->first << " " << it->second << std::endl;
+    
+    std::cout << "11111"<< std::endl;
     return 0;
 }

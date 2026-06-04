@@ -1,0 +1,3 @@
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/CMakeFiles/template_demo.dir
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/CMakeFiles/edit_cache.dir
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/CMakeFiles/rebuild_cache.dir
