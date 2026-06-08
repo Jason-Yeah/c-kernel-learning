@@ -1,0 +1,3 @@
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/build/CMakeFiles/sfinae_demo.dir
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/build/CMakeFiles/edit_cache.dir
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/build/CMakeFiles/rebuild_cache.dir

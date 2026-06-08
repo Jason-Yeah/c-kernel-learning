@@ -60,7 +60,7 @@ EQUALS = =
 CMAKE_SOURCE_DIR = /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template
+CMAKE_BINARY_DIR = /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/CMakeFiles /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/build/CMakeFiles /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_template/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,41 +117,41 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named logger
+# Target rules for targets named sfinae_demo
 
 # Build rule for target.
-logger: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 logger
-.PHONY : logger
+sfinae_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 sfinae_demo
+.PHONY : sfinae_demo
 
 # fast build rule for target.
-logger/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logger.dir/build.make CMakeFiles/logger.dir/build
-.PHONY : logger/fast
+sfinae_demo/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sfinae_demo.dir/build.make CMakeFiles/sfinae_demo.dir/build
+.PHONY : sfinae_demo/fast
 
-logger.o: logger.cpp.o
-.PHONY : logger.o
+sfinae_demo.o: sfinae_demo.cpp.o
+.PHONY : sfinae_demo.o
 
 # target to build an object file
-logger.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logger.dir/build.make CMakeFiles/logger.dir/logger.cpp.o
-.PHONY : logger.cpp.o
+sfinae_demo.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sfinae_demo.dir/build.make CMakeFiles/sfinae_demo.dir/sfinae_demo.cpp.o
+.PHONY : sfinae_demo.cpp.o
 
-logger.i: logger.cpp.i
-.PHONY : logger.i
+sfinae_demo.i: sfinae_demo.cpp.i
+.PHONY : sfinae_demo.i
 
 # target to preprocess a source file
-logger.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logger.dir/build.make CMakeFiles/logger.dir/logger.cpp.i
-.PHONY : logger.cpp.i
+sfinae_demo.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sfinae_demo.dir/build.make CMakeFiles/sfinae_demo.dir/sfinae_demo.cpp.i
+.PHONY : sfinae_demo.cpp.i
 
-logger.s: logger.cpp.s
-.PHONY : logger.s
+sfinae_demo.s: sfinae_demo.cpp.s
+.PHONY : sfinae_demo.s
 
 # target to generate assembly for a file
-logger.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logger.dir/build.make CMakeFiles/logger.dir/logger.cpp.s
-.PHONY : logger.cpp.s
+sfinae_demo.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sfinae_demo.dir/build.make CMakeFiles/sfinae_demo.dir/sfinae_demo.cpp.s
+.PHONY : sfinae_demo.cpp.s
 
 # Help Target
 help:
@@ -161,10 +161,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... logger"
-	@echo "... logger.o"
-	@echo "... logger.i"
-	@echo "... logger.s"
+	@echo "... sfinae_demo"
+	@echo "... sfinae_demo.o"
+	@echo "... sfinae_demo.i"
+	@echo "... sfinae_demo.s"
 .PHONY : help
 
 
