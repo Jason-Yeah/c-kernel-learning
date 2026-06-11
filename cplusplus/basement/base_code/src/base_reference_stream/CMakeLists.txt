@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-project(ref_demo
+project(stream_demo
     VERSION 1.0.0
-    DESCRIPTION "C++20 reference demo project"
+    DESCRIPTION "C++20 stream demo project"
     LANGUAGES CXX
 )
 
@@ -22,6 +22,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 # ── 可执行文件 ──────────────────────────────────────────────────────────────
 add_executable(${PROJECT_NAME}
-    ref_demo.cpp
-    ref_demo.h
+    stream_demo.cpp
+    stream_demo.h
 )

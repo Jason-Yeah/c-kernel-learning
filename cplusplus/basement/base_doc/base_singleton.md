@@ -64,6 +64,141 @@ Singleton* Singleton::m_instance = nullptr;
 
 ---
 
+## 1.5 双检锁（DCLP）—— 在 C++98 夹缝中的尝试
+
+在 C++11 之前，为了让经典单例线程安全，人们提出了 **DCLP（Double-Checked Locking Pattern，双检锁模式）**。
+
+### 1.5.1 原理思路
+
+```cpp
+class singleton_lazy {
+public:
+    static singleton_lazy* instance() {
+        if (inst != nullptr)          // ① 第一次检查（无锁）
+            return inst;
+
+        _mtx.lock();                   // ② 加锁
+
+        if (inst != nullptr)          // ③ 第二次检查（有锁）
+        {
+            _mtx.unlock();
+            return inst;
+        }
+
+        inst = new singleton_lazy();  // ④ 创建实例
+        _mtx.unlock();                // ⑤ 解锁
+        return inst;
+    }
+
+private:
+    static singleton_lazy* inst;
+    static std::mutex _mtx;
+};
+```
+
+**核心思想——两段检查：**
+
+| 步骤 | 锁 | 目的 |
+|---|---|---|
+| ① 第一次 `if` | **无锁** | 实例已存在时快速返回，避免每次调用都加锁的开销 |
+| ② 加锁 | 独占 | 确保只有一个线程进入临界区 |
+| ③ 第二次 `if` | **有锁** | 防止"两个线程同时通过①，一个等另一个解锁后重复创建" |
+| ④ `new` | 有锁 | 在锁保护下安全创建 |
+| ⑤ 解锁 | — | 释放锁 |
+
+**为什么需要两次检查？**
+
+```
+线程A: ① inst==nullptr → 通过 → ② 加锁 → ③ inst==nullptr → 通过 → ④ new ...
+线程B:                         等待锁...
+                                                      线程B拿到锁 → ③ inst≠nullptr → 返回已有实例 ✅
+```
+
+如果没有第二次检查，线程B拿到锁后会直接再次 `new`，破坏单例唯一性。
+
+### 1.5.2 DCLP 在 C++98 下的致命缺陷
+
+**DCLP 在 C++98 中是错误的，原因在于指令重排（Instruction Reordering）。**
+
+问题出在第 ④ 步 `inst = new singleton_lazy();`，这条语句在底层分解为三步：
+
+```
+步骤 A:  分配内存              — operator new(sizeof(singleton_lazy))
+步骤 B:  在内存上构造对象       — 调用构造函数
+步骤 C:  将地址赋给 inst       — inst = 分配到的地址
+```
+
+**编译器或 CPU 可能将步骤 C 重排到步骤 B 之前！**
+
+```
+实际执行顺序可能变成： A → C → B
+
+线程A:  ① inst==nullptr → 通过 → ② 加锁 → ③ inst==nullptr → 通过
+         → A(分配内存) → C(inst = 地址，此时 inst≠nullptr，但对象尚未构造!)
+         → 此时线程B 调用 instance()
+线程B:  ① inst≠nullptr → ❌ 直接返回 inst → 访问未构造完成的对象 → **未定义行为!**
+```
+
+这种 bug 极难复现，只在多核 CPU 上偶发，是典型的**竞态条件（Race Condition）**。
+
+### 1.5.3 C++11 的修复方案
+
+C++11 引入了**内存模型 + `std::atomic`**，通过内存序（memory order）禁止重排：
+
+```cpp
+#include <atomic>
+#include <mutex>
+
+class singleton_lazy {
+public:
+    static singleton_lazy* instance() {
+        singleton_lazy* p = inst.load(std::memory_order_acquire);   // ① acquire: 之后的读不能重排到前面
+        if (!p) {
+            std::lock_guard<std::mutex> lock(mtx);
+            p = inst.load(std::memory_order_relaxed);               // ③ 在锁保护下，relaxed 就够
+            if (!p) {
+                p = new singleton_lazy();
+                inst.store(p, std::memory_order_release);           // ④ release: 之前的写不能重排到后面
+            }
+        }
+        return p;
+    }
+
+private:
+    singleton_lazy() = default;
+
+    static std::atomic<singleton_lazy*> inst;
+    static std::mutex mtx;
+};
+```
+
+**`acquire` / `release` 的作用：**
+
+| 内存序 | 位置 | 效果 |
+|---|---|---|
+| `memory_order_acquire` | ① `load` | 禁止之后的读写（包括解引用实例）重排到 `load` 之前 |
+| `memory_order_release` | ④ `store` | 禁止之前的操作（包括构造函数）重排到 `store` 之后 |
+
+`acquire-release` 配对形成**happens-before**关系：
+- 线程B 的 `acquire load` 看到线程A 的 `release store` → 线程B 必定看到线程A 在 `store` 之前的所有操作（包括构造完成的对象）
+
+> **注意：** `singleton_lazy` 中直接用裸 `static singleton_lazy* inst` + `std::mutex` 的写法，在 C++98/11 下仍然有数据竞争（非原子变量的读写不同步），属于未定义行为。**正确的 DCLP 必须使用 `std::atomic`。**
+
+### 1.5.4 最佳实践：别自己写 DCLP
+
+既然 C++11 的静态局部变量已经线程安全，**不要再手动实现 DCLP**：
+
+| 方案 | 代码量 | 正确性 | 性能 |
+|---|---|---|---|
+| Meyer's Singleton | 1 行 `static T inst;` | ✅ 标准保证 | 最优（C++11 编译器通常用更高效的实现） |
+| `std::call_once` | 3 行 | ✅ 标准保证 | 略逊于 Meyer's |
+| 手写 `std::atomic` DCLP | 10+ 行 | ⚠️ 容易写错 | 与 Meyer's 接近 |
+| C++98 裸指针 DCLP | 10+ 行 | ❌ 有 bug | — |
+
+**结论：** 理解 DCLP 是为了看懂历史代码和面试，**生产代码直接用 Meyer's Singleton**。
+
+---
+
 ## 2. C++11 — 质变：线程安全内置 + 现代语法
 
 ### 2.1 静态局部变量
@@ -244,7 +379,33 @@ consteval SingletonBuffer make_buffer() {
 inline constexpr auto g_buffer = make_buffer();
 ```
 
-### 4.3 CRTP + Mixin 模式
+### 4.3 CRTP 单例基类
+
+**CRTP（Curiously Recurring Template Pattern，奇异递归模板模式）** 是 C++ 模板元编程中的一种经典技巧：派生类将自己作为模板参数传给基类。
+
+```cpp
+template <typename Derived>
+class Base {
+    // 基类能通过 static_cast<Derived*>(this) 调用派生类的接口
+};
+
+class Derived : public Base<Derived> {
+    // ...
+};
+```
+
+#### 4.3.1 原理
+
+CRTP 本质上是**通过模板在编译期实现静态多态**，避免了虚函数的运行时开销：
+
+| | 虚函数多态 | CRTP 静态多态 |
+|---|---|---|
+| 绑定时机 | **运行时**（vtable） | **编译期**（模板实例化） |
+| 调用开销 | 间接跳转（vptr 查表） | 直接调用（可内联） |
+| 类型擦除 | ✅ 通过基类指针存不同类型 | ❌ 每种派生类是不同的独立类型 |
+| 代码膨胀 | 一份虚表 | 每实例化一个派生类生成一份代码 |
+
+#### 4.3.2 CRTP 实现单例基类
 
 ```cpp
 template <typename Derived>
@@ -252,25 +413,80 @@ class SingletonBase {
 public:
     SingletonBase(const SingletonBase&)            = delete;
     SingletonBase& operator=(const SingletonBase&) = delete;
+    SingletonBase(SingletonBase&&)                 = delete;
+    SingletonBase& operator=(SingletonBase&&)      = delete;
 
     [[nodiscard]] static Derived& instance() {
-        static Derived inst;
+        static Derived inst;               // C++11 线程安全
         return inst;
     }
 
 protected:
     SingletonBase() noexcept = default;
-    ~SingletonBase()         = default;
+    ~SingletonBase()         = default;    // 防止外部 delete 基类指针
 };
 
 class Logger : public SingletonBase<Logger> {
-    friend class SingletonBase<Logger>;
+    friend class SingletonBase<Logger>;    // 基类调用 private 构造需要友元
 public:
     void log(std::string_view msg) { /* ... */ }
 private:
-    Logger() = default;
+    Logger() = default;                    // 禁止外部构造
 };
 ```
+
+**各要素的作用：**
+
+| 组件 | 作用 |
+|---|---|
+| `SingletonBase<Logger>` | 每个派生类实例化一份独立的 `instance()` 代码 |
+| `friend class SingletonBase<Logger>` | 基类的 `instance()` 才能调用 `Logger` 的私有构造 |
+| `static Derived inst` | Meyer's Singleton，线程安全 |
+| `protected 构造/析构` | 防止外部直接创建基类，但派生类可以继承 |
+| `= delete` 拷贝/移动 | 禁止复制单例 |
+
+#### 4.3.3 多单例统一管理
+
+CRTP + 注册表可以实现**所有单例的统一生命周期管理**：
+
+```cpp
+class SingletonRegistry {
+public:
+    static void cleanup_all() {
+        for (auto& dtor : destructors())
+            dtor();
+    }
+protected:
+    static void register_destructor(std::function<void()> dtor) {
+        destructors().push_back(std::move(dtor));
+    }
+private:
+    static std::vector<std::function<void()>>& destructors() {
+        static std::vector<std::function<void()>> inst;
+        return inst;
+    }
+};
+
+template <typename Derived>
+class ManagedSingleton : public SingletonRegistry {
+public:
+    static Derived& instance() {
+        static Derived inst;
+        static bool registered = (register_destructor([]{ /* 自定义清理 */ }), true);
+        (void)registered;
+        return inst;
+    }
+};
+```
+
+#### 4.3.4 CRTP 的优缺点
+
+| 优点 | 缺点 |
+|---|---|
+| ✅ **零开销抽象** — 比虚函数高效 | ❌ **代码膨胀** — 每实例化一次生成一份代码 |
+| ✅ **编译期多态** — 错误在编译期捕获 | ❌ **类型独立** — 无法通过基类指针统一管理 |
+| ✅ **可复用** — 一行 `: public SingletonBase<T>` 获得单例能力 | ❌ **友元声明啰嗦** — 每个派生类都要声明 friend |
+| ✅ **组合灵活** — 可叠加其他 CRTP（如 `Comparable<T>`） | ❌ **学习曲线** — 不如继承直观，新手难读 |
 
 ---
 

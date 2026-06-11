@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/singleton.dir/singleton.cpp.o -o /home/jason/study/ck_study/cplusplus/basement/base_code/src/base_reference_stream/singleton 

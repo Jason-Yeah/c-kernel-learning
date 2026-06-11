@@ -1,0 +1,8 @@
+[INFO]  [20:56:27-06-11 20:56:27] START...
+[INFO]  [20:56:27-06-11 20:56:27] User 10 performed login in 1.5 seconds
+[DEBUG] [20:56:27-06-11 20:56:27] Hello nss
+[WARN]  [20:56:27-06-11 20:56:27] Multiple placehold: 123
+[INFO]  [2026-06-11 21:44:01] START...
+[INFO]  [2026-06-11 21:44:01] User 10 performed login in 1.5 seconds
+[DEBUG] [2026-06-11 21:44:01] Hello nss
+[WARN]  [2026-06-11 21:44:01] Multiple placehold: 123

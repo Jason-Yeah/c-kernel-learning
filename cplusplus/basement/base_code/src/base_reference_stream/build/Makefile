@@ -117,41 +117,41 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named ref_demo
+# Target rules for targets named stream_demo
 
 # Build rule for target.
-ref_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ref_demo
-.PHONY : ref_demo
+stream_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 stream_demo
+.PHONY : stream_demo
 
 # fast build rule for target.
-ref_demo/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ref_demo.dir/build.make CMakeFiles/ref_demo.dir/build
-.PHONY : ref_demo/fast
+stream_demo/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stream_demo.dir/build.make CMakeFiles/stream_demo.dir/build
+.PHONY : stream_demo/fast
 
-ref_demo.o: ref_demo.cpp.o
-.PHONY : ref_demo.o
+stream_demo.o: stream_demo.cpp.o
+.PHONY : stream_demo.o
 
 # target to build an object file
-ref_demo.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ref_demo.dir/build.make CMakeFiles/ref_demo.dir/ref_demo.cpp.o
-.PHONY : ref_demo.cpp.o
+stream_demo.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stream_demo.dir/build.make CMakeFiles/stream_demo.dir/stream_demo.cpp.o
+.PHONY : stream_demo.cpp.o
 
-ref_demo.i: ref_demo.cpp.i
-.PHONY : ref_demo.i
+stream_demo.i: stream_demo.cpp.i
+.PHONY : stream_demo.i
 
 # target to preprocess a source file
-ref_demo.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ref_demo.dir/build.make CMakeFiles/ref_demo.dir/ref_demo.cpp.i
-.PHONY : ref_demo.cpp.i
+stream_demo.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stream_demo.dir/build.make CMakeFiles/stream_demo.dir/stream_demo.cpp.i
+.PHONY : stream_demo.cpp.i
 
-ref_demo.s: ref_demo.cpp.s
-.PHONY : ref_demo.s
+stream_demo.s: stream_demo.cpp.s
+.PHONY : stream_demo.s
 
 # target to generate assembly for a file
-ref_demo.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ref_demo.dir/build.make CMakeFiles/ref_demo.dir/ref_demo.cpp.s
-.PHONY : ref_demo.cpp.s
+stream_demo.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stream_demo.dir/build.make CMakeFiles/stream_demo.dir/stream_demo.cpp.s
+.PHONY : stream_demo.cpp.s
 
 # Help Target
 help:
@@ -161,10 +161,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... ref_demo"
-	@echo "... ref_demo.o"
-	@echo "... ref_demo.i"
-	@echo "... ref_demo.s"
+	@echo "... stream_demo"
+	@echo "... stream_demo.o"
+	@echo "... stream_demo.i"
+	@echo "... stream_demo.s"
 .PHONY : help
 
 

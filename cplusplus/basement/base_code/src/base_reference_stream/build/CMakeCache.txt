@@ -116,13 +116,13 @@ CMAKE_OBJCOPY:FILEPATH=/usr/bin/objcopy
 CMAKE_OBJDUMP:FILEPATH=/usr/bin/objdump
 
 //Value Computed by CMake
-CMAKE_PROJECT_DESCRIPTION:STATIC=C++20 reference demo project
+CMAKE_PROJECT_DESCRIPTION:STATIC=C++20 stream demo project
 
 //Value Computed by CMake
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=ref_demo
+CMAKE_PROJECT_NAME:STATIC=stream_demo
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION:STATIC=1.0.0
@@ -212,6 +212,24 @@ ref_demo_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 ref_demo_SOURCE_DIR:STATIC=/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_reference_stream
+
+//Value Computed by CMake
+singleton_BINARY_DIR:STATIC=/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_reference_stream/build
+
+//Value Computed by CMake
+singleton_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+singleton_SOURCE_DIR:STATIC=/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_reference_stream
+
+//Value Computed by CMake
+stream_demo_BINARY_DIR:STATIC=/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_reference_stream/build
+
+//Value Computed by CMake
+stream_demo_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+stream_demo_SOURCE_DIR:STATIC=/home/jason/study/ck_study/cplusplus/basement/base_code/src/base_reference_stream
 
 
 ########################
