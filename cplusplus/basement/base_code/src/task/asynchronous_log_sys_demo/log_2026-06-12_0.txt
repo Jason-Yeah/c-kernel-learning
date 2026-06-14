@@ -1,0 +1,4 @@
+[INFO]   [2026-06-12 16:46:49] START...
+[INFO]   [2026-06-12 16:46:49] User 10 performed login in 1.5 seconds
+[DEBUG]  [2026-06-12 16:46:49] Hello nss
+[WARN]   [2026-06-12 16:46:49] Multiple placeholder: 123

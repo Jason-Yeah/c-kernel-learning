@@ -1,0 +1,3 @@
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles/main.dir
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles/edit_cache.dir
+/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles/rebuild_cache.dir
