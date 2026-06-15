@@ -1,14 +1,3 @@
-# Compiled binaries
-*.exe
-*.out
-
-# Temp files
-*.o
-*.obj
-
-# GDB history
-.gdb_history
-
-# IDE
-.vscode/
-.idea/
+# 忽略 Makefile 文件
+Makefile
+makefile
