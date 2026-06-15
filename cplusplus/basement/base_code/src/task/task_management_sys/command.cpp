@@ -18,9 +18,31 @@ void add_command::exec_impl(const std::string& args)
         return;
     }
 
+    if (pos1 == 0)
+    {
+        std::cout << "Description cannot be empty." << std::endl;
+        return;
+    }
+
     std::string description = args.substr(0, pos1);
-    int priority = std::stoi(args.substr(pos1 + 1, pos2 - pos1 - 1));
+    std::string priority_str = args.substr(pos1 + 1, pos2 - pos1 - 1);
     std::string deadline = args.substr(pos2 + 1);
+
+    int priority;
+    try
+    {
+        priority = std::stoi(priority_str);
+    }
+    catch (std::invalid_argument&)
+    {
+        std::cout << "Priority must be a number (1/2/3)." << std::endl;
+        return;
+    }
+    catch (std::out_of_range&)
+    {
+        std::cout << "Priority out of range." << std::endl;
+        return;
+    }
 
     _t_manager.add(description, priority, deadline);
     std::cout << "Successfully add task." << std::endl;

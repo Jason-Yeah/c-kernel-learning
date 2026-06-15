@@ -2,17 +2,52 @@
 #ifndef TASK_COMMAND_H
 #define TASK_COMMAND_H
 
+#include <algorithm>
+#include <memory>
 #include <string>
 
-struct command_base
+// struct command_base
+// {
+//     virtual void exec(const std::string& args) = 0;
+// };
+
+class wapper_command
 {
-    virtual void exec(const std::string& args) = 0;
+    public:
+
+        template<typename T>
+        wapper_command(T cmd): impl(std::make_unique<model<T>>(std::move(cmd))){}
+        void exec(const std::string& args)
+        {
+            impl->exec(args);
+        }
+
+    private:
+
+        struct _concept
+        {
+            virtual void exec(const std::string& args) = 0;
+            virtual ~_concept() = default;
+        };
+
+        template<typename T>
+        struct model: public _concept
+        {
+            T _cmd;
+            model(T cmd): _cmd(std::move(cmd)) {}
+            void exec(const std::string& args) override
+            {
+                _cmd.exec(args);
+            }
+        };
+    private:
+        std::unique_ptr<_concept> impl;
 };
 
 template <typename Derived>
-struct command: public command_base
+struct command
 {
-    void exec(const std::string& args) override
+    void exec(const std::string& args)
     {
         (static_cast<Derived*>(this))->exec_impl(args);
     }
