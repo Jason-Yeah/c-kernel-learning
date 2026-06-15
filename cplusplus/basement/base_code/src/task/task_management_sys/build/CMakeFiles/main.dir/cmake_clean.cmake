@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/main.dir/command.cpp.o"
   "CMakeFiles/main.dir/command.cpp.o.d"
+  "CMakeFiles/main.dir/command_registry.cpp.o"
+  "CMakeFiles/main.dir/command_registry.cpp.o.d"
   "CMakeFiles/main.dir/datastore.cpp.o"
   "CMakeFiles/main.dir/datastore.cpp.o.d"
   "CMakeFiles/main.dir/logger.cpp.o"

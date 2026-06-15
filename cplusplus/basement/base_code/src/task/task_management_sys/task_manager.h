@@ -11,6 +11,14 @@
 #include <algorithm>
 #include <fstream>
 
+struct filter_args
+{
+    std::string _keyword;
+    int priority = 0;
+    std::string _data_st;
+    std::string _data_ed;
+};
+
 class task_manager
 {
     public:
@@ -26,10 +34,11 @@ class task_manager
         void list(int option) const;
         
         void load();
-
         
         void save() const;
-    
+
+        void filter(const filter_args& args) const;
+        
     private:
         
         std::vector<task> _tasks;

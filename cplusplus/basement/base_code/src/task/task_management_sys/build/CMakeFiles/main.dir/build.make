@@ -97,10 +97,24 @@ CMakeFiles/main.dir/command.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main.dir/command.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command.cpp -o CMakeFiles/main.dir/command.cpp.s
 
+CMakeFiles/main.dir/command_registry.cpp.o: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/command_registry.cpp.o: /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command_registry.cpp
+CMakeFiles/main.dir/command_registry.cpp.o: CMakeFiles/main.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/main.dir/command_registry.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/command_registry.cpp.o -MF CMakeFiles/main.dir/command_registry.cpp.o.d -o CMakeFiles/main.dir/command_registry.cpp.o -c /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command_registry.cpp
+
+CMakeFiles/main.dir/command_registry.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main.dir/command_registry.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command_registry.cpp > CMakeFiles/main.dir/command_registry.cpp.i
+
+CMakeFiles/main.dir/command_registry.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main.dir/command_registry.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command_registry.cpp -o CMakeFiles/main.dir/command_registry.cpp.s
+
 CMakeFiles/main.dir/datastore.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/datastore.cpp.o: /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/datastore.cpp
 CMakeFiles/main.dir/datastore.cpp.o: CMakeFiles/main.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/main.dir/datastore.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/main.dir/datastore.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/datastore.cpp.o -MF CMakeFiles/main.dir/datastore.cpp.o.d -o CMakeFiles/main.dir/datastore.cpp.o -c /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/datastore.cpp
 
 CMakeFiles/main.dir/datastore.cpp.i: cmake_force
@@ -114,7 +128,7 @@ CMakeFiles/main.dir/datastore.cpp.s: cmake_force
 CMakeFiles/main.dir/logger.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/logger.cpp.o: /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/logger.cpp
 CMakeFiles/main.dir/logger.cpp.o: CMakeFiles/main.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/main.dir/logger.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/main.dir/logger.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/logger.cpp.o -MF CMakeFiles/main.dir/logger.cpp.o.d -o CMakeFiles/main.dir/logger.cpp.o -c /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/logger.cpp
 
 CMakeFiles/main.dir/logger.cpp.i: cmake_force
@@ -128,7 +142,7 @@ CMakeFiles/main.dir/logger.cpp.s: cmake_force
 CMakeFiles/main.dir/task.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/task.cpp.o: /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/task.cpp
 CMakeFiles/main.dir/task.cpp.o: CMakeFiles/main.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/main.dir/task.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/main.dir/task.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/task.cpp.o -MF CMakeFiles/main.dir/task.cpp.o.d -o CMakeFiles/main.dir/task.cpp.o -c /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/task.cpp
 
 CMakeFiles/main.dir/task.cpp.i: cmake_force
@@ -142,7 +156,7 @@ CMakeFiles/main.dir/task.cpp.s: cmake_force
 CMakeFiles/main.dir/task_manager.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/task_manager.cpp.o: /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/task_manager.cpp
 CMakeFiles/main.dir/task_manager.cpp.o: CMakeFiles/main.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/main.dir/task_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/main.dir/task_manager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/task_manager.cpp.o -MF CMakeFiles/main.dir/task_manager.cpp.o.d -o CMakeFiles/main.dir/task_manager.cpp.o -c /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/task_manager.cpp
 
 CMakeFiles/main.dir/task_manager.cpp.i: cmake_force
@@ -157,6 +171,7 @@ CMakeFiles/main.dir/task_manager.cpp.s: cmake_force
 main_OBJECTS = \
 "CMakeFiles/main.dir/main.cpp.o" \
 "CMakeFiles/main.dir/command.cpp.o" \
+"CMakeFiles/main.dir/command_registry.cpp.o" \
 "CMakeFiles/main.dir/datastore.cpp.o" \
 "CMakeFiles/main.dir/logger.cpp.o" \
 "CMakeFiles/main.dir/task.cpp.o" \
@@ -167,13 +182,14 @@ main_EXTERNAL_OBJECTS =
 
 main: CMakeFiles/main.dir/main.cpp.o
 main: CMakeFiles/main.dir/command.cpp.o
+main: CMakeFiles/main.dir/command_registry.cpp.o
 main: CMakeFiles/main.dir/datastore.cpp.o
 main: CMakeFiles/main.dir/logger.cpp.o
 main: CMakeFiles/main.dir/task.cpp.o
 main: CMakeFiles/main.dir/task_manager.cpp.o
 main: CMakeFiles/main.dir/build.make
 main: CMakeFiles/main.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable main"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable main"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/main.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

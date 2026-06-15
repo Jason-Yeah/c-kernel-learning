@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     main.cpp
     command.cpp
+    command_registry.cpp
     datastore.cpp
     logger.cpp
     task.cpp

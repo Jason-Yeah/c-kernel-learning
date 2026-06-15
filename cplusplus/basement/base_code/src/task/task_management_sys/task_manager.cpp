@@ -3,6 +3,7 @@
 #include "task.h"
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -31,13 +32,15 @@ void task_manager::remove(int id)
         return tsk._id == id;
     });
 
-    if (it == _tasks.end())
+    if (it == _tasks.end()) // 做return处理防止下面erase报错出现Undefined behavior
     {
         std::cout << "Task not found." << std::endl;
         logger::instance().log("Task not found.");
+        return; // 优化
     }
-    _tasks.erase(it);
+    
     logger::instance().log("Task deleted: " + it->to_string());
+    _tasks.erase(it);
     save();
 }
 
@@ -51,6 +54,7 @@ void task_manager::update(int id, const std::string& description, int priority, 
     {
         std::cout << "Task not found." << std::endl;
         logger::instance().log("Task not found.");
+        return; // 优化
     }
     it->_description = description;
     it->_priority = priority;
@@ -111,6 +115,12 @@ void task_manager::load()
         // iss中读取指针会自动向前移动
         iss >> tsk._id >> delimiter;
         std::getline(iss, tsk._description, ',');
+        {
+            size_t s = tsk._description.find_first_not_of(" \t");
+            size_t e = tsk._description.find_last_not_of(" \t");
+            tsk._description = (s == std::string::npos) ? "" :
+            tsk._description.substr(s, e - s + 1);
+        }
         iss >> tsk._priority >> delimiter;
         iss >> tsk._ddl;
 
@@ -130,4 +140,44 @@ bool task_manager::cmp_by_priority(const task& ta, const task& tb)
 bool task_manager::cmp_by_date(const task& ta, const task& tb)
 {
     return ta._ddl < tb._ddl;
+}
+
+void task_manager::filter(const filter_args& args) const
+{
+    std::vector<std::function<bool(const task&)>> preds;
+
+    if (!args._keyword.empty())
+        preds.push_back([&args](const task& t){
+            return t._description.find(args._keyword) != std::string::npos;
+    });
+
+    if (args.priority != 0)
+        preds.push_back([&args](const task& t){
+            return t._priority == args.priority;
+    });
+
+    if (!args._data_st.empty() && !args._data_ed.empty())
+        preds.push_back([&args](const task& t){
+            return t._ddl >= args._data_st && t._ddl <=args._data_ed;
+    });
+
+    if (preds.empty())
+    {
+            // 没有任何过滤条件，提示用法
+            std::cout << "Usage: filter -k <keyword> -p <priority>"
+            << "-d <date_begin> <date_end>" << std::endl;
+            return;
+    }
+    
+    for (const auto& t: _tasks)
+    {
+        // std::all_of检查所有元素是否满足指定条件（谓词）
+        bool is_match = std::all_of(preds.begin(), preds.end(),
+         [&t](const auto& pred){
+            return pred(t);
+        });
+
+        if (is_match)
+            std::cout << t.to_string() << std::endl;
+    }
 }

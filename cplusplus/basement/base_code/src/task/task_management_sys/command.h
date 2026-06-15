@@ -2,6 +2,7 @@
 #ifndef TASK_COMMAND_H
 #define TASK_COMMAND_H
 
+#include "task.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -99,6 +100,19 @@ class update_command: public command<update_command>
         
         void exec_impl(const std::string& args);
         
+    private:
+
+        task_manager& _t_manager;
+};
+
+class filter_command: public command<filter_command>
+{
+    public:
+
+        filter_command(task_manager& manager);
+
+        void exec_impl(const std::string& args);
+
     private:
 
         task_manager& _t_manager;

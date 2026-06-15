@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/main.dir/main.cpp.o CMakeFiles/main.dir/command.cpp.o CMakeFiles/main.dir/datastore.cpp.o CMakeFiles/main.dir/logger.cpp.o CMakeFiles/main.dir/task.cpp.o CMakeFiles/main.dir/task_manager.cpp.o -o main 
+/usr/bin/c++ CMakeFiles/main.dir/main.cpp.o CMakeFiles/main.dir/command.cpp.o CMakeFiles/main.dir/command_registry.cpp.o CMakeFiles/main.dir/datastore.cpp.o CMakeFiles/main.dir/logger.cpp.o CMakeFiles/main.dir/task.cpp.o CMakeFiles/main.dir/task_manager.cpp.o -o main 

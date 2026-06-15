@@ -202,4 +202,5 @@ CMakeFiles/main.dir/main.cpp.o: \
  /usr/include/c++/13/bits/enable_special_members.h \
  /usr/include/c++/13/bits/node_handle.h \
  /usr/include/c++/13/bits/erase_if.h /usr/include/c++/13/array \
- /usr/include/c++/13/compare /usr/include/c++/13/variant
+ /usr/include/c++/13/compare /usr/include/c++/13/variant \
+ /home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command_registry.h

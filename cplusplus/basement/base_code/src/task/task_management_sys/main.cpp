@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <memory>
 #include <variant>
+#include "command_registry.h"
 
 int main()
 {
@@ -64,11 +65,11 @@ int main()
     // cmds["update"] = std::make_unique<update_command>(tmgr);
 
     //PLAN_4 Wapper
-    std::unordered_map<std::string, wapper_command> cmds;
-    cmds.emplace("add", add_command(tmgr));
-    cmds.emplace("list", ls_command(tmgr));
-    cmds.emplace("delete", del_command(tmgr));
-    cmds.emplace("update", update_command(tmgr));
+    // std::unordered_map<std::string, wapper_command> cmds;
+    // cmds.emplace("add", add_command(tmgr));
+    // cmds.emplace("list", ls_command(tmgr));
+    // cmds.emplace("delete", del_command(tmgr));
+    // cmds.emplace("update", update_command(tmgr));
 
     std::cout << "Welcome! Please input commands: " << std::endl;
     std::string input;
@@ -89,7 +90,7 @@ int main()
             std::cout << "Exiting program..." << std::endl;
             break;
         }
-
+        /*
         auto it = cmds.find(cmd);
         if (it != cmds.end()) 
         {
@@ -100,6 +101,16 @@ int main()
             // }, it->second);
         }
         else std::cout << "Unknown command: " << cmd << std::endl;
+        */
+        try
+        {
+            auto wapper = command_registry::instance().create(cmd, tmgr);
+            wapper.exec(args);
+        }
+        catch (std::runtime_error&)
+        {
+            std::cout << "Unknown command: " << cmd << std::endl;
+        }
     }
 
     return 0;

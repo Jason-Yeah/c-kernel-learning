@@ -8,3 +8,31 @@
 "2026-06-15 15:57:53" : Tasks loaded successfully.
 "2026-06-15 15:58:12" : JY
 "2026-06-15 15:58:12" : Tasks loaded successfully.
+"2026-06-15 21:35:20" : JY
+"2026-06-15 21:35:20" : Tasks loaded successfully.
+"2026-06-15 21:52:09" : JY
+"2026-06-15 21:52:09" : Tasks loaded successfully.
+"2026-06-15 21:53:24" : Task added: ID: 2, Description: test, Priority: 1, Deadline:  2026-6-15
+"2026-06-15 21:53:24" : Tasks saved successfully.
+"2026-06-15 21:55:46" : JY
+"2026-06-15 21:55:46" : Tasks loaded successfully.
+"2026-06-15 21:55:58" : JY
+"2026-06-15 21:55:58" : Tasks loaded successfully.
+"2026-06-15 22:01:09" : JY
+"2026-06-15 22:01:09" : Tasks loaded successfully.
+"2026-06-15 22:01:32" : Task added: ID: 3, Description: test2, Priority: 1, Deadline:  2026-6-16
+"2026-06-15 22:01:32" : Tasks saved successfully.
+"2026-06-15 22:30:34" : JY
+"2026-06-15 22:30:34" : Tasks loaded successfully.
+"2026-06-15 22:39:05" : JY
+"2026-06-15 22:39:05" : Tasks loaded successfully.
+"2026-06-15 22:39:38" : Task added: ID: 4, Description: t4, Priority: 3, Deadline: 2026-6-18
+"2026-06-15 22:39:38" : Tasks saved successfully.
+"2026-06-15 22:45:00" : JY
+"2026-06-15 22:45:00" : Tasks loaded successfully.
+"2026-06-15 22:47:24" : Task added: ID: 5, Description: t5, Priority: 4, Deadline: 2026-6-16
+"2026-06-15 22:47:24" : Tasks saved successfully.
+"2026-06-15 22:51:43" : JY
+"2026-06-15 22:51:43" : Tasks loaded successfully.
+"2026-06-15 22:56:48" : JY
+"2026-06-15 22:56:48" : Tasks loaded successfully.

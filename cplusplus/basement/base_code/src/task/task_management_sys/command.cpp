@@ -2,8 +2,24 @@
 #include "task_manager.h"
 #include "logger.h"
 #include <cstddef>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
+#include "command_registry.h"
+
+// #name原样替换为字符串字面量，##name令牌粘贴运算符，用于编译时变量名/函数名
+// auto res = [](){}();是定义完立即执行，auto func = [](){}仅定义不执行
+
+#define REGISTER_COMMAND(name, cmd_class) \
+    static bool _reg_##name = [] { \
+        command_registry::instance().register_command(#name, \
+            [](task_manager& tmgr) {\
+                return wapper_command(cmd_class(tmgr)); \
+            } \
+        ); \
+        return true; \
+    }()
 
 add_command::add_command(task_manager& manager): _t_manager(manager) {}
 
@@ -27,6 +43,14 @@ void add_command::exec_impl(const std::string& args)
     std::string description = args.substr(0, pos1);
     std::string priority_str = args.substr(pos1 + 1, pos2 - pos1 - 1);
     std::string deadline = args.substr(pos2 + 1);
+    auto trim = [](std::string& str){
+        size_t st = str.find_first_not_of(" \t");
+        size_t ed = str.find_last_not_of(" \t");
+        str = (st == std::string::npos) ? "" : str.substr(st, ed - st + 1); 
+    };
+
+    trim(description);
+    trim(deadline);
 
     int priority;
     try
@@ -103,12 +127,70 @@ void update_command::exec_impl(const std::string& args)
         << " <DESCRIPTION>, <PRIORITY>, <DEADLINE>" << std::endl;
         return;
     }
-
-    int id = std::stoi(args.substr(0, pos_description));
-    std::string description = args.substr(pos_description + 1, pos_priority - pos_description - 1);
-    int priority = std::stoi(args.substr(pos_priority + 1, pos_ddl - pos_priority - 1));
-    std::string ddl = args.substr(pos_ddl + 1);
+    // 优化：设计stoi要try catch异常保护机制，因为stoi可能会抛出异常
+    try
+    {
+        int id = std::stoi(args.substr(0, pos_description));
+        std::string description = args.substr(pos_description + 1, pos_priority - pos_description - 1);
+        int priority = std::stoi(args.substr(pos_priority + 1, pos_ddl - pos_priority - 1));
+        std::string ddl = args.substr(pos_ddl + 1);
+        _t_manager.update(id, description, priority, ddl);
+    }
+    catch (std::invalid_argument& iae)
+    {
+        std::cout << "Incorrect parameter format. Please use: delete <ID>\n";
+        return;
+    }
+    catch (std::out_of_range& ofre)
+    {
+        std::cout << "ID was our of range. Please use valid task ID.";
+        return;
+    }
     
-    _t_manager.update(id, description, priority, ddl);
     std::cout << "Successfully update task." << std::endl;
 }
+
+filter_command::filter_command(task_manager& manager): _t_manager(manager) {}
+
+void filter_command::exec_impl(const std::string& args)
+{
+    // filter -k keyword -p 1 -d 2026-06-01 2026-07-01
+    std::istringstream iss(args);
+    std::string token;
+    std::vector<std::string> tokens;
+    
+    while (iss >> token)
+        tokens.push_back(token);
+
+    filter_args f_args;
+    for (size_t i = 0; i < tokens.size(); ++ i )
+    {
+        if (tokens[i] == "-k" && i + 1 < tokens.size())
+            f_args._keyword = tokens[ ++ i];
+        else if (tokens[i] == "-p" && i + 2 < tokens.size())
+        {
+            try
+            {
+                f_args.priority = std::stoi(tokens[ ++ i]);
+            }
+            catch (std::invalid_argument& iae)
+            {
+                std::cout << "Incorrect parameter format. Please use: filter -k <keyword> -p <proirity> -d <start> <end>\n";
+                return;
+            }
+        }
+        else if (tokens[i] == "-d" && i + 2 < tokens.size())
+        {
+            f_args._data_st = tokens[ ++ i];
+            f_args._data_ed = tokens[ ++ i];
+        }
+    }
+
+    _t_manager.filter(f_args);
+}
+
+REGISTER_COMMAND(add, add_command);
+REGISTER_COMMAND(delete, del_command);
+REGISTER_COMMAND(update, update_command);
+REGISTER_COMMAND(ls, ls_command);
+REGISTER_COMMAND(filter, filter_command);

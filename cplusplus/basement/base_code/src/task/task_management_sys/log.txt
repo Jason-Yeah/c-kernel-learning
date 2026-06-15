@@ -1,0 +1,26 @@
+"2026-06-15 20:59:43" : JY
+"2026-06-15 20:59:43" : Falied to open tasks file.
+"2026-06-15 22:31:44" : JY
+"2026-06-15 22:31:44" : Falied to open tasks file.
+"2026-06-15 22:31:44" : Task added: ID: 1, Description: task1, Priority: 1, Deadline:  2026-06-15
+"2026-06-15 22:31:44" : Tasks saved successfully.
+"2026-06-15 22:31:44" : Task added: ID: 2, Description: task2, Priority: 2, Deadline:  2026-07-01
+"2026-06-15 22:31:44" : Tasks saved successfully.
+"2026-06-15 22:31:44" : Task added: ID: 3, Description: task_abc, Priority: 1, Deadline:  2026-08-01
+"2026-06-15 22:31:44" : Tasks saved successfully.
+"2026-06-15 22:32:33" : JY
+"2026-06-15 22:32:33" : Falied to open tasks file.
+"2026-06-15 22:32:33" : Task added: ID: 1, Description: task1, Priority: 1, Deadline:  2026-06-15
+"2026-06-15 22:32:33" : Tasks saved successfully.
+"2026-06-15 22:32:33" : Task added: ID: 2, Description: task2, Priority: 2, Deadline:  2026-07-01
+"2026-06-15 22:32:33" : Tasks saved successfully.
+"2026-06-15 22:32:33" : Task added: ID: 3, Description: task_abc, Priority: 1, Deadline:  2026-08-01
+"2026-06-15 22:32:33" : Tasks saved successfully.
+"2026-06-15 22:33:52" : JY
+"2026-06-15 22:33:52" : Falied to open tasks file.
+"2026-06-15 22:33:52" : Task added: ID: 1, Description: task1, Priority: 1, Deadline:  2026-06-15
+"2026-06-15 22:33:52" : Tasks saved successfully.
+"2026-06-15 22:33:52" : Task added: ID: 2, Description: task2, Priority: 2, Deadline:  2026-07-01
+"2026-06-15 22:33:52" : Tasks saved successfully.
+"2026-06-15 22:33:52" : Task added: ID: 3, Description: task_abc, Priority: 1, Deadline:  2026-08-01
+"2026-06-15 22:33:52" : Tasks saved successfully.

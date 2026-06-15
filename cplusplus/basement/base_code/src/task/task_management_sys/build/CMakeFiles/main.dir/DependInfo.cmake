@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command.cpp" "CMakeFiles/main.dir/command.cpp.o" "gcc" "CMakeFiles/main.dir/command.cpp.o.d"
+  "/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/command_registry.cpp" "CMakeFiles/main.dir/command_registry.cpp.o" "gcc" "CMakeFiles/main.dir/command_registry.cpp.o.d"
   "/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/datastore.cpp" "CMakeFiles/main.dir/datastore.cpp.o" "gcc" "CMakeFiles/main.dir/datastore.cpp.o.d"
   "/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/logger.cpp" "CMakeFiles/main.dir/logger.cpp.o" "gcc" "CMakeFiles/main.dir/logger.cpp.o.d"
   "/home/jason/study/ck_study/cplusplus/basement/base_code/src/task/task_management_sys/main.cpp" "CMakeFiles/main.dir/main.cpp.o" "gcc" "CMakeFiles/main.dir/main.cpp.o.d"
