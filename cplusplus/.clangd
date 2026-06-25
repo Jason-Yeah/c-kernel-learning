@@ -1,0 +1,18 @@
+# clangd 配置 — 作用于 ~/study/ck_study/cplusplus/ 及其所有子目录
+# 被下层更具体的 .clangd 或 compile_commands.json 覆盖
+#
+# 注意: 不写 -std 标志，clangd 自动按文件扩展名选择语言和标准:
+#   .c        → C17 (gnu17)
+#   .cpp/.cc  → C++17/20 (gnu++17)
+#   .h        → 按调用方推断
+
+Diagnostics:
+  UnusedIncludes: Strict
+  Suppress:
+    - -Wunused-parameter
+
+Index:
+  Background: Build
+
+Formatting:
+  Style: "{BasedOnStyle: LLVM, BreakBeforeBraces: Allman, IndentWidth: 4, UseTab: false}"

@@ -1,0 +1,25 @@
+{
+    "tasks": [
+        {
+            "label": "g++ 编译当前文件",
+            "type": "shell",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-std=c++20",
+                "-g",
+                "-Wall",
+                "-Wextra",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "编译当前 .c/.cpp 文件为可执行文件 (C++20)"
+        }
+    ],
+    "version": "2.0.0"
+}

@@ -1,0 +1,6 @@
+# clangd 按文件扩展名自动识别语言（.c → C, .cpp → C++）
+# g++ 编译用的 -std=c++20，clangd 需保持一致以免误报
+-std=c++20
+-Wall
+-Wextra
+-Wpedantic

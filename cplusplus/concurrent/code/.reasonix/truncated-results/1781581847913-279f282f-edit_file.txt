@@ -1,0 +1,700 @@
+edited ../doc/base_thread.md (592→18547 chars)
+@@ -1167,16 +1167,686 @@
++ ---
++ 
++ ## 13. 标准库源码精读
++ 
++ > 以下源码来自 GCC 13 libstdc++，路径 `/usr/include/c++/13/`。
++ > 通过阅读标准库的实现，理解设计理念和底层原理。
++ 
++ ### 13.1 std::thread 源码分析
++ 
++ #### 核心类定义 (`bits/std_thread.h`)
++ 
++ ```cpp
++ // /usr/include/c++/13/bits/std_thread.h
++ class thread {
++ public:
++     using native_handle_type = __gthread_t;  // ≡ pthread_t (Linux)
++ 
++     class id {
++         native_handle_type _M_thread;        // 存储原生线程 ID
++     public:
++         id() noexcept : _M_thread() { }      // 默认构造 → 空 ID
++         explicit id(native_handle_type __id) : _M_thread(__id) { }
++     };
++ 
++ private:
++     id _M_id;  // 线程的唯一标识
++ ```
++ 
++ **设计理念**：
++ - `id` 是 `thread` 的核心成员，默认构造的 `_M_thread` 为零值，表示**未关联线程**
++ - `joinable()` 的实现就是检查 `_M_id == id()`（即 ID 是否为空）
++ - 空 ID = 默认构造 / 已被 move 走 / 已 join / 已 detach
++ 
++ #### 构造函数——线程创建的关键
++ 
++ ```cpp
++ // /usr/include/c++/13/bits/std_thread.h
++ template<typename _Callable, typename... _Args,
++          typename = _Require<__not_same<_Callable>>>
++ explicit
++ thread(_Callable&& __f, _Args&&... __args)
++ {
++     // 1. 编译期检查：参数必须可调用
++     static_assert( __is_invocable<...>::value,
++       "std::thread arguments must be invocable after conversion to rvalues" );
++ 
++     // 2. 创建 Call_wrapper：将所有参数 decay 拷贝后打包成 tuple
++     using _Wrapper = _Call_wrapper<_Callable, _Args...>;
++ 
++     // 3. 创建状态对象 + 启动线程
++     _M_start_thread(_State_ptr(new _State_impl<_Wrapper>(
++           std::forward<_Callable>(__f), std::forward<_Args>(__args)...)),
++         _M_thread_deps_never_run);
++ }
++ ```
++ 
++ **关键设计——Call_wrapper 内部机制**：
++ 
++ ```cpp
++ // _Call_wrapper 实际上是 _Invoker<tuple<decay_t<_Callable>, decay_t<_Args>...>>
++ template<typename... _Tp>
++     using _Call_wrapper = _Invoker<tuple<typename decay<_Tp>::type...>>;
++ 
++ template<typename _Tuple>
++     struct _Invoker {
++         _Tuple _M_t;  // 存储 decay 拷贝后的函数对象 + 参数
++ 
++         // 通过 index_sequence 展开 tuple，依次调用
++         template<size_t... _Ind>
++         typename __result<_Tuple>::type
++         _M_invoke(_Index_tuple<_Ind...>)
++         { return std::__invoke(std::get<_Ind>(std::move(_M_t))...); }
++ 
++         typename __result<_Tuple>::type
++         operator()() {
++             using _Indices = _Build_index_tuple<tuple_size<_Tuple>::value>;
++             return _M_invoke(_Indices());
++         }
++     };
++ ```
++ 
++ **为什么参数要 decay 拷贝？**  
++ 因为线程可能比创建它的函数活得久，局部变量的引用可能在线程使用前就销毁了。所以标准强制 `thread` 构造函数对所有参数做 `decay` 拷贝（实际上等同于按值传递），存到 `tuple` 中。
++ 
++ **参数传递陷阱验证**：
++ ```cpp
++ void f(int& x) { x = 42; }
++ int a;
++ std::thread t(f, a);         // ❌ 编译错误：f(int&) 但传入的是 int（decay 后为 int）
++ std::thread t(f, std::ref(a));  // ✅ std::ref 绕过 decay 拷贝
++ ```
++ 
++ #### _M_start_thread —— 底层 pthread_create 调用
++ 
++ ```cpp
++ // 对应 libstdc++ 编译后的库代码（src/c++11/thread.cc）
++ // 核心逻辑（伪码还原）：
++ void thread::_M_start_thread(_State_ptr state, void (*)()) {
++     // 1. 分配原生线程属性
++     pthread_attr_t attr;
++     pthread_attr_init(&attr);
++ 
++     // 2. 创建 pthread，传递的 func 是静态的 _State::_M_run 包装器
++     pthread_t native_id;
++     int ret = pthread_create(&native_id, &attr,
++                              &_dispatch_thread,  // 静态函数
++                              state.get());       // 用户态参数
++ 
++     // 3. 保存原生线程 ID
++     if (ret == 0)
++         _M_id = id(native_id);
++     else
++         throw system_error(ret, system_category());
++ }
++ ```
++ 
++ **`_dispatch_thread` 的职责**（静态函数）：
++ ```c
++ // 相当于：
++ void* _dispatch_thread(void* p) {
++     auto* state = static_cast<thread::_State*>(p);
++     state->_M_run();  // 实际调用用户传入的 callable
++     delete state;
++     return nullptr;
++ }
++ ```
++ 
++ **设计模式**：**Type Erasure（类型擦除）**  
++ `_State` 是抽象基类，`_State_impl<_Callable>` 是模板派生类。`pthread_create` 只需要 C 函数指针 `void* (*)(void*)`，通过虚函数 `_M_run()` 恢复类型信息：
++ 
++ ```
++ pthread_create           pthread 线程入口
++     │                        │
++     ▼                        ▼
++ _dispatch_thread(void* p) → state->_M_run() → 用户的 callable
++                                     ▲
++                       _State_impl<Lambda> 重写 _M_run()
++ ```
++ 
++ 这就是为什么 `std::thread` 可以接受任意可调用对象——**虚函数 + 静态分发**。
++ 
++ #### join() 的实现
++ 
++ ```cpp
++ // src/c++11/thread.cc（伪码）
++ void thread::join() {
++     if (!joinable())
++         throw system_error(EDEADLK);  // 不能 join 一个非 joinable 的线程
++ 
++     // 检查是否自己 join 自己
++     if (get_id() == this_thread::get_id())
++         throw system_error(EDEADLK);
++ 
++     pthread_join(_M_id._M_thread, nullptr);  // 阻塞等待子线程结束
++     _M_id = id();  // 置空，此后 joinable() 返回 false
++ }
++ ```
++ 
++ **关键行为**：
++ - `pthread_join` 阻塞当前线程，直到目标线程退出
++ - join 后 **必须** 将 `_M_id` 置空，否则析构时会 `std::terminate`
++ - 自己 join 自己会导致死锁，标准库直接抛 `EDEADLK`
++ 
++ #### detach() 的实现
++ 
++ ```cpp
++ // src/c++11/thread.cc（伪码）
++ void thread::detach() {
++     if (!joinable())
++         throw system_error(EINVAL);
++ 
++     pthread_detach(_M_id._M_thread);  // 标记为 detached 状态
++     _M_id = id();  // 置空，释放所有权
++ }
++ ```
++ 
++ `pthread_detach` 告诉内核：该线程结束时自动回收资源（不需要其他线程 join）。detach 后线程在后台继续运行，`std::thread` 对象放弃所有权。
++ 
++ #### 析构函数——为什么 joinable 会 terminate
++ 
++ ```cpp
++ ~thread() {
++     if (joinable())
++         std::__terminate();  // 直接终止进程！
++ }
++ ```
++ 
++ **设计理由**：  
++ 如果析构时自动 `join`，可能导致隐式阻塞——你不知在哪里就卡住了。如果析构时自动 `detach`，线程可能在后台运行而局部变量已被销毁，导致数据竞争。标准选择了最安全（也最严厉）的做法：**让程序员显式处理线程生命周期**。
++ 
++ ---
++ 
++ ### 13.2 std::mutex 源码分析
++ 
++ #### 类型映射
++ 
++ ```cpp
++ // /usr/include/x86_64-linux-gnu/c++/13/bits/gthr-posix.h
++ typedef pthread_t __gthread_t;              // thread::native_handle_type
++ typedef struct timespec __gthread_time_t;   // 超时时间结构体
++ #define __GTHREAD_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER  // 静态初始化
++ ```
++ 
++ #### mutex 类定义
++ 
++ ```cpp
++ // /usr/include/c++/13/bits/std_mutex.h
++ class __mutex_base {
++ protected:
++     typedef __gthread_mutex_t __native_type;  // ≡ pthread_mutex_t
++ 
++ #ifdef __GTHREAD_MUTEX_INIT
++     __native_type _M_mutex = __GTHREAD_MUTEX_INIT;  // 静态初始化
++     constexpr __mutex_base() noexcept = default;
++ #else
++     __native_type _M_mutex;
++     __mutex_base() noexcept {
++         __GTHREAD_MUTEX_INIT_FUNCTION(&_M_mutex);  // 动态初始化
++     }
++     ~__mutex_base() noexcept { __gthread_mutex_destroy(&_M_mutex); }
++ #endif
++ };
++ ```
++ 
++ **设计要点**：
++ - Linux 上通过 `PTHREAD_MUTEX_INITIALIZER` **静态初始化**，零开销
++ - 没有定义析构函数（静态初始化不需要清理）
++ - 没有动态分配内存——`pthread_mutex_t` 直接内嵌在对象中
++ 
++ #### lock() / unlock() 的实现
++ 
++ ```cpp
++ class mutex : private __mutex_base {
++ public:
++     void lock() {
++         int __e = __gthread_mutex_lock(&_M_mutex);  // → pthread_mutex_lock
++         if (__e)
++             __throw_system_error(__e);  // 出错时抛出 system_error
++     }
++ 
++     bool try_lock() noexcept {
++         return !__gthread_mutex_trylock(&_M_mutex);  // → pthread_mutex_trylock
++         // 返回 true 表示锁成功
++     }
++ 
++     void unlock() {
++         __gthread_mutex_unlock(&_M_mutex);  // → pthread_mutex_unlock
++     }
++ };
++ ```
++ 
++ **gthread 宏展开**（Linux x86-64）：
++ ```c
++ // gthr-posix.h 中通过 __gthrw 宏做 weak symbol 声明
++ __gthrw(pthread_mutex_lock)     // → extern __typeof(pthread_mutex_lock) pthread_mutex_lock __attribute__((weak));
++ #define __gthread_mutex_lock(x) __gthrw_(pthread_mutex_lock)(x)
++ ```
++ 
++ **为什么要用 weak symbol？**  
++ 支持单线程环境：如果 pthread 库未链接，这些符号解析为 `nullptr`，调用前通过 `__gthread_active_p()` 检查跳过。
++ 
++ #### pthread_mutex_lock 底层 (glibc/NPTL)
++ 
++ `pthread_mutex_lock` 在内核层面使用 **futex**（Fast Userspace Mutex）：
++ 
++ ```c
++ // glibc nptl/pthread_mutex_lock.c（简化逻辑）
++ int pthread_mutex_lock(pthread_mutex_t *mutex) {
++     // 1. 原子尝试：CAS 将 0 改为 1（未锁→锁定）
++     unsigned int v = atomic_exchange(&mutex->__data.__lock, 1);
++     if (v == 0)
++         return 0;  // 快速路径：锁成功！
++ 
++     // 2. 慢速路径：需要阻塞
++     if (v == 1 || /* 不等待 */) {
++         do {
++             // futex 系统调用：如果锁仍被占用则睡眠
++             futex(&mutex->__data.__lock, FUTEX_WAIT, 2, ...);
++             v = atomic_exchange(&mutex->__data.__lock, 2);
++         } while (v != 0);
++     }
++     return 0;
++ }
++ ```
++ 
++ **futex 的精髓**：
++ - **无竞争时**：仅一次原子操作（~10ns），无系统调用
++ - **有竞争时**：通过 `futex(FUTEX_WAIT)` 陷入内核，线程挂起（~μs 级别）
++ - 值 0=未锁，1=锁定无竞争者，2=锁定有等待者
++ 
++ ---
++ 
++ ### 13.3 lock_guard 源码分析
++ 
++ ```cpp
++ template<typename _Mutex>
++     class lock_guard {
++     public:
++         typedef _Mutex mutex_type;
++ 
++         // 构造时加锁
++         explicit lock_guard(mutex_type& __m) : _M_device(__m)
++         { _M_device.lock(); }
++ 
++         // adopt_lock：假设调用方已持有锁，不再加锁
++         lock_guard(mutex_type& __m, adopt_lock_t) noexcept : _M_device(__m)
++         { }
++ 
++         // 析构时解锁（永不抛异常——unlock() 不抛）
++         ~lock_guard()
++         { _M_device.unlock(); }
++ 
++         // 禁止拷贝
++         lock_guard(const lock_guard&) = delete;
++         lock_guard& operator=(const lock_guard&) = delete;
++ 
++     private:
++         mutex_type&  _M_device;  // 引用绑定（不能为空，不可移动）
++     };
++ ```
++ 
++ **设计理念——最小且安全的 RAII 包装器**：
++ - 只有构造和析构两个操作，没有 `lock()`/`unlock()` 接口
++ - 发生异常时栈展开会调用析构函数，保证锁一定释放
++ - `_M_device` 用**引用**而非指针——永远不可能是 `nullptr`，避免空指针检查
++ - 不可移动、不可拷贝——生命周期严格绑定到栈上
++ 
++ **对比 unique_lock**：`lock_guard` 没有 `defer_lock` / `try_lock` / 所有权转移等功能，但编译器可以内联得更好，因为它只有构造+析构两个出口。
++ 
++ ---
++ 
++ ### 13.4 unique_lock 源码分析
++ 
++ ```cpp
++ template<typename _Mutex>
++     class unique_lock {
++     public:
++         typedef _Mutex mutex_type;
++ 
++     private:
++         mutex_type* _M_device;  // 指针（可为空，表示未关联 mutex）
++         bool        _M_owns;    // 是否持有锁
++ ```
++ 
++ **与 lock_guard 的关键差异**：
++ | 特性 | lock_guard | unique_lock |
++ |------|-----------|-------------|
++ | 成员 | 引用 `mutex_type&` | 指针 `mutex_type*` |
++ | 可空 | 否 | 是（默认构造/被 move 后） |
++ | 可移动 | 否 | 是 |
++ | 额外操作 | 无 | `lock()`/`unlock()`/`try_lock()`/`release()` |
++ 
++ #### 各个构造器
++ 
++ ```cpp
++ explicit unique_lock(mutex_type& __m)
++     : _M_device(std::__addressof(__m)), _M_owns(false)
++ {
++     lock();       // 调用的是 unique_lock::lock()
++     _M_owns = true;
++ }
++ 
++ unique_lock(mutex_type& __m, defer_lock_t) noexcept
++     : _M_device(std::__addressof(__m)), _M_owns(false)
++ { }  // 不锁！等待后续手动 lock()
++ 
++ unique_lock(mutex_type& __m, try_to_lock_t)
++     : _M_device(std::__addressof(__m)),
++       _M_owns(_M_device->try_lock())
++ { }  // 尝试锁，结果记录在 _M_owns
++ 
++ unique_lock(mutex_type& __m, adopt_lock_t) noexcept
++     : _M_device(std::__addressof(__m)), _M_owns(true)
++ { }  // 假设已持有锁，仅注册
++ 
++ // 移动构造：转让所有权
++ unique_lock(unique_lock&& __u) noexcept
++     : _M_device(__u._M_device), _M_owns(__u._M_owns)
++ {
++     __u._M_device = 0;   // 源对象置空
++     __u._M_owns = false;
++ }
++ ```
++ 
++ **`defer_lock_t` / `try_to_lock_t` / `adopt_lock_t` 是空标签类型**：
++ 
++ ```cpp
++ struct defer_lock_t   { explicit defer_lock_t() = default; };
++ struct try_to_lock_t  { explicit defer_lock_t() = default; };
++ struct adopt_lock_t   { explicit defer_lock_t() = default; };
++ 
++ inline constexpr defer_lock_t   defer_lock{ };
++ inline constexpr try_to_lock_t  try_to_lock{ };
++ inline constexpr adopt_lock_t   adopt_lock{ };
++ ```
++ 
++ **设计模式——Tag Dispatch（标签派发）**：  
++ 通过不同的空结构体标签，在编译期选择不同的构造行为，无需运行时判断。
++ 
++ #### lock() 的安全检查
++ 
++ ```cpp
++ void lock() {
++     if (!_M_device)
++         __throw_system_error(errc::operation_not_permitted);  // 空指针
++     else if (_M_owns)
++         __throw_system_error(errc::resource_deadlock_would_occur);  // 重复锁
++     else {
++         _M_device->lock();
++         _M_owns = true;
++     }
++ }
++ ```
++ 
++ **安全检查**：unique_lock 在调用锁操作前先做防御性检查，防止：
++ 1. 对空的 unique_lock（默认构造或已被 move）调用 `lock()`
++ 2. 重复加锁（未解锁又加锁——注意这不是死锁检测，只是防止 misuse）
++ 
++ ---
++ 
++ ### 13.5 scoped_lock 源码分析 (C++17)
++ 
++ ```cpp
++ // /usr/include/c++/13/mutex
++ template<typename... _MutexTypes>
++     class scoped_lock {
++     public:
++         explicit scoped_lock(_MutexTypes&... __m) : _M_devices(std::tie(__m...))
++         { std::lock(__m...); }     // 原子方式锁多个 mutex
++ 
++         ~scoped_lock()
++         { std::apply([](auto&... __m) { (__m.unlock(), ...); }, _M_devices); }
++         // C++17 fold expression: 逐个解锁
++ 
++     private:
++         tuple<_MutexTypes&...> _M_devices;  // 存储所有 mutex 的引用
++     };
++ ```
++ 
++ **亮点**：
++ - 变参模板支持任意数量的 mutex
++ - 构造时调用 `std::lock()` 保证不产生死锁
++ - C++17 fold expression `(__m.unlock(), ...)` 逐个解锁
++ - `std::apply` 展开 tuple 调用 lambda
++ 
++ ---
++ 
++ ### 13.6 std::lock() 死锁避免算法
++ 
++ ```cpp
++ // /usr/include/c++/13/mutex
++ template<typename _L1, typename _L2, typename... _L3>
++     void lock(_L1& __l1, _L2& __l2, _L3&... __l3) {
++ #if __cplusplus >= 201703L
++         if constexpr (is_same_v<_L1, _L2> && (is_same_v<_L1, _L3> && ...)) {
++             // 所有锁类型相同 → 使用数组 + 轮询算法
++             constexpr int _Np = 2 + sizeof...(_L3);
++             unique_lock<_L1> __locks[] = {
++                 {__l1, defer_lock}, {__l2, defer_lock}, {__l3, defer_lock}...
++             };
++             int __first = 0;
++             do {
++                 __locks[__first].lock();              // 锁当前锚点
++                 for (int __j = 1; __j < _Np; ++__j) {
++                     const int __idx = (__first + __j) % _Np;
++                     if (!__locks[__idx].try_lock()) {  // 尝试下一个
++                         // 失败 → 解锁全部，换锚点重试
++                         for (int __k = __j; __k != 0; --__k)
++                             __locks[(__first + __k - 1) % _Np].unlock();
++                         __first = __idx;
++                         break;
++                     }
++                 }
++             } while (!__locks[__first].owns_lock());
++ 
++             for (auto& __l : __locks) __l.release();
++         } else
++ #endif
++         {
++             // 不同类型 → 递归旋转算法
++             int __i = 0;
++             __detail::__lock_impl(__i, 0, __l1, __l2, __l3...);
++         }
++     }
++ ```
++ 
++ **算法核心**（旋转锁 + 回退）：
++ 1. 从一个锁开始 `lock()`
++ 2. 对剩余锁依次 `try_lock()`
++ 3. 如果 `try_lock` 失败，**回退解锁所有已获锁**，将失败的那个锁作为新锚点
++ 4. 循环直到所有锁都获得
++ 
++ **为什么能避免死锁**：死锁需要"每个线程持有一部分锁，等待另一部分"——本算法保证获得锁的操作是原子的（要么全部得到，要么全部释放再重试），不会被其他线程打断。
++ 
++ ---
++ 
++ ### 13.7 shared_mutex 源码分析
++ 
++ #### 实现选择
++ 
++ ```cpp
++ // /usr/include/c++/13/shared_mutex
++ #if _GLIBCXX_USE_PTHREAD_RWLOCK_T
++     // 优先使用 pthread_rwlock_t（Linux 上都有）
++     class __shared_mutex_pthread { ... };
++ #else
++     // 回退：基于 mutex + condition_variable 实现
++     class __shared_mutex_cv { ... };
++ #endif
++ ```
++ 
++ #### pthread_rwlock_t 版本
++ 
++ ```cpp
++ class __shared_mutex_pthread {
++     pthread_rwlock_t _M_rwlock = PTHREAD_RWLOCK_INITIALIZER;
++ 
++ public:
++     // 写锁（独占）
++     void lock() {
++         int __ret = __glibcxx_rwlock_wrlock(&_M_rwlock);  // pthread_rwlock_wrlock
++         if (__ret == EDEADLK)
++             __throw_system_error(errc::resource_deadlock_would_occur);
++     }
++ 
++     // 读锁（共享）
++     void lock_shared() {
++         int __ret;
++         do
++             __ret = __glibcxx_rwlock_rdlock(&_M_rwlock);  // pthread_rwlock_rdlock
++         while (__ret == EAGAIN);  // 读锁数量达上限重试
++     }
++ 
++     bool try_lock_shared() {
++         int __ret = __glibcxx_rwlock_tryrdlock(&_M_rwlock);
++         return !(__ret == EBUSY || __ret == EAGAIN);
++     }
++ 
++     void unlock_shared() {
++         __glibcxx_rwlock_unlock(&_M_rwlock);  // 与 unlock() 相同
++     }
++ };
++ ```
++ 
++ **设计要点**：
++ - `unlock()` 和 `unlock_shared()` 都调用 `pthread_rwlock_unlock`——pthread 内部通过计数器区分读写
++ - 读锁超限时 `do...while` 忙等 `EAGAIN`——标准中允许实现"尽力而为"
++ 
++ #### condition_variable 版本 (回退实现)
++ 
++ 当平台没有 pthread_rwlock_t 时，libstdc++ 用 `mutex + condition_variable` 模拟：
++ 
++ ```cpp
++ class __shared_mutex_cv {
++     mutex              _M_mut;
++     condition_variable _M_gate1;   // 控制写者进入
++     condition_variable _M_gate2;   // 控制写者等待读者退出
++     unsigned _M_state;             // 高位=写标志，低位=读者计数
++ 
++     static constexpr unsigned _S_write_entered = 1U << 31;  // 最高位
++     static constexpr unsigned _S_max_readers   = ~_S_write_entered;
++ 
++ public:
++     void lock() {               // 写锁
++         unique_lock<mutex> __lk(_M_mut);
++         _M_gate1.wait(__lk, [=]{ return !_M_write_entered(); });   // 无写者
++         _M_state |= _S_write_entered;                                // 标记写者
++         _M_gate2.wait(__lk, [=]{ return _M_readers() == 0; });      // 无读者
++     }
++ 
++     void lock_shared() {        // 读锁
++         unique_lock<mutex> __lk(_M_mut);
++         _M_gate1.wait(__lk, [=]{ return _M_state < _S_max_readers; });  // 未超限
++         ++_M_state;                                                      // 读者计数++
++     }
++ };
++ ```
++ 
++ **这个实现展示了读写锁的经典算法**：
++ 1. 写者要等**所有读者退出**和**没有其他写者**
++ 2. 读者要等**写者完成**且**读者未超限**
++ 3. 写者有**公平策略**：一旦写者排队，新读者被 gate1 阻止
++ 
++ ---
++ 
++ ### 13.8 recursive_mutex 源码分析
++ 
++ ```cpp
++ class __recursive_mutex_base {
++ protected:
++     typedef __gthread_recursive_mutex_t __native_type;  // ≡ pthread_mutex_t（特殊 attr）
++ #ifdef __GTHREAD_RECURSIVE_MUTEX_INIT
++     __native_type _M_mutex = __GTHREAD_RECURSIVE_MUTEX_INIT;
++     // → PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
++ };
++ 
++ class recursive_mutex : private __recursive_mutex_base {
++ public:
++     void lock() {
++         int __e = __gthread_recursive_mutex_lock(&_M_mutex);
++         if (__e) __throw_system_error(__e);
++     }
++ 
++     void unlock() {
++         __gthread_recursive_mutex_unlock(&_M_mutex);
++     }
++ };
++ ```
++ 
++ **不同点**：`recursive_mutex` 使用 `PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP` 初始化，这是一个设置了 `PTHREAD_MUTEX_RECURSIVE` 属性的 mutex。pthread 内部维护一个**所有者线程 ID + 递归计数**，同一线程多次 lock() 只需递增计数器，不必真的阻塞。
++ 
++ ---
++ 
++ ### 13.9 call_once 源码分析
++ 
++ #### TLS 版本（有线程局部存储）
++ 
++ ```cpp
++ // /usr/include/c++/13/mutex
++ extern __thread void* __once_callable;   // 每个线程独有
++ extern __thread void (*__once_call)();   // 函数指针
++ 
++ struct once_flag::_Prepare_execution {
++     template<typename _Callable>
++     explicit _Prepare_execution(_Callable& __c) {
++         __once_callable = std::__addressof(__c);   // 存 callable 地址到 TLS
++         __once_call = [] {
++             (*static_cast<_Callable*>(__once_callable))();  // 恢复类型后调用
++         };
++     }
++     ~_Prepare_execution() {
++         __once_callable = nullptr;
++         __once_call = nullptr;
++     }
++ };
++ ```
++ 
++ #### 无 TLS 版本（回退：全局互斥 + std::function）
++ 
++ ```cpp
++ extern function<void()> __once_functor;      // 全局 std::function
++ extern mutex& __get_once_mutex();            // 全局 mutex
++ 
++ struct once_flag::_Prepare_execution {
++     template<typename _Callable>
++     explicit _Prepare_execution(_Callable& __c) {
++         __once_functor = __c;                // 存到全局 function
++         __set_once_functor_lock_ptr(&_M_functor_lock);  // 持有全局 mutex 锁
++     }
++ private:
++     unique_lock<mutex> _M_functor_lock{__get_once_mutex()};
++ };
++ ```
++ 
++ **对比**：TLS 版本无锁、零拷贝；无 TLS 版本需要全局锁和 `std::function` 的动态内存分配。现代 Linux 都支持 TLS。
++ 
++ ---
++ 
++ ### 13.10 pthread 类型映射总览（Linux x86-64）
++ 
++ | C++ 类型 | 底层 POSIX 类型 | 初始化方式 |
++ |----------|----------------|-----------|
++ | `std::thread::native_handle_type` | `pthread_t` | — |
++ | `std::mutex::native_handle_type` | `pthread_mutex_t*` | `PTHREAD_MUTEX_INITIALIZER` |
++ | `std::recursive_mutex` | `pthread_mutex_t` | `PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP` |
++ | `std::shared_mutex` (Linux) | `pthread_rwlock_t` | `PTHREAD_RWLOCK_INITIALIZER` |
++ | `std::once_flag` | `pthread_once_t` | `PTHREAD_ONCE_INIT` |
++ | `std::condition_variable` | `pthread_cond_t` | `PTHREAD_COND_INITIALIZER` |
++ | `thread_local` 变量 | 取决于链接器 | `__thread` (GCC) |
++ 
+  ---
+  
+  ## 总结速查
+  
+- | 概念 | 关键点 | 核心 API |
+- |------|--------|----------|
+- | 线程创建 | 可调用对象 + 参数 | `std::thread` |
+- | 生命周期 | join / detach / move | `.join()` `.detach()` `std::move` |
+- | 异常安全 | RAII 管理线程 | `ThreadGuard` / `std::jthread`(C++20) |
+- | 互斥 | 保护共享数据 | `std::mutex` + `std::lock_guard` |
+- | 死锁 | 固定顺序 / std::lock | `std::lock(m1, m2)` |
+- | 灵活加锁 | defer / try / 超时 | `std::unique_lock` |
+- | 读写分离 | 读共享、写独占 | `std::shared_mutex` + `shared_lock` |
+- | 递归 | 同一线程重复加锁 | `std::recursive_mutex` |
+- | 一次性初始化 | 线程安全懒加载 | `std::call_once` + `once_flag` |
+- | 底层 | futex / 原子操作 / 上下文切换 | `clone()` / `LOCK CMPXCHG` |
++ | 概念 | 关键点 | 核心 API | 源码位置 |
++ |------|--------|----------|----------|
++ | 线程创建 | 可调用对象 + 参数 | `std::thread` | `bits/std_thread.h` |
++ | 生命周期 | join / detach / move | `.join()` `.detach()` `std::move` | `src/c++11/thread.cc` |
++ | 异常安全 | RAII 管理线程 | `ThreadGuard` / `std::jthread`(C++20) | — |
++ | 互斥 | 保护共享数据 | `std::mutex` + `std::lock_guard` | `bits/std_mutex.h` |
++ | 死锁 | 固定顺序 / std::lock | `std::lock(m1, m2)` | `include/mutex` |
++ | 灵活加锁 | defer / try / 超时 | `std::unique_lock` | `bits/unique_lock.h` |
++ | 读写分离 | 读共享、写独占 | `std::shared_mutex` + `shared_lock` | `include/shared_mutex` |
++ | 递归 | 同一线程重复加锁 | `std::recursive_mutex` | `include/mutex` |
++ | 一次性初始化 | 线程安全懒加载 | `std::call_once` + `once_flag` | `include/mutex` |
++ | 底层 | futex / 原子操作 / 上下文切换 | `clone()` / `LOCK CMPXCHG` | — |
