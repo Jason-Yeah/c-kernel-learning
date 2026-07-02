@@ -1,0 +1,1992 @@
+# ASIO 异步读写：原理、用法与 session 封装拆解
+
+> **目标读者**：已经知道 `io_context` 是什么、见过 `async_accept`，但面对 `async_read_some`、`async_write`、`async_send` 等函数一头雾水，拿到 `session.hpp` 和 `session.cpp` 看不明白封装逻辑。
+>
+> **本文路线**：同步 vs 异步（重新追问）→ async_xxx 函数族全景 → 异步底层原理（epoll 视角）→ session.cpp 逐行拆解 → 代码审查与优化建议
+
+---
+
+## 目录
+
+1. [再次追问：同步 vs 异步到底差在哪](#1-再次追问同步-vs-异步到底差在哪)
+2. [ASIO 的 async_xxx 函数族](#2-asio-的-async_xxx-函数族)
+3. [async_xxx 底层原理——调用后到底发生了什么](#3-async_xxx-底层原理调用后到底发生了什么)
+4. [session.hpp 和 session.cpp 逐行拆解](#4-sessionhpp-和-sessioncpp-逐行拆解)
+5. [代码审查——有问题吗？怎么优化？](#5-代码审查有问题吗怎么优化)
+6. [企业实战：生产环境中的 Asio 编程](#6-企业实战生产环境中的-asio-编程)
+7. [总结](#7-总结)
+
+---
+
+## 1. 再次追问：同步 vs 异步到底差在哪
+
+`base_asio.md` 已经用咖啡店类比讲过一遍了。这里从**代码执行流**和**资源占用**两个维度重新追问。
+
+### 1.1 从 CPU 时间线看同步
+
+假设你要从三个 socket 读数据，同步写法：
+
+```cpp
+// 同步：一个线程处理一个连接
+void handle_client(int fd) {
+    char buf[1024];
+    int n = recv(fd, buf, sizeof(buf), 0);  // ← 线程卡在这
+    process(buf, n);
+}
+
+// 三个客户端 = 三个线程
+std::thread(handle_client, fd1).detach();
+std::thread(handle_client, fd2).detach();
+std::thread(handle_client, fd3).detach();
+```
+
+CPU 时间线（假设每个 recv 等 10ms，处理 2ms）：
+
+```
+         t0    t1    t2    t3    t4    t5    t6
+线程1:   [recv------------------] [process]
+线程2:   [recv--------] [process] [recv--------] [process]
+线程3:   [recv------------------]             [process]
+                           ↑
+                    CPU 在三个线程间来回切换
+                    每次切换 ~1μs（上下文切换开销）
+```
+
+**三个线程轮流跑，大部分时间在等 recv（阻塞睡眠），少部分在真正处理。** 但每个线程 8MB 栈空间占着，3 个线程 = 24MB。3000 个连接 = 24GB，爆了。
+
+### 1.2 从 CPU 时间线看异步
+
+```cpp
+// 异步：一个线程处理所有连接
+void handle_client(tcp::socket& sock) {
+    auto buf = std::make_shared<std::array<char, 1024>>();
+    sock.async_read_some(asio::buffer(*buf), [buf](ec, n) {
+        process(buf->data(), n);
+    });
+}
+
+io_context io;
+// 注册三个 socket 的读
+handle_client(sock1);
+handle_client(sock2);
+handle_client(sock3);
+io.run();  // 一个线程跑所有
+```
+
+CPU 时间线：
+
+```
+         t0    t1    t2    t3    t4    t5    t6
+线程1:   [注册] [注册] [注册] [epoll_wait] [proc1][proc2][proc3]
+                               ↑                        ↑
+                          等待时线程睡眠           数据到了，依次处理
+                          不占 CPU
+```
+
+**一个线程，没有上下文切换，等的时候线程睡眠，数据来了依次处理回调。**
+
+### 1.3 核心区别表
+
+| 维度 | 同步（多线程） | 异步（单线程） |
+|------|-------------|--------------|
+| **线程数** | = 连接数（或多路复用+线程池） | 通常 1 个（或 CPU 核数个） |
+| **栈占用** | 每线程 8MB，1k 连接 = 8GB | 每个连接几十字节（socket 对象） |
+| **上下文切换** | 频繁（操作系统调度线程） | 几乎没有 |
+| **编程模型** | 顺序写，'卡'在 I/O 处 | 回调写，注册完就返回 |
+| **错误处理** | try-catch 或 errno | 回调参数里的 error_code |
+| **数据完整性** | 一个连接一个线程，天然隔离 | 回调之间共享数据需要同步（strand） |
+
+### 1.4 最容易混淆的误区
+
+> **误区**：错误认为异步 = 非阻塞，所以 `async_read_some` 是立即读完数据返回的。
+
+**不是。** 异步和非阻塞是两个维度：
+
+| | 阻塞 | 非阻塞 |
+|--|------|--------|
+| **同步** | `recv()` 卡住直到有数据 | `recv()` 立即返回 `EAGAIN`，你得轮询 |
+| **异步** | 不适用 | `async_read_some()` 立即返回，数据到了回调通知 |
+
+`async_read_some` **立即返回**不等数据——这叫非阻塞。但"回调什么时候被调用"你控制不了——这是异步。**异步一定非阻塞，但非阻塞不一定是异步。**
+
+---
+
+## 2. ASIO 的 async_xxx 函数族
+
+这是你最困惑的部分。ASIO 里面有一大堆读写函数，名字相似，到底用哪个？
+
+### 2.1 全貌速查
+
+| 函数 | 所属对象 | 语义 | 保证读完指定字节？ | 对应 C 函数 |
+|------|---------|------|:---:|-----------|
+| `async_read_some` | `socket` | "读一些数据，有多少算多少" | ❌ | `recv(fd, buf, size, 0)` |
+| `async_write_some` | `socket` | "写一些数据，能写多少写多少" | ❌ | `send(fd, buf, size, 0)` |
+| `async_read` | 自由函数 | "读完指定的字节数才回调" | ✅ | 循环 recv 直到凑够 |
+| `async_write` | 自由函数 | "写完指定的字节数才回调" | ✅ | 循环 send 直到发完 |
+| `async_send` | `socket` | 同 `async_write_some`（等效） | ❌ | `send(fd, buf, size, MSG_NOSIGNAL)` |
+| `async_receive` | `socket` | 同 `async_read_some`（等效） | ❌ | `recv(fd, buf, size, 0)` |
+| `async_read_until` | 自由函数 | "读到某个分隔符为止" | 读到了算 | 无直接对应 |
+
+**最常用的组合**：
+
+```
+读固定长度数据 → async_read
+读变长数据     → async_read_until + streambuf
+写数据         → async_write
+高性能但麻烦   → async_read_some / async_write_some（自己维护进度）
+```
+
+### 2.2 核心区别一：async_read_some vs async_read
+
+这是面试常考、代码里最容易用错的。
+
+**`async_read_some`——"有多少读多少"**
+
+```cpp
+char buf[1024];
+// 对方发了 2000 字节
+sock.async_read_some(asio::buffer(buf), [](ec, size_t n) {
+    // n 可能是 2000，也可能是 1024，也可能是 500
+    // ASIO 只保证：读到了至少 1 字节，最多 buf.size() 字节
+    // 不保证填满 buf！
+    // 如果 n < 2000，剩下的数据还在内核缓冲区里
+    // 你需要再次 async_read_some 才能读完剩下的
+});
+```
+
+**`async_read`——"读完指定的字节数才回调"**
+
+```cpp
+char buf[1024];
+// 读满 1024 字节才回调
+asio::async_read(sock, asio::buffer(buf), [](ec, size_t n) {
+    // n == 1024，一定读满了
+    // 如果对方只发了 500 字节就断开连接，ec 会变成 error::eof
+});
+```
+
+**`async_read` 内部怎么做到的？**
+
+它其实是在 `async_read_some` 外面包了一层循环：
+
+```cpp
+// asio::async_read 伪代码
+void async_read(socket& s, buffer b, callback c) {
+    // 创建一个"复合操作"对象，记录已经读了多少
+    auto op = new read_op(s, b, c);
+
+    // 第一次调用 async_read_some
+    s.async_read_some(b, [op](ec, n) {
+        op->bytes += n;
+        if (op->bytes >= op->total) {
+            // 够了，调用用户回调
+            c(ec, op->bytes);
+        } else {
+            // 不够！继续读剩下的
+            s.async_read_some(剩下的部分, [op](ec, n) {
+                // 再次检查...
+                // 循环直到读够
+            });
+        }
+    });
+}
+```
+
+**什么时候用哪个？**
+
+| 场景 | 用哪个 | 原因 |
+|------|--------|------|
+| 读已知长度的消息头（比如 4 字节长度） | `async_read` | 省得自己循环 |
+| 读 HTTP 响应（不知道长度） | `async_read_until` 或 `async_read_some` | 一边读一边解析 |
+| 高性能自定义协议 | `async_read_some` | 你自己管理 buffer，减少一次封装 |
+| 写数据时 | `async_write` | 保证全部写完，少犯错 |
+
+### 2.3 核心区别二：async_write_some vs async_write
+
+逻辑跟读完全对称：
+
+```cpp
+// async_write_some —— 能写多少写多少
+std::string msg = "Hello, world!";
+sock.async_write_some(asio::buffer(msg), [](ec, size_t n) {
+    // n 可能 < 13（对方接收窗口太小、内核缓冲区满了）
+    // 需要再次 async_write_some 发剩下的
+});
+
+// async_write —— 保证全部写完
+asio::async_write(sock, asio::buffer(msg), [](ec, size_t n) {
+    // n == 13，全部发完了
+});
+```
+
+### 2.4 async_send / async_receive——socket 的成员函数
+
+这两个是 `socket` 类的成员函数，分别等价于 `async_write_some` 和 `async_read_some`：
+
+```cpp
+// 这三组各自等价：
+sock.async_write_some(buf, cb);   // 自由风格
+sock.async_send(buf, cb);         // 语义更接近 POSIX send()
+boost::asio::async_write(sock, buf, cb);  // 自由函数，保证写完
+
+// async_receive 同理
+sock.async_read_some(buf, cb);
+sock.async_receive(buf, cb);
+boost::asio::async_read(sock, buf, cb);  // 保证读完
+```
+
+`async_send` 和 `async_receive` 是 socket 对象提供的成员函数名，语义跟 `async_write_some` / `async_read_some` 完全一样——**不保证一次完成**。
+
+### 2.5 async_read_until——读到分隔符为止
+
+```cpp
+asio::streambuf buf;
+asio::async_read_until(sock, buf, "\r\n\r\n",  // 读到两个回车换行为止（HTTP 头结束）
+    [&buf](ec, n) {
+        // buf 里已经包含了 "\r\n\r\n" 以及之后可能多读的数据
+        std::istream is(&buf);
+        std::string header_line;
+        std::getline(is, header_line);  // 读第一行 "GET / HTTP/1.1"
+    });
+```
+
+### 2.6 怎么选——决策链
+
+```
+你要做什么？
+│
+├─ 读数据
+│   ├─ 知道确切长度（比如 4 字节包头） → async_read
+│   ├─ 知道分隔符（比如 HTTP 头）     → async_read_until
+│   └─ 不知道长度，流式解析           → async_read_some（自行管理进度）
+│
+└─ 写数据
+    ├─ 要保证发完 → async_write
+    └─ 性能极致  → async_write_some（自行管理进度）
+```
+
+---
+
+## 3. async_xxx 底层原理——调用后到底发生了什么
+
+这是你问的"背后做了什么呢"。我们以 `async_read_some` 为例，从你调用到回调执行，拆成 10 步。
+
+### 3.1 函数调用链全景
+
+```
+你写的代码：
+    sock.async_read_some(buffer(data, 1024), callback)
+        │
+        ▼
+1. ASIO 检查 buffer 是否为空（空则立即回调 error）
+        │
+        ▼
+2. 创建一个 read_operation 对象（堆分配）
+   ├── 记录 socket fd、buffer 地址、回调函数指针
+   └── 内部状态：pending = true
+        │
+        ▼
+3. 调用 platform->register_read_descriptor(fd, op)
+        │
+        ▼
+   ┌─ Linux 分支 ────────────────────────────────┐
+   │  epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd,     │
+   │           {EPOLLIN, {.ptr = op}})            │
+   │  → 告诉内核："这个 fd 有数据可读时，通知我"  │
+   └─────────────────────────────────────────────┘
+        │
+        ▼
+4. async_read_some 立即返回（不阻塞！）
+   → 你的代码继续执行后面的语句
+        │
+        │  ~~~~~~~~ 一段时间过去了 ~~~~~~~~
+        │
+        ▼
+5. 网卡收到数据 → DMA → 硬件中断 → 软中断
+        │
+        ▼
+6. 内核把数据放入 socket 的接收缓冲区
+        │
+        ▼
+7. 内核检查：这个 socket 被 epoll 关注了吗？
+   ├── 是！epoll 把这个 fd 加入就绪队列
+   └── epoll_wait 上如果有线程在等 → 唤醒它
+        │
+        ▼
+8. io.run() 中的 epoll_wait 返回
+   → 拿到就绪的 fd 和之前注册的 op 指针
+        │
+        ▼
+9. op->complete() 被调用
+   ├── 内部调用 recv(fd, buf, size, MSG_DONTWAIT)
+   │   → 从内核缓冲区拷贝数据到你的 buffer（唯一的拷贝！）
+   ├── 记录实际读到的字节数
+   └── 调用你写的 callback(ec, bytes_transferred)
+        │
+        ▼
+10. 你的回调被执行——数据已经在 buffer 里了
+```
+
+### 3.2 关键点逐条解释
+
+**关键 1：第 2 步的堆分配**
+
+每次 `async_xxx` 调用，ASIO 都在堆上创建一个 operation 对象。这个对象包含了你传进去的 buffer 信息、回调、socket fd。它一直活着，直到回调执行完毕才被销毁。
+
+**性能影响**：高频调用（如每秒百万次小包）→ 频繁堆分配/释放 → 可能成为瓶颈。高性能场景可以用 connection pool 复用。
+
+**关键 2：第 3 步的 epoll_ctl**
+
+每个 socket 首次调用 `async_read_some` 时，ASIO 通过 `epoll_ctl(EPOLL_CTL_ADD)` 把这个 fd 加入 epoll 监控。如果这个 socket 已经注册过，ASIO 可能走 `EPOLL_CTL_MOD` 或直接跳过（内部有去重优化）。
+
+**关键 3：第 7 步的内核唤醒**
+
+epoll 不需要你轮询——内核在软中断上下文（数据到达时）就直接把等待的线程标记为就绪。这就是 epoll 高效的根本原因：**事件驱动，而不是轮询驱动**。
+
+**关键 4：第 9 步的 recv(MSG_DONTWAIT)**
+
+ASIO 在回调你的代码之前，已经帮你在**内核态**把数据从 socket 接收缓冲区拷贝到了你给的 buffer 里。使用的是**非阻塞** recv（`MSG_DONTWAIT` 标志），因为 epoll 已经保证"有数据"，所以这次 recv 几乎总是立即成功，不会阻塞。
+
+### 3.3 同步 vs 异步的底层对比
+
+| 步骤 | 同步 recv | 异步 async_read_some |
+|------|----------|-------------------|
+| 1 | 调用 `recv(fd, buf, size, 0)` | 注册 operation 到 epoll |
+| 2 | 内核发现 buffer 为空 | `async_read_some` 返回，你的代码继续 |
+| 3 | 进程标记为 `TASK_INTERRUPTIBLE` | 你的代码可能注册第二个 async_xxx |
+| 4 | 进程从 CPU 调度出去（睡眠） | 或者 `io.run()` 进入 `epoll_wait` |
+| 5 | 数据到达 → 内核唤醒进程 | 数据到达 → 内核唤醒 epoll_wait |
+| 6 | 进程被调度回来 | epoll_wait 返回，拿到就绪 fd |
+| 7 | 数据从内核拷贝到用户 buffer | 内部 recv 拷贝数据到你的 buffer |
+| 8 | `recv` 返回，进程继续 | 你的回调被执行 |
+
+**核心差异在步骤 3-4**：同步时每个 recv 调用都可能导致一次进程睡眠/唤醒。异步时**所有 socket 共享一次 epoll_wait 睡眠**——不管你有 10 个还是 10000 个 socket，只有一个线程在一个 epoll_wait 上等。
+
+### 3.4 数据拷贝次数对比
+
+```
+同步 recv：                       异步 async_read_some：
+网卡 → 内核缓冲区（DMA）          网卡 → 内核缓冲区（DMA）
+内核缓冲区 → 用户 buffer（recv）   内核缓冲区 → 用户 buffer（ASIO 内部 recv）
+                                  ↑
+                           拷贝次数一样！都是 1 次 DMA + 1 次 CPU 拷贝
+                           异步没有多拷贝，也没有少拷贝
+```
+
+**异步不是为了减少数据拷贝，而是为了减少线程上下文切换和内存占用。**
+
+---
+
+## 4. session.hpp 和 session.cpp 逐行拆解
+
+现在来看你的 `session.hpp` 和 `session.cpp`。这是一个**封装了异步读写逻辑的会话类**，用来管理一个客户端连接的全部收发操作。
+
+### 4.1 先看设计意图
+
+这个 session 要解决的核心问题是：
+
+> 一个连接上，应用程序可能**连续多次调用写操作**（比如发了消息 A 又发消息 B），但 ASIO 的 `async_write_some` **不保证一次写完**。如果 A 还没写完你就发 B，两次数据会在内核缓冲区里混在一起，接收方收到的是 A 的一部分 + B 的一部分——乱掉了。
+
+**解决方案**：用一个**发送队列**（`_send_queue`）把所有要发的数据排队，**一次只发一个**，发完再从队列拿下一个。这个机制叫做**序列化发送（serialized write）**。
+
+同时，读也是异步的——`read_from_socket` 发起一次异步读，数据到了回调处理，然后发起下一次读。
+
+### 4.2 msg_node——消息节点
+
+```cpp
+class msg_node
+{
+public:
+    // 构造方式1："发送用"——传入数据，内部拷贝一份
+    msg_node(const char *msg, int total)
+        : _total_len(total), _cur_len(0)
+    {
+        _msg = new char[total];          // 分配堆内存
+        memcpy(_msg, msg, total);        // 拷贝数据（深拷贝）
+    }
+
+    // 构造方式2："接收用"——只分配空间，不填充数据
+    msg_node(int total)
+        : _total_len(total), _cur_len(0)
+    {
+        _msg = new char[total];          // 只分配，留给 ASIO 往里写
+    }
+
+    ~msg_node() { delete[] _msg; }        // 析构释放内存
+
+    // ===== 三个成员 =====
+    int _total_len;     // 数据总长度
+    int _cur_len;       // 已经处理（读或写）了多少字节
+    char *_msg;         // 数据指针
+};
+```
+
+**`_cur_len` 的作用**：因为 `async_write_some` 可能只发出去一部分（比如发了 500 字节但总长 2000），`_cur_len` 记录"已经发了多少"，下次从 `_msg + _cur_len` 开始继续发。
+
+### 4.3 session 类——成员变量总览
+
+```cpp
+class session : public std::enable_shared_from_this<session>
+{
+    // ... 略去函数声明 ...
+
+private:
+    std::shared_ptr<boost::asio::ip::tcp::socket> _sock;
+    std::shared_ptr<msg_node> _send_node;        // "版本1"用的当前发送节点
+    std::queue<std::shared_ptr<msg_node>> _send_queue;  // "版本2"用的发送队列
+
+    std::shared_ptr<msg_node> _recv_node;        // 当前接收节点
+
+    bool _send_pending;   // 发送进行中？(有 async_write_some 还没回调)
+    bool _recv_pending;   // 接收进行中？(有 async_read_some 还没回调)
+};
+```
+
+**核心设计**：
+
+| 成员 | 作用 |
+|------|------|
+| `_sock` | 共享指针管理的 socket |
+| `_send_node` | 版本 1 用的——正在发的消息（被 `write2socket_err` 使用） |
+| `_send_queue` | 版本 2 用的——排队等待发送的消息队列 |
+| `_recv_node` | 当前正在接收的消息节点 |
+| `_send_pending` | 标记是否有一个 async_write_some 正在飞行 | 
+| `_recv_pending` | 标记是否有一个 async_read_some 正在飞行 |
+
+**`_send_pending` 是核心控制变量**：如果当前有一个写操作在等回调，新来的写请求就排队；回调完成后从队列取下一个继续发。**这样保证同一时间只有一个 async_write_some 在飞行，数据不会乱。**
+
+### 4.4 shared_from_this vs this——异步回调里的"保命符"
+
+这是 session 代码里你肯定注意到了但没搞懂的关键点。每一处回调捕获的都是 `shared_from_this()` 而不是 `this`。为什么？
+
+#### 4.4.1 先看一个"崩溃"的例子
+
+假设不用 `shared_from_this()`，用 `this`：
+
+```cpp
+class Session {
+    void start() {
+        auto self = this;  // ← 捕获原始指针
+        _sock->async_read_some(asio::buffer(_buf),
+            [self](ec, size_t n) {
+                self->process(n);  // ← 危险！self 可能已经失效
+            });
+    }
+};
+
+// 外部使用：
+{
+    auto session_ptr = std::make_shared<Session>(...);
+    session_ptr->start();
+    // 作用域结束，session_ptr 被销毁 → Session 对象被释放
+    // 但 ASIO 的回调还在 io_context 里排队！
+    // 回调执行时：self 指向的内存已经被回收了 → 崩溃！
+}
+```
+
+**问题**：`this` 是一个**原始指针**。它不延长对象的生命周期。如果 Session 对象在回调执行前被销毁了，`this` 就变成了悬空指针（dangling pointer），访问它的任何成员都会崩溃。
+
+#### 4.4.2 shared_from_this() 的原理
+
+```cpp
+class session : public std::enable_shared_from_this<session> {
+    //                ↑ 关键：继承这个模板类
+    // ...
+};
+```
+
+**`std::enable_shared_from_this<T>`** 做了什么？它在 `T` 内部添加了一个**弱引用**（`weak_ptr<T>`），记录着管理这个对象的 `shared_ptr`。
+
+```cpp
+// enable_shared_from_this 内部大致实现（伪代码）
+template<typename T>
+class enable_shared_from_this {
+    mutable std::weak_ptr<T> _weak_this;  // 记录"管理我的那个 shared_ptr"
+
+protected:
+    std::shared_ptr<T> shared_from_this() {
+        // 从 _weak_this 提升为 shared_ptr
+        // 如果 _weak_this 已经过期（没有 shared_ptr 管理我了），抛 bad_weak_ptr
+        return _weak_this.lock();
+    }
+
+    // 当外部创建 shared_ptr<T>(this) 时，内部会初始化 _weak_this
+    // 这个过程是 std::shared_ptr 的构造函数自动完成的
+};
+```
+
+**工作流程**：
+
+```
+// 1. 外部创建 shared_ptr
+auto sp = std::make_shared<session>(sock);
+    │
+    │  shared_ptr 的构造函数检测到 session 继承自
+    │  enable_shared_from_this<session>，自动把
+    │  _weak_this 指向自己（sp 的引用计数 +1）
+    ▼
+
+// 2. 成员函数里调用 shared_from_this()
+auto self = shared_from_this();   // _weak_this.lock() 提升
+    │
+    │  lock() 成功 → 返回一个新的 shared_ptr
+    │ 这个新 shared_ptr 和 sp 共享同一个控制块
+    │ 引用计数 +1（从 1 变成 2）
+    ▼
+
+// 3. 外部 sp 被销毁
+// 作用域结束，sp 析构 → 引用计数 2→1
+// 对象还没销毁！（因为还有一个 shared_ptr 活着 = self）
+
+// 4. 回调执行完毕，self 析构
+// 引用计数 1→0 → 对象真正被销毁
+```
+
+**关键**：
+- `shared_from_this()` 返回的 `shared_ptr` **和外部管理这个对象的 `shared_ptr` 共享引用计数**
+- 只要还有任何一个 `shared_ptr`（包括回调里捕获的那个）活着，Session 对象就不会被销毁
+- 这就保证了**回调执行时，Session 对象一定还活着**
+
+#### 4.4.3 两种做法的对比
+
+| | `this`（原始指针） | `shared_from_this()` |
+|--|------------------|---------------------|
+| 生命周期 | 不延长 | ✅ 延长到回调执行完 |
+| 对象提前销毁后 | 💥 悬空指针，崩溃 | ✅ 回调里有 shared_ptr，对象不销毁 |
+| 多线程安全 | ❌ 一个线程析构，另一个线程还在用 | ✅ shared_ptr 引用计数线程安全 |
+| 语法 | 简单，但危险 | 稍微啰嗦，但安全 |
+
+**一句话**：`this` 是"对象现在可能还在也可能不在了"，`shared_from_this()` 是"对象一定还在，因为我拿着它的 shared_ptr"。
+
+#### 4.4.4 什么时候不能用 shared_from_this？
+
+**场景 1：构造函数里不能用**
+
+```cpp
+class session : public std::enable_shared_from_this<session> {
+public:
+    session() {
+        auto self = shared_from_this();  // 💥 抛出 std::bad_weak_ptr！
+        // 原因：shared_ptr 还没创建完，_weak_this 还没初始化
+    }
+};
+```
+
+因为 `enable_shared_from_this` 的 `_weak_this` 是在 `shared_ptr` 构造时初始化的——而构造函数运行时，`shared_ptr` 还没构造完。
+
+**修复**：不在构造函数里调用 `shared_from_this()`，而是等对象被 `shared_ptr` 管理后再调用。
+
+**场景 2：栈上对象不能用**
+
+```cpp
+int main() {
+    session s(sock);          // 栈上分配，不是 shared_ptr
+    auto self = s.shared_from_this();  // 💥 bad_weak_ptr！
+    // 原因：没有 shared_ptr 管理 s，_weak_this 没被初始化
+}
+```
+
+`enable_shared_from_this` 的前提是：**对象必须被 `shared_ptr` 管理**。栈对象、`unique_ptr` 管理的对象都不能用 `shared_from_this()`。
+
+#### 4.4.5 session.cpp 中的实际用法
+
+回头看 session.cpp 里的典型用法：
+
+```cpp
+void session::write2socket(const std::string &buf)
+{
+    // ...
+    auto self = shared_from_this();   // ← 创建一个 shared_ptr 给自己
+    _sock->async_write_some(
+        boost::asio::buffer(...),
+        [self](const boost::system::error_code &ec,   // ← 捕获 self
+               std::size_t bytes_transferred) {
+            self->write_callback(ec, bytes_transferred);
+            // self 超出作用域 → 如果这是最后一个 shared_ptr，对象销毁
+        });
+    // 注意：还有一个 _send_queue 也可能持有 shared_ptr<msg_node>
+    // 但这些跟 session 本身的寿命是独立的
+}
+```
+
+**为什么每处回调都要捕获 `self`？**
+
+因为 `async_write_some` 的回调可能在**几毫秒甚至几秒后才执行**。在这段时间里，外部的 `shared_ptr<session>` 可能已经被销毁了（比如连接关闭）。`self` 保证了回调执行时 session 对象还活着。
+
+**如果回调里用了 `this` 而不是 `self` 会怎样？**
+
+```cpp
+// 错误写法
+void session::write2socket(const std::string &buf) {
+    // ...
+    _sock->async_write_some(
+        boost::asio::buffer(...),
+        [this](ec, size_t n) {   // ← 捕获 this！
+            this->write_callback(ec, n);
+        });
+}
+
+// 外部：
+{
+    auto s = std::make_shared<session>(sock);
+    s->write2socket("hello");
+}   // s 析构，session 对象被释放
+// 回调执行时：this 已经是悬空指针 → 崩溃！
+```
+
+这就是那句经典教训的来源：**异步回调里永远用 `shared_from_this()`，不要用 `this`。**
+
+#### 4.4.6 一个小技巧：用 auto self = shared_from_this() 的时机
+
+你会在代码里看到两种模式：
+
+```cpp
+// 模式 A：在 async_xxx 调用前创建 self，在 lambda 里捕获
+auto self = shared_from_this();
+_sock->async_read_some(..., [self](ec, n) { ... });
+
+// 模式 B：直接在 lambda 捕获列表里调用
+_sock->async_read_some(...,
+    [self = shared_from_this()](ec, n) { ... });
+```
+
+两种完全等价。模式 B 是 C++14 的广义 lambda 捕获，更简洁。session.cpp 里两种都有。
+
+#### 4.4.7 总结
+
+```
+this                     vs      shared_from_this()
+原始指针                         shared_ptr
+不延长生命周期                    延长到回调执行完
+对象销毁就崩溃                    自动保活
+不需要对象被 shared_ptr 管理      必须被 shared_ptr 管理
+```
+
+**在 ASIO 异步编程中，一个铁律：所有异步回调里捕获 `shared_from_this()`，绝不捕获 `this`。**
+
+### 4.5 三套写函数——版本演进
+
+这个 session 文件中包含了**三套不同的写实现**，看起来有点乱，实际上是在逐步演进：
+
+| 版本 | 函数 | 特点 | 问题 |
+|------|------|------|------|
+| v1 | `write2socket_err` + `write_callback_err` | 最简单的异步写，回调里检查是否写完了，没写完继续写 | 只有一条"轨道"。如果连续调用两次 `write2socket_err`，第二个会覆盖 `_send_node`，第一个的数据就丢了 |
+| v2 | `write2socket` + `write_callback` | 引入了队列 `_send_queue` + `_send_pending` 标记 | 可以连续多次调用 `write2socket`，自动排队 |
+| v3 | `write_all_to_socket` + `write_all_callback` | 用 `async_send` 替代 `async_write_some` | 代码更简单，但逻辑上有问题（后面分析） |
+
+#### 版本 1：write2socket_err + write_callback_err
+
+```cpp
+void session::write_callback_err(const boost::system::error_code &ec,
+                                 std::size_t bytes_transferred,
+                                 std::shared_ptr<msg_node> send_node)
+{
+    if (ec) {
+        // 错误处理...
+        return;
+    }
+
+    send_node->_cur_len += bytes_transferred;   // 累加已发长度
+
+    if (send_node->_cur_len < send_node->_total_len) {
+        // 没发完！继续发剩下的
+        auto self = shared_from_this();
+        _sock->async_write_some(
+            boost::asio::buffer(send_node->_msg + send_node->_cur_len,
+                                send_node->_total_len - send_node->_cur_len),
+            [self, send_node](const boost::system::error_code &ec,
+                              std::size_t bytes_transferred) {
+                self->write_callback_err(ec, bytes_transferred, send_node);
+            });
+    }
+    // 发完了 → 什么也不做，send_node 随 shared_ptr 自动析构
+}
+
+void session::write2socket_err(const std::string &buf)
+{
+    auto send_node = std::make_shared<msg_node>(buf.data(), buf.size());
+    _send_node = send_node;   // ⚠️ 只保存最新一个，旧的会被覆盖！
+
+    auto self = shared_from_this();
+    _sock->async_write_some(
+        boost::asio::buffer(send_node->_msg, send_node->_total_len),
+        [self, send_node](const boost::system::error_code &ec,
+                          std::size_t bytes_transferred) {
+            self->write_callback_err(ec, bytes_transferred, send_node);
+        });
+}
+```
+
+**执行流**：
+
+```
+write2socket_err("Hello")    ← 调用
+    │
+    ├── 创建 msg_node("Hello", 5)
+    ├── _send_node = 这个节点
+    └── async_write_some(...)  ← 注册，立即返回
+    │
+    │  可能只发出去 3 字节
+    ▼
+write_callback_err(ec, 3, send_node)
+    │
+    ├── _cur_len = 0 + 3 = 3
+    ├── 3 < 5 → 没发完
+    └── async_write_some(_msg+3, 2)  ← 继续发剩下的
+        │
+        ▼
+    write_callback_err(ec, 2, send_node)
+        ├── _cur_len = 3 + 2 = 5
+        └── 5 >= 5 → 发完了，不做任何事
+```
+
+**问题**：如果连续调用两次：
+
+```cpp
+write2socket_err("Hello");    // 第一次
+write2socket_err("World");    // 第二次，_send_node 被覆盖！
+```
+
+第二次调用把 `_send_node` 指向了 "World"，第一次的 "Hello" 虽然还在发（由于 shared_ptr 捕获，callback 不会崩溃），但 `_send_node` 不再指向它——代码无法知道第一个消息是否发完。
+
+**这就是版本 2 要解决的问题。**
+
+#### 版本 2：write2socket + write_callback（带队列）
+
+```cpp
+void session::write2socket(const std::string &buf)
+{
+    // 1. 创建消息节点，入队
+    auto node = std::make_shared<msg_node>(buf.data(), buf.size());
+    _send_queue.emplace(std::move(node));  // 入队
+
+    // 2. 如果已经有写在飞了，新来的排队等
+    if (_send_pending)
+        return;   // ← 关键：不发起新的 async_write_some
+
+    // 3. 没有写操作在飞 → 启动队列里的第一个
+    _send_pending = true;
+    auto self = shared_from_this();
+    auto &front_node = _send_queue.front();
+
+    _sock->async_write_some(
+        boost::asio::buffer(front_node->_msg, front_node->_total_len),
+        [self](const boost::system::error_code &ec,
+               std::size_t bytes_transferred) {
+            self->write_callback(ec, bytes_transferred);
+        });
+}
+```
+
+```cpp
+void session::write_callback(const boost::system::error_code &ec,
+                             std::size_t bytes_transferred)
+{
+    if (ec) { /* 错误处理... */ return; }
+
+    auto &send_data = _send_queue.front();  // 拿到队首（当前正在发的）
+    send_data->_cur_len += bytes_transferred;
+    auto self = shared_from_this();
+
+    // 场景 A：当前消息没发完 → 继续发剩下的
+    if (send_data->_cur_len < send_data->_total_len) {
+        _sock->async_write_some(
+            boost::asio::buffer(send_data->_msg + send_data->_cur_len,
+                                send_data->_total_len - send_data->_cur_len),
+            [self](const boost::system::error_code &ec,
+                   std::size_t bytes_transferred) {
+                self->write_callback(ec, bytes_transferred);
+            });
+        return;  // ← 注意：这里 return 了，不会执行下面的 pop
+    }
+
+    // ===== 场景 B：当前消息发完了 → 处理队列下一个 =====
+
+    _send_queue.pop();  // 移除已发完的消息
+
+    if (_send_queue.empty()) {
+        _send_pending = false;  // 队列空了，标记为空闲
+    } else {
+        // 还有消息在排队 → 发队列里的下一个
+        auto &send_data = _send_queue.front();
+        _sock->async_write_some(
+            boost::asio::buffer(send_data->_msg + send_data->_cur_len,
+                                send_data->_total_len - send_data->_cur_len),
+            [self](const boost::system::error_code &ec,
+                   std::size_t bytes_transferred) {
+                self->write_callback(ec, bytes_transferred);
+            });
+    }
+}
+```
+
+**执行流**（连续两次写调用）：
+
+```
+write2socket("Hello")   ← 第一次调用
+    │
+    ├── 队列: ["Hello"]
+    ├── _send_pending 是 false → 设为 true
+    └── async_write_some("Hello") → 飞行中
+    │
+    │  紧接着（第一次的 async_write_some 还没回调）
+    ▼
+write2socket("World")   ← 第二次调用
+    │
+    ├── 队列: ["Hello", "World"]
+    ├── _send_pending 是 true → 直接 return！
+    └── 不发起新的 async_write_some
+    │
+    │  第一次回调：发完了 "Hello" 的一部分或全部
+    ▼
+write_callback 被调用
+    │
+    ├── 如果 "Hello" 没发完 → 继续发剩下的
+    ├── 如果 "Hello" 发完了 → pop "Hello"
+    │   队列: ["World"]
+    │   队列不为空 → 发起 async_write_some("World")
+    │
+    │  第二次回调
+    ▼
+write_callback 被调用
+    ├── 处理 "World"
+    ├── pop "World"
+    ├── 队列空了 → _send_pending = false
+    └── 结束
+```
+
+**这就是"序列化发送"——同一时间只有一个 async_write_some 在飞行，数据不会乱。**
+
+#### 版本 2 的回调 bug
+
+仔细看 `write_callback`，在场景 A（还没发完）之后：
+
+```cpp
+if (send_data->_cur_len < send_data->_total_len) {
+    _sock->async_write_some(...);
+    // ⚠️ 没有 return！会继续往下执行 pop 和发送下一个！
+}
+
+// 下面的代码不管上面有没有 return 都会执行
+_send_queue.pop();    // 问题：如果上面没 return，这里 pop 掉了还没发完的
+```
+
+这确实是一个 bug——当消息没发完时，代码没有 `return`，会继续执行 `pop` 把当前消息移出队列。我标注的时候已经加了 `return` 在注释里，但原始代码没有。我们稍后在代码审查部分再详细说。
+
+#### 版本 3：write_all_to_socket + write_all_callback
+
+```cpp
+void session::write_all_to_socket(const std::string &buf)
+{
+    auto node = std::make_shared<msg_node>(buf.data(), buf.size());
+    _send_queue.emplace(std::move(node));
+
+    if (_send_pending)   // 有在飞的，排队等
+        return;
+
+    auto self = shared_from_this();
+    // ⚠️ 这里用了 async_send（不是 async_write_some）
+    this->_sock->async_send(boost::asio::buffer(buf),
+                            [self](const boost::system::error_code &ec,
+                                   std::size_t bytes_transferred) {
+                                self->write_all_callback(ec, bytes_transferred);
+                            });
+    _send_pending = true;
+}
+
+void session::write_all_callback(const boost::system::error_code &ec,
+                                 std::size_t bytes_transferred)
+{
+    if (ec) { /* 错误处理 */ return; }
+
+    _send_queue.pop();     // 直接 pop，假设当前消息一定发完了
+    if (_send_queue.empty())
+        _send_pending = false;
+    if (!_send_queue.empty()) {
+        auto &send_data = _send_queue.front();
+        auto self = shared_from_this();
+        // ⚠️ 这里又用了 async_write_some（跟 async_send 混用）
+        _sock->async_write_some(
+            boost::asio::buffer(send_data->_msg + send_data->_cur_len,
+                                send_data->_total_len - send_data->_cur_len),
+            [self](const boost::system::error_code &ec,
+                   std::size_t bytes_transferred) {
+                self->write_callback(ec, bytes_transferred);
+            });
+    }
+}
+```
+
+**问题 1**：`async_send` 等价于 `async_write_some`——**不保证一次发完**。但 `write_all_callback` 直接 `pop` 了队首，假设已经全部发完。如果只发了一部分，剩余数据就丢了。
+
+**问题 2**：回调混用——`write_all_callback` 里又调用了 `write_callback`（版本 2 的回调），两个版本的逻辑混在一起，容易出 bug。
+
+### 4.6 读函数分析
+
+#### read_from_socket + read_call_back
+
+```cpp
+void session::read_from_socket()
+{
+    if (_recv_pending)   // 已经有读在飞了
+        return;
+
+    _recv_node = std::make_shared<msg_node>(RECVSIZE);  // 分配接收缓冲区
+    auto self = shared_from_this();
+    _sock->async_read_some(
+        boost::asio::buffer(_recv_node->_msg, _recv_node->_total_len),
+        [self](const boost::system::error_code &ec,
+               std::size_t bytes_transferred) {
+            self->read_call_back(ec, bytes_transferred);
+        });
+
+    _recv_pending = true;
+}
+
+void session::read_call_back(const boost::system::error_code &ec,
+                             std::size_t bytes_transferred)
+{
+    _recv_node->_cur_len += bytes_transferred;
+
+    if (_recv_node->_cur_len < _recv_node->_total_len)
+    {
+        // ⚠️ BUG！这里调用了 async_write_some 而非 async_read_some
+        // 把读回调里写成了写操作！
+        auto self = shared_from_this();
+        _sock->async_write_some(
+            boost::asio::buffer(_recv_node->_msg + _recv_node->_cur_len,
+                                _recv_node->_total_len - _recv_node->_cur_len),
+            [self](const boost::system::error_code &ec,
+                   std::size_t bytes_transferred) {
+                self->write_callback(ec, bytes_transferred);
+            });
+        return;
+    }
+
+    _recv_pending = false;
+    _recv_node = nullptr;
+}
+```
+
+**明显的 bug**：读回调 `read_call_back` 里，当数据还没读完时，应该继续 `async_read_some`，但代码写了 `async_write_some`——写成了写操作！而且回调链到了 `write_callback`，完全混乱了。
+
+正确的应该是：
+
+```cpp
+// 正确的写法
+if (_recv_node->_cur_len < _recv_node->_total_len) {
+    auto self = shared_from_this();
+    _sock->async_read_some(                              // ← 改这里！
+        boost::asio::buffer(_recv_node->_msg + _recv_node->_cur_len,
+                            _recv_node->_total_len - _recv_node->_cur_len),
+        [self](const boost::system::error_code &ec,
+               std::size_t bytes_transferred) {
+            self->read_call_back(ec, bytes_transferred);  // ← 应该回调自己
+        });
+    return;
+}
+```
+
+#### read_all_from_socket + read_all_callback
+
+```cpp
+void session::read_all_from_socket()
+{
+    if (_recv_pending)
+        return;
+
+    _recv_node = std::make_shared<msg_node>(RECVSIZE);
+    auto self = shared_from_this();
+    // 这次用了 async_receive（等价于 async_read_some）
+    _sock->async_receive(
+        boost::asio::buffer(_recv_node->_msg, _recv_node->_total_len),
+        [self](const boost::system::error_code &ec,
+               std::size_t bytes_transferred) {
+            self->read_call_back(ec, bytes_transferred);
+        });
+    _recv_pending = true;
+}
+
+void session::read_all_callback(const boost::system::error_code &ec,
+                                std::size_t bytes_transferred)
+{
+    _recv_node->_cur_len += bytes_transferred;
+    _recv_node = nullptr;
+    _recv_pending = false;
+}
+```
+
+`read_all_callback` 跟 `read_call_back` 不同，它**没有检查是否读满**——它假设 `async_receive` 一次就读完了（但这是不保证的）。这是一个简化版本，用于"读多少算多少"的场景。
+
+### 4.7 connect 函数
+
+```cpp
+void session::connect(const boost::asio::ip::tcp::endpoint &ep)
+{
+    _sock->connect(ep);  // 同步连接（阻塞）
+}
+```
+
+这里用的是**同步 connect**——会阻塞当前线程直到连接建立。一般用于客户端。真正的异步服务器不会用这个（而是用 `async_connect`）。
+
+---
+
+## 5. 代码审查——有问题吗？怎么优化？
+
+你说"当前写的代码也只是代码切片用于学习理解"，以下分析就是从**学习角度**指出哪里有问题、为什么会错、怎样更好。
+
+### 5.1 确认的 bug 列表
+
+#### Bug 1：read_call_back 中写成了 async_write_some（严重）
+
+```cpp
+// session.cpp 第 156-163 行
+if (_recv_node->_cur_len < _recv_node->_total_len) {
+    // BUG：应该是 async_read_some，写成了 async_write_some
+    _sock->async_write_some(   ← 错！
+        boost::asio::buffer(...),
+        [self](ec, n) { self->write_callback(ec, n); });  ← 错！
+    return;
+}
+```
+
+**后果**：读数据没读完时，不是继续读，而是尝试往 socket 写数据。逻辑完全错了，运行时数据彻底错乱。
+
+**修正**：
+
+```cpp
+if (_recv_node->_cur_len < _recv_node->_total_len) {
+    auto self = shared_from_this();
+    _sock->async_read_some(
+        boost::asio::buffer(_recv_node->_msg + _recv_node->_cur_len,
+                            _recv_node->_total_len - _recv_node->_cur_len),
+        [self](const boost::system::error_code &ec,
+               std::size_t bytes_transferred) {
+            self->read_call_back(ec, bytes_transferred);
+        });
+    return;
+}
+```
+
+#### Bug 2：write_callback 缺少 return 导致队列错误弹出（中等）
+
+```cpp
+// write_callback 中
+if (send_data->_cur_len < send_data->_total_len) {
+    _sock->async_write_some(...);
+    // ← 缺少 return！继续执行下面的 pop
+}
+// 下面这段在没有 return 的情况下一定会执行
+_send_queue.pop();   // 把还没发完的消息弹掉了！
+```
+
+**后果**：如果一个消息一次没发完，却被弹出了队列，剩余的数据就永远丢失了。
+
+**修正**：在 `async_write_some` 后面加 `return;`。
+
+#### Bug 3：write_all_callback 假设 async_send 一次发完（中等）
+
+```cpp
+void session::write_all_callback(...) {
+    _send_queue.pop();   // 直接 pop，假设已经全部发完
+    // ...
+}
+```
+
+但 `async_send` 等价于 `async_write_some`——不保证一次发完。TCP 可能因为对方窗口太小而只发出去一部分。
+
+**修正**：要么换成 `async_write`（保证发完），要么在回调里检查 `_cur_len`。
+
+#### Bug 4：write_all_callback 回调混用（轻微/耦合问题）
+
+```cpp
+// write_all_callback 中发下一个消息时用了：
+self->write_callback(ec, bytes_transferred);
+// 但 write_callback（版本 2）会操作 _send_queue，而
+// write_all_callback（版本 3）也在操作 _send_queue
+// 两者逻辑不同，互相调用导致不可预期的行为
+```
+
+**修正**：统一用同一套回调链，不要混用。
+
+### 5.2 设计问题（不是 bug，但可以更好）
+
+#### 问题 1：内存管理——msg_node 用裸 new/delete
+
+```cpp
+_msg = new char[total];
+// ...
+~msg_node() { delete[] _msg; }
+```
+
+现代 C++ 建议用 `std::vector<char>` 或 `std::string` 代替：
+
+```cpp
+class msg_node {
+    std::vector<char> _data;
+    int _cur_len;
+public:
+    msg_node(const char* msg, int total)
+        : _data(msg, msg + total), _cur_len(0) {}
+    msg_node(int total)
+        : _data(total), _cur_len(0) {}
+    // 不需要析构函数——vector 自动释放
+};
+```
+
+好处：不需要手写拷贝构造、赋值操作符、析构函数（Rule of Zero），vector 自动管理内存。
+
+#### 问题 2：版本混乱——一个文件有三套实现
+
+`session.cpp` 里同时有 v1/v2/v3 三套写逻辑、两套读逻辑，很容易混淆。学习时建议**只保留一套正确的**。
+
+#### 问题 3：读操作没有"读完数据"的通知机制
+
+当前读回调里只是把数据放到了 `_recv_node` 里，但没有把数据传给上层（比如业务逻辑）。真正的 session 应该在读完成后，把数据通过回调或消息队列发给上层的业务处理类。当前代码读完了就 `_recv_node = nullptr`，数据就丢了。
+
+**建议的改进**：在读回调里，处理完数据后，再次调用 `read_from_socket()` 形成**持续读取循环**：
+
+```cpp
+void session::read_call_back(ec, bytes_transferred) {
+    if (ec) { /* 处理错误 */ return; }
+
+    // 处理数据——比如发给业务层
+    on_message_received(_recv_node->_msg, _recv_node->_cur_len);
+
+    // 继续下一轮读取（形成循环）
+    read_from_socket();
+}
+```
+
+### 5.3 优化建议
+
+如果要改进这个 session 封装，以下是建议：
+
+#### 建议 1：用 async_write 替代 async_write_some
+
+对于消息发送，直接用 `async_write`（保证写完），可以省去 `_cur_len` 的追踪逻辑：
+
+```cpp
+void session::write_to_socket(const std::string &buf) {
+    auto node = std::make_shared<msg_node>(buf.data(), buf.size());
+    _send_queue.push(node);
+
+    if (_send_pending) return;
+
+    _send_pending = true;
+    send_next();
+}
+
+void session::send_next() {
+    auto self = shared_from_this();
+    auto &node = _send_queue.front();
+    asio::async_write(*_sock, asio::buffer(node->_msg, node->_total_len),
+        [self](ec, size_t n) {
+            self->_send_queue.pop();
+            if (self->_send_queue.empty()) {
+                self->_send_pending = false;
+            } else {
+                self->send_next();  // 继续发队列里的下一个
+            }
+        });
+}
+```
+
+这样 `msg_node` 就不再需要 `_cur_len` 了。
+
+#### 建议 2：读操作使用 async_read 或 streambuf
+
+对于固定大小的消息，用 `async_read`；对于变长消息，用 `async_read_until` + `streambuf`：
+
+```cpp
+void session::start_read() {
+    auto self = shared_from_this();
+    asio::async_read(*_sock, asio::buffer(_recv_buf),
+        [self](ec, size_t n) {
+            // 一定读满了 _recv_buf.size() 字节
+            self->process_message(self->_recv_buf.data(), n);
+            self->start_read();  // 继续读下一轮
+        });
+}
+```
+
+#### 建议 3：用 std::enable_shared_from_this 统一对象管理
+
+当前代码已经用了 `enable_shared_from_this`，这是正确的。但要注意：**不要在构造函数里调用 `shared_from_this()`**（会抛 `bad_weak_ptr`）。必须等对象被 `shared_ptr` 管理之后才能调用。
+
+当前代码的 `shared_from_this()` 都在成员函数里调用，是正确的。
+
+### 5.4 一个精简正确的版本（参考）
+
+```cpp
+class session : public std::enable_shared_from_this<session> {
+public:
+    session(tcp::socket sock)
+        : _sock(std::move(sock)) {}
+
+    void start() {
+        do_read();  // 启动读循环
+    }
+
+    void write(const std::string& msg) {
+        auto node = std::make_shared<std::string>(msg);
+        _write_queue.push(node);
+        if (!_write_pending) {
+            _write_pending = true;
+            do_write();
+        }
+    }
+
+private:
+    void do_read() {
+        auto self = shared_from_this();
+        asio::async_read(_sock, asio::buffer(_read_buf),
+            [self](error_code ec, size_t n) {
+                if (!ec) {
+                    // 读满了一整个 _read_buf
+                    self->on_message(self->_read_buf.data(), n);
+                    self->do_read();  // 继续读
+                }
+            });
+    }
+
+    void do_write() {
+        auto self = shared_from_this();
+        auto& node = _write_queue.front();
+        asio::async_write(_sock, asio::buffer(*node),
+            [self](error_code ec, size_t) {
+                if (!ec) {
+                    self->_write_queue.pop();
+                    if (self->_write_queue.empty()) {
+                        self->_write_pending = false;
+                    } else {
+                        self->do_write();
+                    }
+                }
+            });
+    }
+
+    tcp::socket _sock;
+    std::array<char, 1024> _read_buf;
+    std::queue<std::shared_ptr<std::string>> _write_queue;
+    bool _write_pending = false;
+};
+```
+
+**对比原版改进点**：
+- `_read_buf` 用 `std::array` 替代裸指针 + new/delete
+- 写队列用 `std::shared_ptr<std::string>` 替代 msg_node，省去手动内存管理
+- 用 `asio::async_read` 保证读完，省去 `_cur_len` 追踪
+- 读写逻辑分离清晰，没有版本混乱
+
+---
+
+## 6. 企业实战：生产环境中的 Asio 编程
+
+> 这一节从"能跑"到"能上线"——讲解企业在实际项目中如何使用 Asio，以及你写的 session.cpp 跟工业级实现差在哪。
+
+前面我们用 session.cpp 展示了异步读写的基本封装：队列 + pending 标记。但真实的生产环境要复杂得多。本节不讲理论，直接上**企业里真正在用的模式**。
+
+### 6.1 为什么要用线程池跑 io_context
+
+你看到的例子都是 `io.run()` 单线程跑。但**生产环境几乎不会只用单线程**。
+
+**单线程的问题**：如果一个回调里处理复杂逻辑（比如 JSON 解析、数据库查询），这个回调会阻塞线程，导致其他连接的读写回调不能及时执行——**所有连接等一个慢请求**。
+
+**解决方案**：多个线程跑同一个 `io_context`：
+
+```cpp
+int main() {
+    boost::asio::io_context io;
+    auto server = std::make_shared<Server>(io, 8888);
+
+    // 创建线程池，每个线程都跑 io.run()
+    std::vector<std::thread> threads;
+    int thread_count = std::thread::hardware_concurrency();  // 通常是 CPU 核数
+    for (int i = 0; i < thread_count; ++i) {
+        threads.emplace_back([&io] { io.run(); });
+    }
+
+    for (auto& t : threads) t.join();
+    return 0;
+}
+```
+
+**多线程跑 io_context 的规则**：
+
+```
+io_context（一个实例）
+    │
+    ├── 线程 1: io.run()
+    ├── 线程 2: io.run()
+    ├── 线程 3: io.run()
+    └── 线程 4: io.run()
+        │
+        ├── 事件来了，epoll_wait 返回
+        ├── ASIO 把就绪的事件分发给空闲的线程
+        ├── 线程 1 处理连接 A 的回调
+        ├── 线程 3 处理连接 B 的回调
+        └── 同一连接的回调也可能在不同线程执行！
+```
+
+**关键问题**：如果两个线程同时处理同一个连接的两个回调，你的数据就乱了。解决方案是 **strand（串行器）**。
+
+### 6.2 Strand——多线程下的"同一个连接串行执行"
+
+**strand 是什么**：一个执行器（executor），保证通过它投递的任务**不会并发执行**——即使底层的 io_context 有多个线程。
+
+```cpp
+class Session : public std::enable_shared_from_this<Session> {
+public:
+    Session(tcp::socket socket)
+        : _sock(std::move(socket))
+        , _strand(boost::asio::make_strand(_sock.get_executor()))
+        // 创建 strand，绑定到这个 socket 的 executor
+    {}
+
+    void start() {
+        do_read();
+    }
+
+private:
+    void do_read() {
+        // 通过 strand 发起异步操作 → 这个连接的所有回调都在 strand 上串行
+        _sock.async_read_some(
+            boost::asio::buffer(_buf),
+            boost::asio::bind_executor(_strand,  // ← 关键：绑定到 strand
+                [self = shared_from_this()](ec, size_t n) {
+                    self->handle_read(n);
+                }));
+    }
+
+    tcp::socket _sock;
+    boost::asio::strand<boost::asio::io_context::executor_type> _strand;
+    std::array<char, 1024> _buf;
+};
+```
+
+**没有 strand 时**（多线程 io_context）：
+
+```
+线程1: SessionA 的回调 1 执行中...
+线程2: SessionA 的回调 2 也执行中...
+       ↓ 两个线程同时操作 SessionA 的成员变量 → 数据竞争！
+```
+
+**有 strand 时**：
+
+```
+strand(SessionA)
+    │
+    ├── 回调 1 加入 strand 队列
+    ├── 回调 2 加入 strand 队列（等回调 1 完成）
+    │
+    ├── 线程1 执行回调 1
+    └── 线程2 或线程1 执行回调 2（但保证回调 1 已完成）
+       ↓ 同一 Session 的回调串行执行，不用加锁
+```
+
+**重要**：strand 不是全局锁，它是**按连接隔离**的。连接 A 的 strand 和连接 B 的 strand 互不影响，可以同时在不同线程执行。
+
+### 6.3 真正的序列化发送——企业级实现
+
+你的 session.cpp 实现了队列 + pending 标记，但企业级代码里更常见的是这种模式：
+
+```cpp
+class Connection : public std::enable_shared_from_this<Connection> {
+public:
+    void send(const char* data, size_t len) {
+        bool write_in_progress = !_write_queue.empty();
+        _write_queue.push(std::make_shared<std::string>(data, len));
+
+        if (!write_in_progress) {
+            // 没有写入操作在飞 → 启动
+            start_write();
+        }
+    }
+
+private:
+    void start_write() {
+        if (_write_queue.empty()) {
+            _write_pending = false;
+            return;
+        }
+
+        _write_pending = true;
+        auto& msg = *_write_queue.front();
+
+        // 用 async_write（保证写完），而不是 async_write_some
+        boost::asio::async_write(
+            _sock,
+            boost::asio::buffer(*msg),
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](boost::system::error_code ec, size_t) {
+                    if (ec) {
+                        // 错误处理（关闭连接、重连等）
+                        return;
+                    }
+                    self->_write_queue.pop();
+                    self->start_write();  // 继续发下一个
+                }));
+    }
+
+    tcp::socket _sock;
+    boost::asio::strand<boost::asio::io_context::executor_type> _strand;
+    std::queue<std::shared_ptr<std::string>> _write_queue;
+    bool _write_pending = false;
+};
+```
+
+**关键区别**：这个版本用 `async_write`（保证写完）而不是 `async_write_some`，所以不需要 `_cur_len` 追踪已发长度，写回调里直接 pop 然后发下一个——逻辑更干净。
+
+### 6.4 读模式一：固定长度包头 + 变长包体
+
+这是企业网络协议**最常用的设计**——先发一个固定长度的包头（包体长度），再发包体：
+
+```
+[ 包头: 4字节(int) ][ 包体: N字节 ]
+  ↑ 包体长度 = N     ↑ 实际数据
+```
+
+```cpp
+class Connection {
+    enum { HEADER_LEN = 4 };
+
+    void start_read_header() {
+        // 读恰好 4 字节（包头的长度字段）
+        boost::asio::async_read(
+            _sock, boost::asio::buffer(_header_buf, HEADER_LEN),
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](ec, size_t) {
+                    if (ec) { /* 关闭连接 */ return; }
+
+                    // 解析出包体长度
+                    uint32_t body_len;
+                    memcpy(&body_len, self->_header_buf, HEADER_LEN);
+                    body_len = ntohl(body_len);  // 网络字节序转主机字节序
+
+                    if (body_len > MAX_BODY_SIZE) {
+                        // 非法长度，关闭连接（防止恶意攻击）
+                        return;
+                    }
+
+                    // 读包体
+                    self->start_read_body(body_len);
+                }));
+    }
+
+    void start_read_body(uint32_t len) {
+        _body_buf.resize(len);
+        boost::asio::async_read(
+            _sock, boost::asio::buffer(_body_buf),
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](ec, size_t) {
+                    if (ec) { /* 关闭连接 */ return; }
+
+                    // 一个完整的消息包已经到了
+                    self->on_message(self->_body_buf);
+
+                    // 继续读下一个包头
+                    self->start_read_header();
+                }));
+    }
+
+    tcp::socket _sock;
+    std::array<char, HEADER_LEN> _header_buf;
+    std::vector<char> _body_buf;
+    boost::asio::strand<...> _strand;
+};
+```
+
+**为什么这个模式是生产标准？**
+
+| 问题 | 方案 |
+|------|------|
+| 粘包（多个消息粘在一起） | 固定包头告诉每个包的长度，精确切割 |
+| 半包（一个消息没发完） | `async_read` 保证读完指定字节，没读完不回调 |
+| 大包攻击 | 检查 body_len 上限，超限直接断开 |
+| 多线程安全 | strand 保证同一个连接串行处理 |
+
+### 6.5 读模式二：async_read_until + streambuf（适用于文本协议）
+
+如果你的协议有明确的分隔符（比如 HTTP 的 `\r\n\r\n`、Redis 的 `\r\n`）：
+
+```cpp
+class HttpConnection {
+    void start_read() {
+        boost::asio::async_read_until(
+            _sock, _streambuf, "\r\n\r\n",               // 读到 HTTP 头结束
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](ec, size_t) {
+                    if (ec) { /* 关闭 */ return; }
+
+                    // 从 streambuf 读出一行一行解析 HTTP 头
+                    std::istream is(&self->_streambuf);
+                    std::string line;
+                    while (std::getline(is, line) && line != "\r") {
+                        // 解析 "Host: example.com" 等
+                    }
+
+                    // 从 Content-Length 得知包体长度
+                    auto body_len = parse_content_length();
+                    // streambuf 里可能已经包含了部分包体数据
+                    // 继续 async_read 读完剩下的包体
+                    self->start_read_body(body_len);
+                }));
+    }
+
+    tcp::socket _sock;
+    boost::asio::streambuf _streambuf;  // 自动扩容，内部管理内存
+    boost::asio::strand<...> _strand;
+};
+```
+
+### 6.6 连接管理——超时与心跳
+
+企业对每个连接最关心的三件事：**建立、保活、关闭**。你的 session.cpp 完全没有超时和心跳处理——这在生产环境里意味着：如果客户端断网了但没发 FIN 包，你的 session 永远不会知道。
+
+**ASIO 的定时器**：
+
+```cpp
+class Connection {
+    void start() {
+        start_read();
+        start_heartbeat_timer();   // 定时心跳
+        start_idle_timeout();      // 空闲超时
+    }
+
+    void start_heartbeat_timer() {
+        _heartbeat_timer.expires_after(std::chrono::seconds(30));
+        _heartbeat_timer.async_wait(
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](ec) {
+                    if (ec) return;  // 定时器被取消（比如连接关闭了）
+
+                    // 发送心跳包
+                    self->send_heartbeat();
+
+                    // 重设定时器
+                    self->start_heartbeat_timer();
+                }));
+    }
+
+    void start_idle_timeout() {
+        _idle_timer.expires_after(std::chrono::seconds(120));
+        _idle_timer.async_wait(
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](ec) {
+                    if (ec) return;
+
+                    // 120 秒没收到任何数据 → 关闭连接
+                    self->close("idle timeout");
+                }));
+    }
+
+    // 每次收到数据时重置空闲计时器
+    void on_data_received() {
+        _idle_timer.expires_after(std::chrono::seconds(120));
+    }
+
+    tcp::socket _sock;
+    boost::asio::steady_timer _heartbeat_timer{_sock.get_executor()};
+    boost::asio::steady_timer _idle_timer{_sock.get_executor()};
+};
+```
+
+### 6.7 优雅关闭——为什么要 shutdown 再 close
+
+你的 session 析构时直接 `close()`。但这会导致**发送缓冲区里还有没发完的数据直接丢失**。
+
+**生产环境的关闭流程**：
+
+```cpp
+void close() {
+    _sock.shutdown(tcp::socket::shutdown_send);   // 告诉对端"我不发了"
+    // 此时：你已经发的数据会正常到达对端
+    //       但对端发来的数据你不再接收
+    //       对端 recv 会读到 EOF
+
+    // 等待一段时间后真正关闭
+    _close_timer.expires_after(std::chrono::seconds(5));
+    _close_timer.async_wait([self = shared_from_this()](ec) {
+        boost::system::error_code ignored_ec;
+        self->_sock.close(ignored_ec);
+        // 不管 error，关闭即可
+    });
+}
+```
+
+**shutdown 和 close 的区别**：
+
+| 操作 | 做了什么 |
+|------|---------|
+| `shutdown(shutdown_send)` | 只关闭发送方向——已经排队的还能发完，但不再发新数据 |
+| `shutdown(shutdown_receive)` | 只关闭接收方向 |
+| `close()` | 直接关闭 socket，发送缓冲区的数据可能丢失 |
+
+**企业级标准关闭流程**：
+
+```
+close() 被调用
+    │
+    ├── shutdown(shutdown_send)  ← 告诉对端"我不发了"
+    ├── 等待对端也 shutdown（收到 FIN）
+    ├── 或者超时（5秒）
+    └── close()  ← 真正释放资源
+```
+
+### 6.8 错误恢复 vs 崩溃退出
+
+你的 session 代码里，`ec` 非零就直接 `return` 了。生产环境中，不同错误有不同处理策略：
+
+```cpp
+void handle_error(boost::system::error_code ec) {
+    if (ec == boost::asio::error::eof) {
+        // 对端正常关闭连接 → 清理资源
+        graceful_close();
+    } else if (ec == boost::asio::error::connection_reset) {
+        // 对端异常断开（比如进程崩溃）→ 清理资源
+        graceful_close();
+    } else if (ec == boost::asio::error::timed_out) {
+        // 超时 → 可能是网络抖动，尝试重连
+        reconnect();
+    } else if (ec == boost::asio::error::operation_aborted) {
+        // 操作被取消（主动调用 cancel）→ 什么都不做
+        return;
+    } else {
+        // 未知错误 → 记录日志，关闭
+        log_error("unexpected error", ec);
+        graceful_close();
+    }
+}
+```
+
+### 6.9 你的 session.cpp 与生产实现的差距
+
+| 维度 | 你的 session.cpp | 企业生产环境 |
+|------|-----------------|-------------|
+| **io_context** | 单线程 | 多线程线程池（CPU 核数） |
+| **线程安全** | 无保护 | strand 保证每个连接串行执行 |
+| **发送** | async_write_some + _cur_len | async_write（保证写完更可靠）|
+| **读协议** | 固定大小读 | 包头+包体模式，或 async_read_until |
+| **超时** | 无 | 定时心跳 + 空闲超时 + 关闭超时 |
+| **关闭** | 直接 close | shutdown 再 close，优雅关闭 |
+| **错误处理** | 打一行日志 | 区分 eof/reset/timeout/aborted |
+| **内存管理** | new[]/delete[] | std::shared_ptr、std::vector、std::array |
+| **buffer 管理** | msg_node 包装 | 直接用 asio::buffer + std::vector |
+
+### 6.10 一个最小可用的生产级 Session 骨架
+
+```cpp
+class Session : public std::enable_shared_from_this<Session> {
+public:
+    Session(tcp::socket socket)
+        : _sock(std::move(socket))
+        , _strand(boost::asio::make_strand(_sock.get_executor()))
+        , _heartbeat_timer(_sock.get_executor())
+        , _idle_timer(_sock.get_executor())
+    {}
+
+    void start() {
+        start_heartbeat();
+        start_idle_timeout();
+        start_read_header();
+    }
+
+    void send(std::shared_ptr<std::string> msg) {
+        boost::asio::post(_strand,
+            [self = shared_from_this(), msg] {
+                bool write_in_progress = !self->_write_queue.empty();
+                self->_write_queue.push(std::move(msg));
+                if (!write_in_progress) {
+                    self->do_write();
+                }
+            });
+    }
+
+private:
+    // ===== 读：固定包头 + 变长包体 =====
+    void start_read_header() {
+        boost::asio::async_read(
+            _sock, boost::asio::buffer(_header_buf),
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](boost::system::error_code ec, size_t) {
+                    if (ec) { self->handle_error(ec); return; }
+                    self->reset_idle_timer();
+
+                    uint32_t body_len;
+                    std::memcpy(&body_len, self->_header_buf.data(), 4);
+                    body_len = ntohl(body_len);
+
+                    if (body_len > 10 * 1024 * 1024) {
+                        self->close("body too large");
+                        return;
+                    }
+
+                    self->start_read_body(body_len);
+                }));
+    }
+
+    void start_read_body(uint32_t len) {
+        _body_buf.resize(len);
+        boost::asio::async_read(
+            _sock, boost::asio::buffer(_body_buf),
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](boost::system::error_code ec, size_t) {
+                    if (ec) { self->handle_error(ec); return; }
+                    self->reset_idle_timer();
+
+                    // 完整的消息到达，交给业务层处理
+                    self->on_message(self->_body_buf);
+
+                    // 继续读下一个消息
+                    self->start_read_header();
+                }));
+    }
+
+    // ===== 写：队列串行化 =====
+    void do_write() {
+        auto& msg = *_write_queue.front();
+        boost::asio::async_write(
+            _sock, boost::asio::buffer(*msg),
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](boost::system::error_code ec, size_t) {
+                    if (ec) { self->handle_error(ec); return; }
+                    self->_write_queue.pop();
+                    if (!self->_write_queue.empty()) {
+                        self->do_write();
+                    }
+                }));
+    }
+
+    // ===== 定时器 =====
+    void start_heartbeat() {
+        _heartbeat_timer.expires_after(std::chrono::seconds(30));
+        _heartbeat_timer.async_wait(
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](boost::system::error_code ec) {
+                    if (ec) return;
+                    auto ping = std::make_shared<std::string>("PING");
+                    self->send(ping);
+                    self->start_heartbeat();
+                }));
+    }
+
+    void start_idle_timeout() {
+        _idle_timer.expires_after(std::chrono::seconds(120));
+        _idle_timer.async_wait(
+            boost::asio::bind_executor(_strand,
+                [self = shared_from_this()](boost::system::error_code ec) {
+                    if (ec) return;
+                    self->close("idle timeout");
+                }));
+    }
+
+    void reset_idle_timer() {
+        _idle_timer.expires_after(std::chrono::seconds(120));
+    }
+
+    // ===== 关闭与错误 =====
+    void handle_error(boost::system::error_code ec) {
+        if (ec == boost::asio::error::eof ||
+            ec == boost::asio::error::connection_reset) {
+            graceful_close();
+        } else {
+            log_error(ec);
+            graceful_close();
+        }
+    }
+
+    void graceful_close() {
+        boost::system::error_code ec;
+        _sock.shutdown(tcp::socket::shutdown_send, ec);
+        // 5 秒后真正关闭
+        _close_timer.expires_after(std::chrono::seconds(5));
+        _close_timer.async_wait([self = shared_from_this()](ec) {
+            boost::system::error_code ignored;
+            self->_sock.close(ignored);
+        });
+    }
+
+    tcp::socket _sock;
+    boost::asio::strand<boost::asio::io_context::executor_type> _strand;
+    std::array<char, 4> _header_buf;
+    std::vector<char> _body_buf;
+    std::queue<std::shared_ptr<std::string>> _write_queue;
+
+    boost::asio::steady_timer _heartbeat_timer;
+    boost::asio::steady_timer _idle_timer;
+    boost::asio::steady_timer _close_timer;
+};
+```
+
+这个骨架包含了本节讲的全部企业级特性：**多线程安全（strand）、固定包头协议、队列串行发送、心跳保活、空闲超时、优雅关闭、错误分类处理**。
+
+### 6.11 一段话总结企业实践
+
+> **小项目用单线程 + async_read/async_write 就够了；上生产再加三条：多线程 io_context + strand 保安全、固定包头分消息、定时器管生死。**
+
+---
+
+## 7. 总结
+
+### 7.1 关键点速查
+
+| 概念 | 一句话 |
+|------|--------|
+| **同步 vs 异步** | 同步：线程睡觉等数据；异步：注册回调，数据到了再叫我 |
+| **async_read_some** | 不保证读完，有多少读多少 |
+| **async_read** | 保证读满指定字节才回调（内部是多次 async_read_some） |
+| **async_write_some** | 不保证写完，能写多少写多少 |
+| **async_write** | 保证全部写完才回调 |
+| **async_send/receive** | socket 成员函数，等价于 async_write_some/read_some |
+| **async_read_until** | 读到分隔符为止，配合 streambuf 用 |
+| **序列化发送** | 用队列 + pending 标记，保证同一时间只有一个写操作在飞 |
+| **buffer 生命周期** | buffer 是视图，异步操作完成前必须保持有效 |
+| **回调错误处理** | 异步里只能用 error_code，不能用 try-catch |
+
+### 7.2 学习建议
+
+1. **先从 `async_write` / `async_read` 开始**（而不是 `_some` 版本）——保证写完/读完让你少踩坑
+2. **理解再简化**——seq_ 写队列 + _pending 标记是经典模式，理解了这个模式再去看复杂封装
+3. **不要混用版本**——一个类里保持一套读写逻辑
+4. **用 `std::vector` / `std::array` 代替裸 new[]**——少写析构函数，减bug
+
+### 7.3 session.cpp 中你该记住的设计模式
+
+```
+发送：write2socket("msg") → [入队] → async_write/async_write_some
+                                         ↓ 回调
+                                    write_callback
+                                         ↓
+                                    发完？→ 是 → pop → 发下一个？
+                                                ↓
+                                            队列空？→ _pending = false
+
+接收：read_from_socket() → async_read/async_read_some
+                                         ↓ 回调
+                                    read_call_back
+                                         ↓
+                                    处理数据 → 再次 read_from_socket()
+```
+
+这个**队列 + pending 标记**的模式是所有 ASIO 异步封装的基础——从简单的 echo server 到复杂的 HTTP 框架，底层都是这个逻辑。
+
+---
+
+## 8. Bug 修复记录
+
+### 8.1 `bad_weak_ptr`——`shared_from_this()` 在构造函数中调用
+
+#### 现象
+
+```bash
+$ ./server 9190
+Server start success, on port: 9190
+Exception: bad_weak_ptr
+```
+
+#### 根因
+
+`server` 继承自 `std::enable_shared_from_this<server>`，且在构造函数中调用了 `start_accept()`，后者内部调用了 `shared_from_this()`。
+
+`std::make_shared<server>(ioc, port)` 的执行顺序为：
+
+1. 分配内存（同时容纳控制块 + 对象）
+2. **构造 `server` 对象**（构造函数运行，调用 `start_accept()` → `shared_from_this()`）
+   — 此时 `shared_ptr` 还没创建，`enable_shared_from_this` 内部的 `weak_ptr` 还是空的
+3. 构造 `shared_ptr`（此时才初始化 `weak_ptr`）
+
+所以第 2 步调用 `shared_from_this()` 时，`weak_ptr` 未经初始化，`lock()` 失败，抛出 `std::bad_weak_ptr`。
+
+#### 修复
+
+**三步改动：**
+
+| 文件 | 改动 |
+|------|------|
+| `server.hpp` | 新增 `void run();` 公开方法 |
+| `server.cpp` | 构造函数中移除 `start_accept()`，移入 `run()` |
+| `async_server.cpp` | `make_shared` 之后先调 `sev->run()`，再 `ioc.run()` |
+
+```cpp
+// async_server.cpp — 修复后
+auto sev = std::make_shared<server>(ioc, port);
+sev->run();           // ← 在 shared_ptr 构造完成后再调用
+ioc.run();
+```
+
+```cpp
+// server.cpp — 修复后
+server::server(boost::asio::io_context &ioc, unsigned short port)
+    : _ioc(ioc), _acceptor(ioc, boost::asio::ip::tcp::endpoint(
+                                    boost::asio::ip::tcp::v4(), port))
+{
+    std::cout << "Server start success, on port: " << port << std::endl;
+    // start_accept() 已移出构造函数
+}
+
+void server::run()
+{
+    start_accept();   // ← 此时 shared_ptr 已就绪，shared_from_this() 可安全使用
+}
+```
+
+#### 教训
+
+> **`shared_from_this()` 不能在构造函数（或构造函数间接调用的任何函数）中调用。**
+>
+> `enable_shared_from_this` 的 `weak_ptr` 由 `shared_ptr` 构造函数初始化，而构造函数执行时 `shared_ptr` 尚未构造完成。
+
+**安全调用时机：** 对象已被 `shared_ptr`（或 `make_shared`）管理之后。
+
+---
+
+### 8.2 客户端连接后直接退出
+
+#### 现象
+
+```bash
+$ ./client 9190
+$   # 直接返回，没有任何提示
+```
+
+#### 根因
+
+```cpp
+// sync_client.cpp — 修复前
+sock.connect(remote_ep, ec);
+
+if (ec)
+    std::cout << "Connect failed, error code is: " << ec.value()
+              << ". err message is: " << ec.message();
+return ec.value();   // ← 不受 if 控制！连不连上都 return
+
+std::cout << "Enter Message: ";   // 永远不会执行到
+```
+
+`if` 不带花括号时，只有紧接的那一条语句受条件控制。`return ec.value();` 不在 `if` 块内，所以无论连接成功还是失败，程序都在 `connect` 后立即 `return`，后面的输入/回显逻辑永远不可达。
+
+#### 修复
+
+将 `return ec.value()` 放入 `if (ec)` 分支内，连接成功时继续执行后续逻辑：
+
+```cpp
+// sync_client.cpp — 修复后
+sock.connect(remote_ep, ec);
+
+if (ec)
+{
+    std::cout << "Connect failed, error code is: " << ec.value()
+              << ". err message is: " << ec.message() << std::endl;
+    return ec.value();    // ← 只在连接失败时 return
+}
+
+std::cout << "Enter Message: ";   // 连接成功，继续执行
+```
+
+#### 教训
+
+> **`if` / `for` / `while` 无花括号时，只有紧随的一条语句受控制。**
+>
+> 养成**所有控制语句都加花括号**的习惯，避免此类逻辑错误。

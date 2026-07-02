@@ -1,3 +1,6 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
 BreakBeforeBraces: Allman
+PointerAlignment: Right
+ReferenceAlignment: Right
+AccessModifierOffset: -4
