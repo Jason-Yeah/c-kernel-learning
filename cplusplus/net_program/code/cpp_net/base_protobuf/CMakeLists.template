@@ -1,0 +1,37 @@
+# ============================================================
+# CMakeLists.txt — protobuf 通用模板（兼容 3.x ~ 7.x）
+# ============================================================
+cmake_minimum_required(VERSION 3.20)
+project(MyProject)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# === protobuf ===
+include(FindProtobuf)
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+
+# 如果 protobuf 版本 ≥ 4.x（依赖 absl），用 pkg-config 补全链接
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(PROTOBUF_DEPS QUIET protobuf)
+endif()
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+# === Boost (ASIO) ===
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
+# === 编译 .proto ===
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS myproto.proto)
+
+# === 可执行文件 ===
+add_executable(myapp ${PROTO_SRCS} ${PROTO_HDRS} main.cpp)
+
+# 链接：优先用 pkg-config 的全依赖（含 absl），否则用 ${PROTOBUF_LIBRARIES}
+if(PROTOBUF_DEPS_FOUND)
+    target_link_libraries(myapp ${PROTOBUF_DEPS_LIBRARIES} pthread)
+else()
+    target_link_libraries(myapp ${PROTOBUF_LIBRARIES} pthread)
+endif()

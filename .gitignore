@@ -1,3 +1,38 @@
 # 忽略 Makefile 文件
 Makefile
 makefile
+
+# 编译目标文件
+*.o
+*.obj
+
+# 可执行文件 / 二进制文件
+*.out
+*.exe
+*.app
+
+# CMake 构建输出目录
+build/
+cmake-build-*/
+cmake-build*/
+
+# clangd 语言服务器缓存
+.cache/
+
+# 编译数据库 (CMake 生成)
+compile_commands.json
+
+# 编辑器/IDE 临时文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 编译产物（无后缀的可执行文件）
+**/code/**/main
+**/code/**/server
+**/code/**/client
+
+# Reasonix 工具内部目录
+.reasonix/
