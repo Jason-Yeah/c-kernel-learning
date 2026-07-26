@@ -188,6 +188,12 @@ public:
 class Circle : public Shape {
     double radius_;
 public:
+    /** 
+    * explicit表示禁止隐式类型转换
+    * explicit Circle(double r)表示构造对象必须写出Circle(...)不可用double自动构造Circle
+    * Cricle c = 5.0是不允许的必须Cricle* c = new Cricle(5.0);
+    */
+    // 单参数构造函数，默认尽量加 explicit
     explicit Circle(double r) : radius_(r) {}
     double Area() const override { return 3.14159 * radius_ * radius_; }
 };

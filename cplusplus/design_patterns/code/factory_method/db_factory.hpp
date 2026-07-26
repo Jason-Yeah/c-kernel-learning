@@ -1,7 +1,6 @@
 #pragma once
 
 #include "db_connection.hpp"
-#include <iostream>
 #include <memory>
 #include <string>
 
