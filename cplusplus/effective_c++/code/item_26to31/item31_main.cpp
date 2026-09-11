@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-int main() {
+int main()
+{
     Widget widget{"dashboard"};
     std::cout << widget.summary() << '\n';
 }
