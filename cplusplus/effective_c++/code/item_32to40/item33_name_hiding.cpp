@@ -1,16 +1,20 @@
 #include <iostream>
 
-struct Base {
+struct Base
+{
     void show(int) const { std::cout << "Base::show(int)\n"; }
 };
-struct Hidden : Base {
+struct Hidden : Base
+{
     void show(double) const { std::cout << "Hidden::show(double)\n"; }
 };
-struct Visible : Base {
+struct Visible : Base
+{
     using Base::show; // 将基类重载引入当前作用域。
     void show(double) const { std::cout << "Visible::show(double)\n"; }
 };
-int main() {
+int main()
+{
     Hidden hidden;
     hidden.show(3); // 基类 int 重载被隐藏，3 转为 double。
     Visible visible;

@@ -24,6 +24,35 @@ private:
 };
 Derived d;
 Base& b = d;
+pwndbg> disassemble /r main
+Dump of assembler code for function main():
+   0x00005555555551a9 <+0>:     f3 0f 1e fa             endbr64
+   0x00005555555551ad <+4>:     55                      push   rbp
+   0x00005555555551ae <+5>:     48 89 e5                mov    rbp,rsp
+   0x00005555555551b1 <+8>:     48 83 ec 20             sub    rsp,0x20
+=> 0x00005555555551b5 <+12>:    64 48 8b 04 25 28 00 00 00      mov    rax,QWORD PTR fs:0x28
+   0x00005555555551be <+21>:    48 89 45 f8             mov    QWORD PTR [rbp-0x8],rax
+   0x00005555555551c2 <+25>:    31 c0                   xor    eax,eax
+   0x00005555555551c4 <+27>:    48 8d 05 a5 2b 00 00    lea    rax,[rip+0x2ba5]        # 0x555555557d70 <_ZTV10EvilBadGuy+16>
+   0x00005555555551cb <+34>:    48 89 45 e8             mov    QWORD PTR [rbp-0x18],rax
+   0x00005555555551cf <+38>:    48 8d 45 e8             lea    rax,[rbp-0x18]
+   0x00005555555551d3 <+42>:    48 89 45 f0             mov    QWORD PTR [rbp-0x10],rax
+   0x00005555555551d7 <+46>:    48 8b 45 f0             mov    rax,QWORD PTR [rbp-0x10]
+   0x00005555555551db <+50>:    48 89 c7                mov    rdi,rax
+   0x00005555555551de <+53>:    e8 39 00 00 00          call   0x55555555521c <_ZNK13GameCharacter11healthValueEv>
+   0x00005555555551e3 <+58>:    89 c6                   mov    esi,eax
+   0x00005555555551e5 <+60>:    48 8d 05 54 2e 00 00    lea    rax,[rip+0x2e54]        # 0x555555558040 <_ZSt4cout@GLIBCXX_3.4>
+   0x00005555555551ec <+67>:    48 89 c7                mov    rdi,rax
+   0x00005555555551ef <+70>:    e8 bc fe ff ff          call   0x5555555550b0 <_ZNSolsEi@plt>
+   0x00005555555551f4 <+75>:    be 0a 00 00 00          mov    esi,0xa
+   0x00005555555551f9 <+80>:    48 89 c7                mov    rdi,rax
+   0x00005555555551fc <+83>:    e8 9f fe ff ff          call   0x5555555550a0 <_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_c@plt>
+   0x0000555555555201 <+88>:    b8 00 00 00 00          mov    eax,0x0
+   0x0000555555555206 <+93>:    48 8b 55 f8             mov    rdx,QWORD PTR [rbp-0x8]
+   0x000055555555520a <+97>:    64 48 2b 14 25 28 00 00 00      sub    rdx,QWORD PTR fs:0x28
+   0x0000555555555213 <+106>:   74 05                   je     0x55555555521a <main()+113>
+   0x0000555555555215 <+108>:   e8 76 fe ff ff          call   0x555555555090 <__stack_chk_fail@plt>
+   0x000055555555521a <+113>:   c9                      leave
 b.run();
 ```
 
@@ -343,7 +372,7 @@ Monitor 使用 Timer 的流程，但对外不是一个 Timer。用户调用 poll
 
 空类完整对象的 sizeof 至少为 1，以满足独立对象的地址要求；空基类子对象在满足条件时可不额外占存储，称 EBO。空策略类作为基类可能节约空间。
 
-C++20 的 `[[no_unique_address]] EmptyPolicy policy_;` 允许成员也利用类似空间复用机会。属性不是“强制 sizeof 减少”的承诺，最终布局受类型和实现影响。
+C++20 的 `[[no_unique_address]] EmptyPolicy policy_;` 允许成员也利用类似空间复用机会。属性不是“强制 sizeof 减少”的承诺，最终布局受类型和实现影响。它的对象地址、对齐、填充和 EBO 关系详见 [`no_unique_address` 专题](no_unique_address.md)。
 
 不要为了省一个字节先选择 private 继承。先确定语义，再测量布局与性能。配套 item39 输出大小作为本机观察，不断言跨平台固定值。
 
@@ -475,6 +504,6 @@ g++ -std=c++20 -Wall -Wextra -Wpedantic item39_private_inheritance.cpp -o /tmp/i
 /tmp/item39
 ```
 
-程序额外输出带 [[no_unique_address]] 的成员布局大小。即使某个平台没有得到预期的空间缩减，也不能由此认定程序错误；属性允许优化，实际大小仍由实现决定。
+程序额外输出带 `[[no_unique_address]]` 的成员布局大小。即使某个平台没有得到预期的空间缩减，也不能由此认定程序错误；属性允许优化，实际大小仍由实现决定。若不理解这里的“允许”以及空成员为何会占空间，可继续阅读 [`no_unique_address` 专题](no_unique_address.md)。
 
 进一步核对覆盖、final、限定调用与动态类型规则，可读 [C++ 标准草案：虚函数](https://eel.is/c++draft/class.virtual)。草案会持续更新；本章可执行实验固定使用 C++17，不依赖最新草案新增语法。
