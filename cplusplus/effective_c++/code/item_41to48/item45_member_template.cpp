@@ -1,19 +1,21 @@
 #include <iostream>
 #include <type_traits>
 
-class Base {
+class Base
+{
 public:
     virtual ~Base() = default;
     virtual const char *name() const { return "Base"; }
 };
 
-class Derived : public Base {
+class Derived : public Base
+{
 public:
     const char *name() const override { return "Derived"; }
 };
 
-template <typename T>
-class PtrView {
+template <typename T> class PtrView
+{
 public:
     explicit PtrView(T *pointer) : pointer_(pointer) {}
 
@@ -32,6 +34,7 @@ private:
     T *pointer_;
 };
 
+// 编译器检查 断言
 static_assert(std::is_constructible_v<PtrView<Base>, PtrView<Derived>>);
 static_assert(!std::is_constructible_v<PtrView<Derived>, PtrView<Base>>);
 

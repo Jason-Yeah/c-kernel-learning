@@ -1,24 +1,22 @@
 #include <iostream>
 #include <string_view>
 
-struct EmailCompany {
+struct EmailCompany
+{
     static void sendClearText(std::string_view text)
     {
         std::cout << "email: " << text << '\n';
     }
 };
 
-template <typename Company>
-class MessageSender {
+template <typename Company> class MessageSender
+{
 protected:
-    void sendClear(std::string_view text)
-    {
-        Company::sendClearText(text);
-    }
+    void sendClear(std::string_view text) { Company::sendClearText(text); }
 };
 
-template <typename Company>
-class LoggingSender : public MessageSender<Company> {
+template <typename Company> class LoggingSender : public MessageSender<Company>
+{
 public:
     void sendWithLog(std::string_view text)
     {
@@ -30,17 +28,14 @@ public:
     }
 };
 
-template <typename Company>
-class UsingSender : public MessageSender<Company> {
+template <typename Company> class UsingSender : public MessageSender<Company>
+{
 private:
     // 另一种写法：先把依赖基类中的一组同名成员引入当前作用域。
     using MessageSender<Company>::sendClear;
 
 public:
-    void send(std::string_view text)
-    {
-        sendClear(text);
-    }
+    void send(std::string_view text) { sendClear(text); }
 };
 
 int main()

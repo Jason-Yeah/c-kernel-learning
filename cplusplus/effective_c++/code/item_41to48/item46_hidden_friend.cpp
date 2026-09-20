@@ -1,14 +1,15 @@
 #include <iostream>
 #include <stdexcept>
 
-template <typename Number>
-class Rational {
+template <typename Number> class Rational
+{
 public:
     // 故意不写 explicit，使整数可以转换为 Rational<Number>。
     Rational(Number numerator, Number denominator = Number{1})
         : numerator_(numerator), denominator_(denominator)
     {
-        if (denominator_ == Number{}) {
+        if (denominator_ == Number{})
+        {
             throw std::invalid_argument("denominator cannot be zero");
         }
     }

@@ -3,32 +3,35 @@
 #include <iostream>
 #include <type_traits>
 
-template <std::size_t N>
-struct Factorial {
+template <std::size_t N> struct Factorial
+{
     static constexpr std::size_t value = N * Factorial<N - 1>::value;
 };
 
-template <>
-struct Factorial<0> {
+template <> struct Factorial<0>
+{
     static constexpr std::size_t value = 1;
 };
 
 constexpr std::size_t factorial(std::size_t number)
 {
     std::size_t result = 1;
-    for (std::size_t current = 2; current <= number; ++current) {
+    for (std::size_t current = 2; current <= number; ++current)
+    {
         result *= current;
     }
     return result;
 }
 
-template <typename T>
-void describeNumber(T value)
+template <typename T> void describeNumber(T value)
 {
     // if constexpr 只实例化被选中的分支；另一分支可含有对该 T 不成立的代码。
-    if constexpr (std::is_integral_v<T>) {
+    if constexpr (std::is_integral_v<T>)
+    {
         std::cout << value << " is an integral value\n";
-    } else {
+    }
+    else
+    {
         std::cout << value << " is a non-integral value\n";
     }
 }
