@@ -3,13 +3,15 @@
 #include <iostream>
 #include <new>
 
-class PoolCandidate {
+class PoolCandidate
+{
 public:
     virtual ~PoolCandidate() = default;
 
     static void *operator new(std::size_t size)
     {
-        if (size != sizeof(PoolCandidate)) {
+        if (size != sizeof(PoolCandidate))
+        {
             std::cout << "derived size " << size
                       << ": delegate to global operator new\n";
             return ::operator new(size);
@@ -29,12 +31,14 @@ private:
     int value_{};
 };
 
-class DerivedCandidate : public PoolCandidate {
+class DerivedCandidate : public PoolCandidate
+{
 private:
     int extra_[100]{};
 };
 
-class alignas(64) CacheLineObject {
+class alignas(64) CacheLineObject
+{
 public:
     static void *operator new(std::size_t size)
     {
@@ -43,8 +47,7 @@ public:
 
     static void operator delete(void *memory) noexcept
     {
-        ::operator delete(memory,
-                          std::align_val_t{alignof(CacheLineObject)});
+        ::operator delete(memory, std::align_val_t{alignof(CacheLineObject)});
     }
 
 private:

@@ -5,7 +5,8 @@
 #include <new>
 #include <vector>
 
-class TrackedMessage {
+class TrackedMessage
+{
 public:
     explicit TrackedMessage(int id) : id_(id) {}
 
@@ -48,17 +49,19 @@ int main()
     // 现代做法：只把特定容器的分配导向明确的 memory_resource，
     // 不改变整个进程的全局 operator new。
     std::array<std::byte, 1024> localBuffer{};
-    std::pmr::monotonic_buffer_resource arena{
-        localBuffer.data(), localBuffer.size(),
-        std::pmr::null_memory_resource()};
+    std::pmr::monotonic_buffer_resource arena{localBuffer.data(),
+                                              localBuffer.size(),
+                                              std::pmr::null_memory_resource()};
     std::pmr::vector<int> values{&arena};
 
-    for (int value = 1; value <= 5; ++value) {
+    for (int value = 1; value <= 5; ++value)
+    {
         values.push_back(value * 10);
     }
 
     std::cout << "pmr values:";
-    for (const int value : values) {
+    for (const int value : values)
+    {
         std::cout << ' ' << value;
     }
     std::cout << '\n';
