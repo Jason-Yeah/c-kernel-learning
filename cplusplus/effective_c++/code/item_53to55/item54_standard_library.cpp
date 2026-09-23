@@ -8,12 +8,12 @@
 
 [[nodiscard]] std::optional<double> average(std::span<const int> values)
 {
-    if (values.empty()) {
+    if (values.empty())
+    {
         return std::nullopt;
     }
 
-    const long long total =
-        std::accumulate(values.begin(), values.end(), 0LL);
+    const long long total = std::accumulate(values.begin(), values.end(), 0LL);
     return static_cast<double>(total) / static_cast<double>(values.size());
 }
 
@@ -27,7 +27,8 @@ int main()
     std::ranges::sort(scores);
 
     const std::span<const int> allScores{scores};
-    if (const auto result = average(allScores)) {
+    if (const auto result = average(allScores))
+    {
         std::cout << "average: " << *result << '\n';
     }
 
@@ -38,7 +39,8 @@ int main()
         scores | std::views::filter([](int score) { return score >= 60; });
 
     std::cout << "passing scores:";
-    for (const int score : passingScores) {
+    for (const int score : passingScores)
+    {
         std::cout << ' ' << score;
     }
     std::cout << '\n';

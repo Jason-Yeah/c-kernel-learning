@@ -13,13 +13,15 @@
     const char *const end = begin + text.size();
     const auto [position, error] = std::from_chars(begin, end, value);
 
-    if (error != std::errc{} || position != end) {
+    if (error != std::errc{} || position != end)
+    {
         return std::nullopt;
     }
     return value;
 }
 
-class Processor {
+class Processor
+{
 public:
     virtual ~Processor() = default;
     virtual void process(int value) const
@@ -28,7 +30,8 @@ public:
     }
 };
 
-class DoublingProcessor final : public Processor {
+class DoublingProcessor final : public Processor
+{
 public:
     void process(int value) const override
     {
@@ -45,7 +48,8 @@ void warningExamples()
     // 2. 有符号负数与无符号 size 比较，-1 会转换为很大的无符号值。
     const int index = -1;
     const std::vector<int> values{10, 20, 30};
-    if (index < values.size()) {
+    if (index < values.size())
+    {
         std::cout << values.front() << '\n';
     }
 
@@ -62,7 +66,8 @@ void warningExamples()
 int main()
 {
     const auto parsed = parseInteger("42");
-    if (!parsed) {
+    if (!parsed)
+    {
         std::cerr << "invalid integer\n";
         return 1;
     }
@@ -74,8 +79,8 @@ int main()
     const int index = -1;
     const std::vector<int> values{10, 20, 30};
     std::cout << std::boolalpha
-              << "index is before size: "
-              << std::cmp_less(index, values.size()) << '\n';
+              << "index is before size: " << std::cmp_less(index, values.size())
+              << '\n';
 
 #ifdef ENABLE_WARNING_DEMO
     warningExamples();

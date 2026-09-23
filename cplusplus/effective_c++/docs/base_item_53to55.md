@@ -112,6 +112,7 @@ void process(int) const override;
 
 ```cpp
 [[nodiscard]] bool saveConfiguration();
+// 表示后续调用该函数时如何忽略返回时会warrning
 
 saveConfiguration(); // 编译器通常警告结果被丢弃。
 ```
