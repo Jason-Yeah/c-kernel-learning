@@ -1,0 +1,5 @@
+/manual_fsm
+/manual_resume
+/generator
+/epoll_coroutines
+/asio_echo
