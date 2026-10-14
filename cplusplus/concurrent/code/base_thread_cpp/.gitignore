@@ -1,0 +1,10 @@
+/thread_demo
+/jthread_stop
+/mutex_demo
+/atomic_counter
+/condition_demo
+/future_demo
+/shared_lock
+/scoped_lock
+/worker_queue
+/atomic_publish
