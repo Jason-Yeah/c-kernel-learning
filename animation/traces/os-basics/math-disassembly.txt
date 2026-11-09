@@ -1,0 +1,46 @@
+$ objdump -dr .trace-build/os-basics/os-math.o
+
+.trace-build/os-basics/os-math.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <os_add>:
+   0:	f3 0f 1e fa          	endbr64
+   4:	55                   	push   %rbp
+   5:	48 89 e5             	mov    %rsp,%rbp
+   8:	48 83 ec 08          	sub    $0x8,%rsp
+   c:	89 7d fc             	mov    %edi,-0x4(%rbp)
+   f:	89 75 f8             	mov    %esi,-0x8(%rbp)
+  12:	8b 55 fc             	mov    -0x4(%rbp),%edx
+  15:	8b 45 f8             	mov    -0x8(%rbp),%eax
+  18:	01 d0                	add    %edx,%eax
+  1a:	c9                   	leave
+  1b:	c3                   	ret
+
+000000000000001c <os_width>:
+  1c:	f3 0f 1e fa          	endbr64
+  20:	55                   	push   %rbp
+  21:	48 89 e5             	mov    %rsp,%rbp
+  24:	48 83 ec 10          	sub    $0x10,%rsp
+  28:	48 b8 ff ff ff ff ff 	movabs $0xffffffffffffffff,%rax
+  2f:	ff ff ff 
+  32:	b8 05 00 00 00       	mov    $0x5,%eax
+  37:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+  3b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+  3f:	c9                   	leave
+  40:	c3                   	ret
+
+0000000000000041 <os_equal>:
+  41:	f3 0f 1e fa          	endbr64
+  45:	55                   	push   %rbp
+  46:	48 89 e5             	mov    %rsp,%rbp
+  49:	48 83 ec 08          	sub    $0x8,%rsp
+  4d:	89 7d fc             	mov    %edi,-0x4(%rbp)
+  50:	89 75 f8             	mov    %esi,-0x8(%rbp)
+  53:	8b 45 fc             	mov    -0x4(%rbp),%eax
+  56:	3b 45 f8             	cmp    -0x8(%rbp),%eax
+  59:	0f 94 c0             	sete   %al
+  5c:	0f b6 c0             	movzbl %al,%eax
+  5f:	c9                   	leave
+  60:	c3                   	ret

@@ -1,0 +1,5 @@
+/process_basics
+/sysv_ipc
+/posix_shared_memory
+/pass_fd
+/spawn_capture

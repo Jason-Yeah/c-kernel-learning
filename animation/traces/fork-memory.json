@@ -1,0 +1,419 @@
+{
+  "schemaVersion": 1,
+  "id": "fork-memory",
+  "provenance": {
+    "kind": "gdb-plus-model",
+    "capturedAt": "2026-11-05T13:41:11.890Z",
+    "source": {
+      "path": "experiments/fork-memory.c",
+      "content": "#define _GNU_SOURCE\n/* VA and values are observable; physical PFNs/COW copies are not inferred here. */\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/mman.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nvolatile int trace_phase, role;\npid_t fork_result, child_id;\nvolatile int *private_page, *shared_page;\nlong page_size;\nvolatile int global_data = 10;\nvolatile int global_bss;\nvolatile int *stack_local;\nvolatile int *heap_object;\n\n__attribute__((noinline)) static void checkpoint(int phase)\n{\n    trace_phase = phase;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_FORK_MEMORY_EVENT */\n}\nstatic int transfer(int fd, int writing)\n{\n    char byte = 'x';\n    return (writing ? write(fd, &byte, 1) : read(fd, &byte, 1)) == 1;\n}\nint main(void)\n{\n    page_size = sysconf(_SC_PAGESIZE);\n    private_page = mmap(NULL, (size_t)page_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);\n    shared_page = mmap(NULL, (size_t)page_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);\n    if (private_page == MAP_FAILED || shared_page == MAP_FAILED)\n        return 2;\n    *private_page = 40;\n    *shared_page = 50;\n    volatile int local = 20;\n    stack_local = &local;\n    heap_object = malloc(sizeof *heap_object);\n    if (heap_object == NULL)\n        return 10;\n    *heap_object = 30;\n    int go[2], done[2];\n    if (pipe(go) != 0 || pipe(done) != 0)\n        return 3;\n    fork_result = fork();\n    if (fork_result < 0)\n        return 4;\n    if (fork_result == 0) {\n        role = 1;\n        child_id = getpid();\n        close(go[1]);\n        close(done[0]);\n        if (!transfer(go[0], 0))\n            _exit(5);\n        checkpoint(2); /* child before mutation: same VA, original values */\n        global_data = 100;\n        global_bss = 200;\n        *stack_local = 200;\n        *heap_object = 300;\n        *private_page = 400;\n        *shared_page = 500;\n        checkpoint(3); /* child's actual values */\n        if (!transfer(done[1], 1))\n            _exit(6);\n        _exit(0);\n    }\n    child_id = fork_result;\n    close(go[0]);\n    close(done[1]);\n    checkpoint(1); /* parent before releasing child */\n    if (!transfer(go[1], 1) || !transfer(done[0], 0))\n        return 7;\n    int status;\n    if (waitpid(child_id, &status, 0) != child_id || status != 0)\n        return 8;\n    checkpoint(4); /* parent: private still 40, shared now 500 */\n    printf(\"parent private=%d shared=%d\\n\", *private_page, *shared_page);\n    return *private_page == 40 && *shared_page == 500 ? 0 : 9;\n}\n",
+      "sha256": "f30ca723b7d3b27badf8a6ebdddcd1e895eeee1064d40566d037334e9fe155a6"
+    },
+    "binary": {
+      "path": ".trace-build/fork-memory",
+      "sha256": "0c6794238b643941be1809a5970617c5f6f00dda6b09f699c4aeb4379fcaa357"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/fork-memory.c -o .trace-build/fork-memory",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-fno-ipa-stack-alignment",
+      "-mno-red-zone",
+      "-fno-stack-protector",
+      "-U_FORTIFY_SOURCE",
+      "-D_FORTIFY_SOURCE=0",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "limits": "VA, values and mapping permissions observed. No PFNs/physical copying/PTE internals inferred from matching VAs or maps; COW internals remain a mechanism model.",
+    "replay": "Offline replay of actual local GDB stops; the website does not execute programs or control GDB."
+  },
+  "runs": {
+    "default": {
+      "case": "default",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 2,
+          "code": 0
+        },
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065652,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/fork-memory.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/fork-memory.c",
+            "line": 72,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x6052555312C1",
+            "rsp": "0x7FFF334A7C48",
+            "rbp": "0x7FFF334A7C50",
+            "rax": "0x1",
+            "rdi": "0x1",
+            "rsi": "0x0"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065658,
+            "childPid": 1065658,
+            "pageSize": 4096,
+            "privateAddress": "0x7AB5FEDA4000",
+            "sharedAddress": "0x7AB5FEDA3000",
+            "privateValue": 40,
+            "sharedValue": 50,
+            "privateMapping": "7ab5feda4000-7ab5feda7000 rw-p 00000000 00:00 0 ",
+            "sharedMapping": "7ab5feda3000-7ab5feda4000 rw-s 00000000 00:01 66084                      /dev/zero (deleted)",
+            "globalData": 10,
+            "globalBss": 0,
+            "localValue": 20,
+            "heapValue": 30,
+            "localAddress": "0x7FFF334A7C7C",
+            "heapAddress": "0x60527C6082A0"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>\nrsp            0x7fff334a7c48      0x7fff334a7c48\nrbp            0x7fff334a7c50      0x7fff334a7c50\nrax            0x1                 1"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x6052555312c1 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory \n  2    process 1065658   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory"
+            },
+            {
+              "command": "p private_page",
+              "output": "$1 = (volatile int *) 0x7ab5feda4000"
+            },
+            {
+              "command": "p *private_page",
+              "output": "$2 = 40"
+            },
+            {
+              "command": "p shared_page",
+              "output": "$3 = (volatile int *) 0x7ab5feda3000"
+            },
+            {
+              "command": "p *shared_page",
+              "output": "$4 = 50"
+            },
+            {
+              "command": "p global_data",
+              "output": "$5 = 10"
+            },
+            {
+              "command": "p global_bss",
+              "output": "$6 = 0"
+            },
+            {
+              "command": "p *stack_local",
+              "output": "$7 = 20"
+            },
+            {
+              "command": "p *heap_object",
+              "output": "$8 = 30"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065658,
+          "inferior": 2,
+          "source": {
+            "file": "experiments/fork-memory.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/fork-memory.c",
+            "line": 57,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x6052555312C1",
+            "rsp": "0x7FFF334A7C48",
+            "rbp": "0x7FFF334A7C50",
+            "rax": "0x2",
+            "rdi": "0x2",
+            "rsi": "0x7FFF334A7C4F"
+          },
+          "fields": {
+            "role": 1,
+            "forkResult": 0,
+            "childPid": 1065658,
+            "pageSize": 4096,
+            "privateAddress": "0x7AB5FEDA4000",
+            "sharedAddress": "0x7AB5FEDA3000",
+            "privateValue": 40,
+            "sharedValue": 50,
+            "privateMapping": "7ab5feda4000-7ab5feda7000 rw-p 00000000 00:00 0 ",
+            "sharedMapping": "7ab5feda3000-7ab5feda4000 rw-s 00000000 00:01 66084                      /dev/zero (deleted)",
+            "globalData": 10,
+            "globalBss": 0,
+            "localValue": 20,
+            "heapValue": 30,
+            "localAddress": "0x7FFF334A7C7C",
+            "heapAddress": "0x60527C6082A0"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>\nrsp            0x7fff334a7c48      0x7fff334a7c48\nrbp            0x7fff334a7c50      0x7fff334a7c50\nrax            0x2                 2"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x6052555312c1 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory \n* 2    process 1065658   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory"
+            },
+            {
+              "command": "p private_page",
+              "output": "$9 = (volatile int *) 0x7ab5feda4000"
+            },
+            {
+              "command": "p *private_page",
+              "output": "$10 = 40"
+            },
+            {
+              "command": "p shared_page",
+              "output": "$11 = (volatile int *) 0x7ab5feda3000"
+            },
+            {
+              "command": "p *shared_page",
+              "output": "$12 = 50"
+            },
+            {
+              "command": "p global_data",
+              "output": "$13 = 10"
+            },
+            {
+              "command": "p global_bss",
+              "output": "$14 = 0"
+            },
+            {
+              "command": "p *stack_local",
+              "output": "$15 = 20"
+            },
+            {
+              "command": "p *heap_object",
+              "output": "$16 = 30"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "event": "phase-3",
+          "phase": 3,
+          "pid": 1065658,
+          "inferior": 2,
+          "source": {
+            "file": "experiments/fork-memory.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/fork-memory.c",
+            "line": 64,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x6052555312C1",
+            "rsp": "0x7FFF334A7C48",
+            "rbp": "0x7FFF334A7C50",
+            "rax": "0x3",
+            "rdi": "0x3",
+            "rsi": "0x7FFF334A7C4F"
+          },
+          "fields": {
+            "role": 1,
+            "forkResult": 0,
+            "childPid": 1065658,
+            "pageSize": 4096,
+            "privateAddress": "0x7AB5FEDA4000",
+            "sharedAddress": "0x7AB5FEDA3000",
+            "privateValue": 400,
+            "sharedValue": 500,
+            "privateMapping": "7ab5feda4000-7ab5feda7000 rw-p 00000000 00:00 0 ",
+            "sharedMapping": "7ab5feda3000-7ab5feda4000 rw-s 00000000 00:01 66084                      /dev/zero (deleted)",
+            "globalData": 100,
+            "globalBss": 200,
+            "localValue": 200,
+            "heapValue": 300,
+            "localAddress": "0x7FFF334A7C7C",
+            "heapAddress": "0x60527C6082A0"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>\nrsp            0x7fff334a7c48      0x7fff334a7c48\nrbp            0x7fff334a7c50      0x7fff334a7c50\nrax            0x3                 3"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x6052555312c1 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory \n* 2    process 1065658   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory"
+            },
+            {
+              "command": "p private_page",
+              "output": "$17 = (volatile int *) 0x7ab5feda4000"
+            },
+            {
+              "command": "p *private_page",
+              "output": "$18 = 400"
+            },
+            {
+              "command": "p shared_page",
+              "output": "$19 = (volatile int *) 0x7ab5feda3000"
+            },
+            {
+              "command": "p *shared_page",
+              "output": "$20 = 500"
+            },
+            {
+              "command": "p global_data",
+              "output": "$21 = 100"
+            },
+            {
+              "command": "p global_bss",
+              "output": "$22 = 200"
+            },
+            {
+              "command": "p *stack_local",
+              "output": "$23 = 200"
+            },
+            {
+              "command": "p *heap_object",
+              "output": "$24 = 300"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "event": "phase-4",
+          "phase": 4,
+          "pid": 1065652,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/fork-memory.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/fork-memory.c",
+            "line": 78,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x6052555312C1",
+            "rsp": "0x7FFF334A7C48",
+            "rbp": "0x7FFF334A7C50",
+            "rax": "0x4",
+            "rdi": "0x4",
+            "rsi": "0x7FFF334A7C68"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065658,
+            "childPid": 1065658,
+            "pageSize": 4096,
+            "privateAddress": "0x7AB5FEDA4000",
+            "sharedAddress": "0x7AB5FEDA3000",
+            "privateValue": 40,
+            "sharedValue": 500,
+            "privateMapping": "7ab5feda4000-7ab5feda7000 rw-p 00000000 00:00 0 ",
+            "sharedMapping": "7ab5feda3000-7ab5feda4000 rw-s 00000000 00:01 66084                      /dev/zero (deleted)",
+            "globalData": 10,
+            "globalBss": 0,
+            "localValue": 20,
+            "heapValue": 30,
+            "localAddress": "0x7FFF334A7C7C",
+            "heapAddress": "0x60527C6082A0"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>\nrsp            0x7fff334a7c48      0x7fff334a7c48\nrbp            0x7fff334a7c50      0x7fff334a7c50\nrax            0x4                 4"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x6052555312c1 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory"
+            },
+            {
+              "command": "p private_page",
+              "output": "$25 = (volatile int *) 0x7ab5feda4000"
+            },
+            {
+              "command": "p *private_page",
+              "output": "$26 = 40"
+            },
+            {
+              "command": "p shared_page",
+              "output": "$27 = (volatile int *) 0x7ab5feda3000"
+            },
+            {
+              "command": "p *shared_page",
+              "output": "$28 = 500"
+            },
+            {
+              "command": "p global_data",
+              "output": "$29 = 10"
+            },
+            {
+              "command": "p global_bss",
+              "output": "$30 = 0"
+            },
+            {
+              "command": "p *stack_local",
+              "output": "$31 = 20"
+            },
+            {
+              "command": "p *heap_object",
+              "output": "$32 = 30"
+            }
+          ]
+        }
+      ],
+      "stdout": "parent private=40 shared=500\n"
+    }
+  }
+}

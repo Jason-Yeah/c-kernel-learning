@@ -1,0 +1,305 @@
+$ readelf -SW .trace-build/os-basics/os-main.o
+There are 295 section headers, starting at offset 0x26610:
+
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .group            GROUP           0000000000000000 000040 00000c 04     292 101  4
+  [ 2] .group            GROUP           0000000000000000 00004c 00000c 04     292 102  4
+  [ 3] .group            GROUP           0000000000000000 000058 00000c 04     292 103  4
+  [ 4] .group            GROUP           0000000000000000 000064 00000c 04     292 104  4
+  [ 5] .group            GROUP           0000000000000000 000070 00000c 04     292 105  4
+  [ 6] .group            GROUP           0000000000000000 00007c 00000c 04     292 106  4
+  [ 7] .group            GROUP           0000000000000000 000088 00000c 04     292 107  4
+  [ 8] .group            GROUP           0000000000000000 000094 00000c 04     292 108  4
+  [ 9] .group            GROUP           0000000000000000 0000a0 00000c 04     292 109  4
+  [10] .group            GROUP           0000000000000000 0000ac 00000c 04     292 110  4
+  [11] .group            GROUP           0000000000000000 0000b8 00000c 04     292 111  4
+  [12] .group            GROUP           0000000000000000 0000c4 00000c 04     292 112  4
+  [13] .group            GROUP           0000000000000000 0000d0 00000c 04     292 113  4
+  [14] .group            GROUP           0000000000000000 0000dc 00000c 04     292 114  4
+  [15] .group            GROUP           0000000000000000 0000e8 00000c 04     292 115  4
+  [16] .group            GROUP           0000000000000000 0000f4 00000c 04     292 116  4
+  [17] .group            GROUP           0000000000000000 000100 00000c 04     292 117  4
+  [18] .group            GROUP           0000000000000000 00010c 00000c 04     292 118  4
+  [19] .group            GROUP           0000000000000000 000118 00000c 04     292 119  4
+  [20] .group            GROUP           0000000000000000 000124 00000c 04     292 120  4
+  [21] .group            GROUP           0000000000000000 000130 00000c 04     292 121  4
+  [22] .group            GROUP           0000000000000000 00013c 00000c 04     292 122  4
+  [23] .group            GROUP           0000000000000000 000148 00000c 04     292 123  4
+  [24] .group            GROUP           0000000000000000 000154 00000c 04     292 124  4
+  [25] .group            GROUP           0000000000000000 000160 00000c 04     292 125  4
+  [26] .group            GROUP           0000000000000000 00016c 00000c 04     292 126  4
+  [27] .group            GROUP           0000000000000000 000178 00000c 04     292 127  4
+  [28] .group            GROUP           0000000000000000 000184 00000c 04     292 128  4
+  [29] .group            GROUP           0000000000000000 000190 00000c 04     292 129  4
+  [30] .group            GROUP           0000000000000000 00019c 00000c 04     292 130  4
+  [31] .group            GROUP           0000000000000000 0001a8 00000c 04     292 131  4
+  [32] .group            GROUP           0000000000000000 0001b4 00000c 04     292 132  4
+  [33] .group            GROUP           0000000000000000 0001c0 00000c 04     292 133  4
+  [34] .group            GROUP           0000000000000000 0001cc 00000c 04     292 134  4
+  [35] .group            GROUP           0000000000000000 0001d8 00000c 04     292 135  4
+  [36] .group            GROUP           0000000000000000 0001e4 00000c 04     292 136  4
+  [37] .group            GROUP           0000000000000000 0001f0 00000c 04     292 137  4
+  [38] .group            GROUP           0000000000000000 0001fc 00000c 04     292 138  4
+  [39] .group            GROUP           0000000000000000 000208 00000c 04     292 139  4
+  [40] .group            GROUP           0000000000000000 000214 00000c 04     292 140  4
+  [41] .group            GROUP           0000000000000000 000220 00000c 04     292 141  4
+  [42] .group            GROUP           0000000000000000 00022c 00000c 04     292 142  4
+  [43] .group            GROUP           0000000000000000 000238 00000c 04     292 143  4
+  [44] .group            GROUP           0000000000000000 000244 00000c 04     292 144  4
+  [45] .group            GROUP           0000000000000000 000250 00000c 04     292 145  4
+  [46] .group            GROUP           0000000000000000 00025c 00000c 04     292 146  4
+  [47] .group            GROUP           0000000000000000 000268 00000c 04     292 147  4
+  [48] .group            GROUP           0000000000000000 000274 00000c 04     292 148  4
+  [49] .group            GROUP           0000000000000000 000280 00000c 04     292 149  4
+  [50] .group            GROUP           0000000000000000 00028c 00000c 04     292 150  4
+  [51] .group            GROUP           0000000000000000 000298 00000c 04     292 151  4
+  [52] .group            GROUP           0000000000000000 0002a4 00000c 04     292 152  4
+  [53] .group            GROUP           0000000000000000 0002b0 00000c 04     292 153  4
+  [54] .group            GROUP           0000000000000000 0002bc 00000c 04     292 154  4
+  [55] .group            GROUP           0000000000000000 0002c8 00000c 04     292 155  4
+  [56] .group            GROUP           0000000000000000 0002d4 00000c 04     292 156  4
+  [57] .group            GROUP           0000000000000000 0002e0 00000c 04     292 157  4
+  [58] .group            GROUP           0000000000000000 0002ec 00000c 04     292 158  4
+  [59] .group            GROUP           0000000000000000 0002f8 00000c 04     292 159  4
+  [60] .group            GROUP           0000000000000000 000304 00000c 04     292 160  4
+  [61] .group            GROUP           0000000000000000 000310 00000c 04     292 161  4
+  [62] .group            GROUP           0000000000000000 00031c 00000c 04     292 162  4
+  [63] .group            GROUP           0000000000000000 000328 00000c 04     292 163  4
+  [64] .group            GROUP           0000000000000000 000334 00000c 04     292 164  4
+  [65] .group            GROUP           0000000000000000 000340 00000c 04     292 165  4
+  [66] .group            GROUP           0000000000000000 00034c 00000c 04     292 166  4
+  [67] .group            GROUP           0000000000000000 000358 00000c 04     292 167  4
+  [68] .group            GROUP           0000000000000000 000364 00000c 04     292 168  4
+  [69] .group            GROUP           0000000000000000 000370 00000c 04     292 169  4
+  [70] .group            GROUP           0000000000000000 00037c 00000c 04     292 170  4
+  [71] .group            GROUP           0000000000000000 000388 00000c 04     292 171  4
+  [72] .group            GROUP           0000000000000000 000394 00000c 04     292 172  4
+  [73] .group            GROUP           0000000000000000 0003a0 00000c 04     292 173  4
+  [74] .group            GROUP           0000000000000000 0003ac 00000c 04     292 174  4
+  [75] .group            GROUP           0000000000000000 0003b8 00000c 04     292 175  4
+  [76] .group            GROUP           0000000000000000 0003c4 00000c 04     292 176  4
+  [77] .group            GROUP           0000000000000000 0003d0 00000c 04     292 177  4
+  [78] .group            GROUP           0000000000000000 0003dc 00000c 04     292 178  4
+  [79] .group            GROUP           0000000000000000 0003e8 00000c 04     292 179  4
+  [80] .group            GROUP           0000000000000000 0003f4 00000c 04     292 180  4
+  [81] .group            GROUP           0000000000000000 000400 00000c 04     292 181  4
+  [82] .group            GROUP           0000000000000000 00040c 00000c 04     292 182  4
+  [83] .group            GROUP           0000000000000000 000418 00000c 04     292 183  4
+  [84] .group            GROUP           0000000000000000 000424 00000c 04     292 184  4
+  [85] .group            GROUP           0000000000000000 000430 00000c 04     292 185  4
+  [86] .group            GROUP           0000000000000000 00043c 00000c 04     292 186  4
+  [87] .group            GROUP           0000000000000000 000448 00000c 04     292 187  4
+  [88] .group            GROUP           0000000000000000 000454 00000c 04     292 188  4
+  [89] .group            GROUP           0000000000000000 000460 00000c 04     292 189  4
+  [90] .group            GROUP           0000000000000000 00046c 00000c 04     292 190  4
+  [91] .text             PROGBITS        0000000000000000 000478 00054c 00  AX  0   0  1
+  [92] .rela.text        RELA            0000000000000000 016c20 000840 18   I 292  91  8
+  [93] .data             PROGBITS        0000000000000000 0009c4 000008 00  WA  0   0  4
+  [94] .bss              NOBITS          0000000000000000 0009d0 000048 00  WA  0   0  8
+  [95] .rodata           PROGBITS        0000000000000000 0009d0 000050 00   A  0   0  8
+  [96] .debug_info       PROGBITS        0000000000000000 000a20 000b5c 00      0   0  1
+  [97] .rela.debug_info  RELA            0000000000000000 017460 001f68 18   I 292  96  8
+  [98] .debug_abbrev     PROGBITS        0000000000000000 00157c 000213 00      0   0  1
+  [99] .debug_aranges    PROGBITS        0000000000000000 00178f 000030 00      0   0  1
+  [100] .rela.debug_aranges RELA            0000000000000000 0193c8 000030 18   I 292  99  8
+  [101] .debug_macro      PROGBITS        0000000000000000 0017bf 000604 00      0   0  1
+  [102] .rela.debug_macro RELA            0000000000000000 0193f8 001080 18   I 292 101  8
+  [103] .debug_macro      PROGBITS        0000000000000000 001dc3 000940 00   G  0   0  1
+  [104] .rela.debug_macro RELA            0000000000000000 01a478 0024f0 18  IG 292 103  8
+  [105] .debug_macro      PROGBITS        0000000000000000 002703 000028 00   G  0   0  1
+  [106] .rela.debug_macro RELA            0000000000000000 01c968 000090 18  IG 292 105  8
+  [107] .debug_macro      PROGBITS        0000000000000000 00272b 000010 00   G  0   0  1
+  [108] .rela.debug_macro RELA            0000000000000000 01c9f8 000030 18  IG 292 107  8
+  [109] .debug_macro      PROGBITS        0000000000000000 00273b 000294 00   G  0   0  1
+  [110] .rela.debug_macro RELA            0000000000000000 01ca28 0008d0 18  IG 292 109  8
+  [111] .debug_macro      PROGBITS        0000000000000000 0029cf 000016 00   G  0   0  1
+  [112] .rela.debug_macro RELA            0000000000000000 01d2f8 000048 18  IG 292 111  8
+  [113] .debug_macro      PROGBITS        0000000000000000 0029e5 00005f 00   G  0   0  1
+  [114] .rela.debug_macro RELA            0000000000000000 01d340 000138 18  IG 292 113  8
+  [115] .debug_macro      PROGBITS        0000000000000000 002a44 0001c3 00   G  0   0  1
+  [116] .rela.debug_macro RELA            0000000000000000 01d478 000618 18  IG 292 115  8
+  [117] .debug_macro      PROGBITS        0000000000000000 002c07 00007b 00   G  0   0  1
+  [118] .rela.debug_macro RELA            0000000000000000 01da90 000198 18  IG 292 117  8
+  [119] .debug_macro      PROGBITS        0000000000000000 002c82 000034 00   G  0   0  1
+  [120] .rela.debug_macro RELA            0000000000000000 01dc28 0000c0 18  IG 292 119  8
+  [121] .debug_macro      PROGBITS        0000000000000000 002cb6 000058 00   G  0   0  1
+  [122] .rela.debug_macro RELA            0000000000000000 01dce8 000150 18  IG 292 121  8
+  [123] .debug_macro      PROGBITS        0000000000000000 002d0e 000067 00   G  0   0  1
+  [124] .rela.debug_macro RELA            0000000000000000 01de38 000168 18  IG 292 123  8
+  [125] .debug_macro      PROGBITS        0000000000000000 002d75 000100 00   G  0   0  1
+  [126] .rela.debug_macro RELA            0000000000000000 01dfa0 0003f0 18  IG 292 125  8
+  [127] .debug_macro      PROGBITS        0000000000000000 002e75 000010 00   G  0   0  1
+  [128] .rela.debug_macro RELA            0000000000000000 01e390 000030 18  IG 292 127  8
+  [129] .debug_macro      PROGBITS        0000000000000000 002e85 000016 00   G  0   0  1
+  [130] .rela.debug_macro RELA            0000000000000000 01e3c0 000048 18  IG 292 129  8
+  [131] .debug_macro      PROGBITS        0000000000000000 002e9b 000298 00   G  0   0  1
+  [132] .rela.debug_macro RELA            0000000000000000 01e408 000918 18  IG 292 131  8
+  [133] .debug_macro      PROGBITS        0000000000000000 003133 000010 00   G  0   0  1
+  [134] .rela.debug_macro RELA            0000000000000000 01ed20 000030 18  IG 292 133  8
+  [135] .debug_macro      PROGBITS        0000000000000000 003143 0000d6 00   G  0   0  1
+  [136] .rela.debug_macro RELA            0000000000000000 01ed50 000348 18  IG 292 135  8
+  [137] .debug_macro      PROGBITS        0000000000000000 003219 000256 00   G  0   0  1
+  [138] .rela.debug_macro RELA            0000000000000000 01f098 000948 18  IG 292 137  8
+  [139] .debug_macro      PROGBITS        0000000000000000 00346f 000010 00   G  0   0  1
+  [140] .rela.debug_macro RELA            0000000000000000 01f9e0 000030 18  IG 292 139  8
+  [141] .debug_macro      PROGBITS        0000000000000000 00347f 00005e 00   G  0   0  1
+  [142] .rela.debug_macro RELA            0000000000000000 01fa10 000168 18  IG 292 141  8
+  [143] .debug_macro      PROGBITS        0000000000000000 0034dd 000010 00   G  0   0  1
+  [144] .rela.debug_macro RELA            0000000000000000 01fb78 000030 18  IG 292 143  8
+  [145] .debug_macro      PROGBITS        0000000000000000 0034ed 00009e 00   G  0   0  1
+  [146] .rela.debug_macro RELA            0000000000000000 01fba8 000210 18  IG 292 145  8
+  [147] .debug_macro      PROGBITS        0000000000000000 00358b 000010 00   G  0   0  1
+  [148] .rela.debug_macro RELA            0000000000000000 01fdb8 000030 18  IG 292 147  8
+  [149] .debug_macro      PROGBITS        0000000000000000 00359b 000034 00   G  0   0  1
+  [150] .rela.debug_macro RELA            0000000000000000 01fde8 0000c0 18  IG 292 149  8
+  [151] .debug_macro      PROGBITS        0000000000000000 0035cf 00006a 00   G  0   0  1
+  [152] .rela.debug_macro RELA            0000000000000000 01fea8 000198 18  IG 292 151  8
+  [153] .debug_macro      PROGBITS        0000000000000000 003639 000010 00   G  0   0  1
+  [154] .rela.debug_macro RELA            0000000000000000 020040 000030 18  IG 292 153  8
+  [155] .debug_macro      PROGBITS        0000000000000000 003649 00005f 00   G  0   0  1
+  [156] .rela.debug_macro RELA            0000000000000000 020070 000138 18  IG 292 155  8
+  [157] .debug_macro      PROGBITS        0000000000000000 0036a8 00002e 00   G  0   0  1
+  [158] .rela.debug_macro RELA            0000000000000000 0201a8 0000a8 18  IG 292 157  8
+  [159] .debug_macro      PROGBITS        0000000000000000 0036d6 000086 00   G  0   0  1
+  [160] .rela.debug_macro RELA            0000000000000000 020250 0001f8 18  IG 292 159  8
+  [161] .debug_macro      PROGBITS        0000000000000000 00375c 000016 00   G  0   0  1
+  [162] .rela.debug_macro RELA            0000000000000000 020448 000048 18  IG 292 161  8
+  [163] .debug_macro      PROGBITS        0000000000000000 003772 00009e 00   G  0   0  1
+  [164] .rela.debug_macro RELA            0000000000000000 020490 000210 18  IG 292 163  8
+  [165] .debug_macro      PROGBITS        0000000000000000 003810 00003a 00   G  0   0  1
+  [166] .rela.debug_macro RELA            0000000000000000 0206a0 0000d8 18  IG 292 165  8
+  [167] .debug_macro      PROGBITS        0000000000000000 00384a 00004c 00   G  0   0  1
+  [168] .rela.debug_macro RELA            0000000000000000 020778 000120 18  IG 292 167  8
+  [169] .debug_macro      PROGBITS        0000000000000000 003896 000052 00   G  0   0  1
+  [170] .rela.debug_macro RELA            0000000000000000 020898 000138 18  IG 292 169  8
+  [171] .debug_macro      PROGBITS        0000000000000000 0038e8 000052 00   G  0   0  1
+  [172] .rela.debug_macro RELA            0000000000000000 0209d0 000138 18  IG 292 171  8
+  [173] .debug_macro      PROGBITS        0000000000000000 00393a 000019 00   G  0   0  1
+  [174] .rela.debug_macro RELA            0000000000000000 020b08 000048 18  IG 292 173  8
+  [175] .debug_macro      PROGBITS        0000000000000000 003953 000012 00   G  0   0  1
+  [176] .rela.debug_macro RELA            0000000000000000 020b50 000030 18  IG 292 175  8
+  [177] .debug_macro      PROGBITS        0000000000000000 003965 00001c 00   G  0   0  1
+  [178] .rela.debug_macro RELA            0000000000000000 020b80 000060 18  IG 292 177  8
+  [179] .debug_macro      PROGBITS        0000000000000000 003981 000010 00   G  0   0  1
+  [180] .rela.debug_macro RELA            0000000000000000 020be0 000030 18  IG 292 179  8
+  [181] .debug_macro      PROGBITS        0000000000000000 003991 000010 00   G  0   0  1
+  [182] .rela.debug_macro RELA            0000000000000000 020c10 000030 18  IG 292 181  8
+  [183] .debug_macro      PROGBITS        0000000000000000 0039a1 00001c 00   G  0   0  1
+  [184] .rela.debug_macro RELA            0000000000000000 020c40 000060 18  IG 292 183  8
+  [185] .debug_macro      PROGBITS        0000000000000000 0039bd 00001c 00   G  0   0  1
+  [186] .rela.debug_macro RELA            0000000000000000 020ca0 000060 18  IG 292 185  8
+  [187] .debug_macro      PROGBITS        0000000000000000 0039d9 00004c 00   G  0   0  1
+  [188] .rela.debug_macro RELA            0000000000000000 020d00 000120 18  IG 292 187  8
+  [189] .debug_macro      PROGBITS        0000000000000000 003a25 00001c 00   G  0   0  1
+  [190] .rela.debug_macro RELA            0000000000000000 020e20 000060 18  IG 292 189  8
+  [191] .debug_macro      PROGBITS        0000000000000000 003a41 000010 00   G  0   0  1
+  [192] .rela.debug_macro RELA            0000000000000000 020e80 000030 18  IG 292 191  8
+  [193] .debug_macro      PROGBITS        0000000000000000 003a51 000046 00   G  0   0  1
+  [194] .rela.debug_macro RELA            0000000000000000 020eb0 000108 18  IG 292 193  8
+  [195] .debug_macro      PROGBITS        0000000000000000 003a97 000020 00   G  0   0  1
+  [196] .rela.debug_macro RELA            0000000000000000 020fb8 000060 18  IG 292 195  8
+  [197] .debug_macro      PROGBITS        0000000000000000 003ab7 000046 00   G  0   0  1
+  [198] .rela.debug_macro RELA            0000000000000000 021018 000108 18  IG 292 197  8
+  [199] .debug_macro      PROGBITS        0000000000000000 003afd 000016 00   G  0   0  1
+  [200] .rela.debug_macro RELA            0000000000000000 021120 000048 18  IG 292 199  8
+  [201] .debug_macro      PROGBITS        0000000000000000 003b13 000016 00   G  0   0  1
+  [202] .rela.debug_macro RELA            0000000000000000 021168 000048 18  IG 292 201  8
+  [203] .debug_macro      PROGBITS        0000000000000000 003b29 000010 00   G  0   0  1
+  [204] .rela.debug_macro RELA            0000000000000000 0211b0 000030 18  IG 292 203  8
+  [205] .debug_macro      PROGBITS        0000000000000000 003b39 000010 00   G  0   0  1
+  [206] .rela.debug_macro RELA            0000000000000000 0211e0 000030 18  IG 292 205  8
+  [207] .debug_macro      PROGBITS        0000000000000000 003b49 000010 00   G  0   0  1
+  [208] .rela.debug_macro RELA            0000000000000000 021210 000030 18  IG 292 207  8
+  [209] .debug_macro      PROGBITS        0000000000000000 003b59 000010 00   G  0   0  1
+  [210] .rela.debug_macro RELA            0000000000000000 021240 000030 18  IG 292 209  8
+  [211] .debug_macro      PROGBITS        0000000000000000 003b69 000020 00   G  0   0  1
+  [212] .rela.debug_macro RELA            0000000000000000 021270 000060 18  IG 292 211  8
+  [213] .debug_macro      PROGBITS        0000000000000000 003b89 000012 00   G  0   0  1
+  [214] .rela.debug_macro RELA            0000000000000000 0212d0 000030 18  IG 292 213  8
+  [215] .debug_macro      PROGBITS        0000000000000000 003b9b 000010 00   G  0   0  1
+  [216] .rela.debug_macro RELA            0000000000000000 021300 000030 18  IG 292 215  8
+  [217] .debug_macro      PROGBITS        0000000000000000 003bab 000010 00   G  0   0  1
+  [218] .rela.debug_macro RELA            0000000000000000 021330 000030 18  IG 292 217  8
+  [219] .debug_macro      PROGBITS        0000000000000000 003bbb 000016 00   G  0   0  1
+  [220] .rela.debug_macro RELA            0000000000000000 021360 000048 18  IG 292 219  8
+  [221] .debug_macro      PROGBITS        0000000000000000 003bd1 000046 00   G  0   0  1
+  [222] .rela.debug_macro RELA            0000000000000000 0213a8 000108 18  IG 292 221  8
+  [223] .debug_macro      PROGBITS        0000000000000000 003c17 000136 00   G  0   0  1
+  [224] .rela.debug_macro RELA            0000000000000000 0214b0 0004c8 18  IG 292 223  8
+  [225] .debug_macro      PROGBITS        0000000000000000 003d4d 000046 00   G  0   0  1
+  [226] .rela.debug_macro RELA            0000000000000000 021978 000108 18  IG 292 225  8
+  [227] .debug_macro      PROGBITS        0000000000000000 003d93 0000aa 00   G  0   0  1
+  [228] .rela.debug_macro RELA            0000000000000000 021a80 000288 18  IG 292 227  8
+  [229] .debug_macro      PROGBITS        0000000000000000 003e3d 000027 00   G  0   0  1
+  [230] .rela.debug_macro RELA            0000000000000000 021d08 000078 18  IG 292 229  8
+  [231] .debug_macro      PROGBITS        0000000000000000 003e64 00007c 00   G  0   0  1
+  [232] .rela.debug_macro RELA            0000000000000000 021d80 0001e0 18  IG 292 231  8
+  [233] .debug_macro      PROGBITS        0000000000000000 003ee0 00009a 00   G  0   0  1
+  [234] .rela.debug_macro RELA            0000000000000000 021f60 000258 18  IG 292 233  8
+  [235] .debug_macro      PROGBITS        0000000000000000 003f7a 000010 00   G  0   0  1
+  [236] .rela.debug_macro RELA            0000000000000000 0221b8 000030 18  IG 292 235  8
+  [237] .debug_macro      PROGBITS        0000000000000000 003f8a 0000b4 00   G  0   0  1
+  [238] .rela.debug_macro RELA            0000000000000000 0221e8 000270 18  IG 292 237  8
+  [239] .debug_macro      PROGBITS        0000000000000000 00403e 0001a1 00   G  0   0  1
+  [240] .rela.debug_macro RELA            0000000000000000 022458 000600 18  IG 292 239  8
+  [241] .debug_macro      PROGBITS        0000000000000000 0041df 00001c 00   G  0   0  1
+  [242] .rela.debug_macro RELA            0000000000000000 022a58 000060 18  IG 292 241  8
+  [243] .debug_macro      PROGBITS        0000000000000000 0041fb 000022 00   G  0   0  1
+  [244] .rela.debug_macro RELA            0000000000000000 022ab8 000078 18  IG 292 243  8
+  [245] .debug_macro      PROGBITS        0000000000000000 00421d 000012 00   G  0   0  1
+  [246] .rela.debug_macro RELA            0000000000000000 022b30 000030 18  IG 292 245  8
+  [247] .debug_macro      PROGBITS        0000000000000000 00422f 00006a 00   G  0   0  1
+  [248] .rela.debug_macro RELA            0000000000000000 022b60 000198 18  IG 292 247  8
+  [249] .debug_macro      PROGBITS        0000000000000000 004299 00001c 00   G  0   0  1
+  [250] .rela.debug_macro RELA            0000000000000000 022cf8 000060 18  IG 292 249  8
+  [251] .debug_macro      PROGBITS        0000000000000000 0042b5 000010 00   G  0   0  1
+  [252] .rela.debug_macro RELA            0000000000000000 022d58 000030 18  IG 292 251  8
+  [253] .debug_macro      PROGBITS        0000000000000000 0042c5 0000ad 00   G  0   0  1
+  [254] .rela.debug_macro RELA            0000000000000000 022d88 0002a0 18  IG 292 253  8
+  [255] .debug_macro      PROGBITS        0000000000000000 004372 000016 00   G  0   0  1
+  [256] .rela.debug_macro RELA            0000000000000000 023028 000048 18  IG 292 255  8
+  [257] .debug_macro      PROGBITS        0000000000000000 004388 00006a 00   G  0   0  1
+  [258] .rela.debug_macro RELA            0000000000000000 023070 000198 18  IG 292 257  8
+  [259] .debug_macro      PROGBITS        0000000000000000 0043f2 000191 00   G  0   0  1
+  [260] .rela.debug_macro RELA            0000000000000000 023208 0005d0 18  IG 292 259  8
+  [261] .debug_macro      PROGBITS        0000000000000000 004583 00004c 00   G  0   0  1
+  [262] .rela.debug_macro RELA            0000000000000000 0237d8 000120 18  IG 292 261  8
+  [263] .debug_macro      PROGBITS        0000000000000000 0045cf 000027 00   G  0   0  1
+  [264] .rela.debug_macro RELA            0000000000000000 0238f8 000078 18  IG 292 263  8
+  [265] .debug_macro      PROGBITS        0000000000000000 0045f6 00003c 00   G  0   0  1
+  [266] .rela.debug_macro RELA            0000000000000000 023970 0000c0 18  IG 292 265  8
+  [267] .debug_macro      PROGBITS        0000000000000000 004632 000832 00   G  0   0  1
+  [268] .rela.debug_macro RELA            0000000000000000 023a30 001cb0 18  IG 292 267  8
+  [269] .debug_macro      PROGBITS        0000000000000000 004e64 000027 00   G  0   0  1
+  [270] .rela.debug_macro RELA            0000000000000000 0256e0 000078 18  IG 292 269  8
+  [271] .debug_macro      PROGBITS        0000000000000000 004e8b 000016 00   G  0   0  1
+  [272] .rela.debug_macro RELA            0000000000000000 025758 000048 18  IG 292 271  8
+  [273] .debug_macro      PROGBITS        0000000000000000 004ea1 00001c 00   G  0   0  1
+  [274] .rela.debug_macro RELA            0000000000000000 0257a0 000060 18  IG 292 273  8
+  [275] .debug_macro      PROGBITS        0000000000000000 004ebd 000016 00   G  0   0  1
+  [276] .rela.debug_macro RELA            0000000000000000 025800 000048 18  IG 292 275  8
+  [277] .debug_macro      PROGBITS        0000000000000000 004ed3 000012 00   G  0   0  1
+  [278] .rela.debug_macro RELA            0000000000000000 025848 000030 18  IG 292 277  8
+  [279] .debug_macro      PROGBITS        0000000000000000 004ee5 00001c 00   G  0   0  1
+  [280] .rela.debug_macro RELA            0000000000000000 025878 000060 18  IG 292 279  8
+  [281] .debug_macro      PROGBITS        0000000000000000 004f01 000010 00   G  0   0  1
+  [282] .rela.debug_macro RELA            0000000000000000 0258d8 000030 18  IG 292 281  8
+  [283] .debug_line       PROGBITS        0000000000000000 004f11 0004a0 00      0   0  1
+  [284] .rela.debug_line  RELA            0000000000000000 025908 000bd0 18   I 292 283  8
+  [285] .debug_str        PROGBITS        0000000000000000 0053b1 00e7ac 01  MS  0   0  1
+  [286] .debug_line_str   PROGBITS        0000000000000000 013b5d 0006fb 01  MS  0   0  1
+  [287] .comment          PROGBITS        0000000000000000 014258 00002e 01  MS  0   0  1
+  [288] .note.GNU-stack   PROGBITS        0000000000000000 014286 000000 00      0   0  1
+  [289] .note.gnu.property NOTE            0000000000000000 014288 000020 00   A  0   0  8
+  [290] .eh_frame         PROGBITS        0000000000000000 0142a8 000090 00   A  0   0  8
+  [291] .rela.eh_frame    RELA            0000000000000000 0264d8 000048 18   I 292 290  8
+  [292] .symtab           SYMTAB          0000000000000000 014338 001590 18     293 191  8
+  [293] .strtab           STRTAB          0000000000000000 0158c8 001355 00      0   0  1
+  [294] .shstrtab         STRTAB          0000000000000000 026520 0000ec 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), l (large), p (processor specific)

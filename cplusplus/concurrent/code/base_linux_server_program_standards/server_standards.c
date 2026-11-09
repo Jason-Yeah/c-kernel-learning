@@ -24,6 +24,7 @@ static void log_demo(void) {
     closelog();
     puts("日志已提交给系统日志服务；请用 journalctl 或系统日志配置查找 server_standards_demo");
 }
+
 static void identity(void) {
     printf("pid=%ld uid=%ld euid=%ld gid=%ld egid=%ld\n", (long)getpid(),
            (long)getuid(), (long)geteuid(), (long)getgid(), (long)getegid());

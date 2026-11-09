@@ -1,0 +1,648 @@
+Captured: 2026-11-06T09:03:19.553Z
+Source SHA256: 3beb4436378756eebe5f9573f4781b4aebc3a13f645428fe88594b25e58d4d18
+ELF SHA256: 26d25f70cafc64dfa3e248888e35f5204b820b765f407fc8f02cb696ffee36da
+gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic experiments/instruction-cycle.c -o .trace-build/instruction-cycle/program
+
+(gdb) set pagination off
+
+
+(gdb) set confirm off
+
+
+(gdb) set style enabled off
+
+
+(gdb) set disassembly-flavor att
+
+
+(gdb) set disable-randomization off
+
+
+(gdb) file .trace-build/instruction-cycle/program
+
+
+(gdb) start > .trace-build/instruction-cycle/stdout.txt
+Temporary breakpoint 1 at 0x11cc: file experiments/instruction-cycle.c, line 17.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) continue
+
+
+(gdb) x/gx $rsp
+0x7ffd69d79588:	0x00005aae619c120c
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c1189      0x5aae619c1189 <calculate>
+rsp            0x7ffd69d79588      0x7ffd69d79588
+rbp            0x7ffd69d795c0      0x7ffd69d795c0
+rax            0x0                 0
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x0                 0
+edx            0x69d795a0          1775736224
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c1189 <calculate>:	endbr64
+
+(gdb) x/4bx $rip
+0x5aae619c1189 <calculate>:	0xf3	0x0f	0x1e	0xfa
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$1 = 0
+
+
+=== sample 0 / 0x5AAE619C1189 ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c118d      0x5aae619c118d <calculate+4>
+rsp            0x7ffd69d79588      0x7ffd69d79588
+rbp            0x7ffd69d795c0      0x7ffd69d795c0
+rax            0x0                 0
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x0                 0
+edx            0x69d795a0          1775736224
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c118d <calculate+4>:	push   %rbp
+
+(gdb) x/1bx $rip
+0x5aae619c118d <calculate+4>:	0x55
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$2 = 0
+
+
+=== sample 1 / 0x5AAE619C118D ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c118e      0x5aae619c118e <calculate+5>
+rsp            0x7ffd69d79580      0x7ffd69d79580
+rbp            0x7ffd69d795c0      0x7ffd69d795c0
+rax            0x0                 0
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x0                 0
+edx            0x69d795a0          1775736224
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c118e <calculate+5>:	mov    %rsp,%rbp
+
+(gdb) x/3bx $rip
+0x5aae619c118e <calculate+5>:	0x48	0x89	0xe5
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$3 = 0
+
+
+=== sample 2 / 0x5AAE619C118E ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c1191      0x5aae619c1191 <calculate+8>
+rsp            0x7ffd69d79580      0x7ffd69d79580
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x0                 0
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x0                 0
+edx            0x69d795a0          1775736224
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c1191 <calculate+8>:	sub    $0x10,%rsp
+
+(gdb) x/4bx $rip
+0x5aae619c1191 <calculate+8>:	0x48	0x83	0xec	0x10
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$4 = 0
+
+
+=== sample 3 / 0x5AAE619C1191 ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c1195      0x5aae619c1195 <calculate+12>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x0                 0
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x0                 0
+edx            0x69d795a0          1775736224
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c1195 <calculate+12>:	mov    0x2e75(%rip),%eax        # 0x5aae619c4010 <inputs>
+
+(gdb) x/6bx $rip
+0x5aae619c1195 <calculate+12>:	0x8b	0x05	0x75	0x2e	0x00	0x00
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$5 = 0
+
+
+=== sample 4 / 0x5AAE619C1195 ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c119b      0x5aae619c119b <calculate+18>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x3                 3
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x3                 3
+edx            0x69d795a0          1775736224
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c119b <calculate+18>:	mov    %eax,-0xc(%rbp)
+
+(gdb) x/3bx $rip
+0x5aae619c119b <calculate+18>:	0x89	0x45	0xf4
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$6 = 0
+
+
+=== sample 5 / 0x5AAE619C119B ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c119e      0x5aae619c119e <calculate+21>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x3                 3
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x3                 3
+edx            0x69d795a0          1775736224
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c119e <calculate+21>:	mov    0x2e70(%rip),%eax        # 0x5aae619c4014 <inputs+4>
+
+(gdb) x/6bx $rip
+0x5aae619c119e <calculate+21>:	0x8b	0x05	0x70	0x2e	0x00	0x00
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$7 = 0
+
+
+=== sample 6 / 0x5AAE619C119E ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11a4      0x5aae619c11a4 <calculate+27>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x2                 2
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x2                 2
+edx            0x69d795a0          1775736224
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11a4 <calculate+27>:	mov    %eax,-0x8(%rbp)
+
+(gdb) x/3bx $rip
+0x5aae619c11a4 <calculate+27>:	0x89	0x45	0xf8
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$8 = 0
+
+
+=== sample 7 / 0x5AAE619C11A4 ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11a7      0x5aae619c11a7 <calculate+30>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x2                 2
+rdx            0x7ffd69d795a0      140726379189664
+eax            0x2                 2
+edx            0x69d795a0          1775736224
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11a7 <calculate+30>:	mov    -0xc(%rbp),%edx
+
+(gdb) x/3bx $rip
+0x5aae619c11a7 <calculate+30>:	0x8b	0x55	0xf4
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$9 = 0
+
+
+=== sample 8 / 0x5AAE619C11A7 ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11aa      0x5aae619c11aa <calculate+33>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x2                 2
+rdx            0x3                 3
+eax            0x2                 2
+edx            0x3                 3
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11aa <calculate+33>:	mov    -0x8(%rbp),%eax
+
+(gdb) x/3bx $rip
+0x5aae619c11aa <calculate+33>:	0x8b	0x45	0xf8
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$10 = 0
+
+
+=== sample 9 / 0x5AAE619C11AA ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11ad      0x5aae619c11ad <calculate+36>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x2                 2
+rdx            0x3                 3
+eax            0x2                 2
+edx            0x3                 3
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11ad <calculate+36>:	add    %edx,%eax
+
+(gdb) x/2bx $rip
+0x5aae619c11ad <calculate+36>:	0x01	0xd0
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$11 = 0
+
+
+=== sample 10 / 0x5AAE619C11AD ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11af      0x5aae619c11af <calculate+38>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x5                 5
+rdx            0x3                 3
+eax            0x5                 5
+edx            0x3                 3
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11af <calculate+38>:	mov    %eax,-0x4(%rbp)
+
+(gdb) x/3bx $rip
+0x5aae619c11af <calculate+38>:	0x89	0x45	0xfc
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$12 = 0
+
+
+=== sample 11 / 0x5AAE619C11AF ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11b2      0x5aae619c11b2 <calculate+41>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x5                 5
+rdx            0x3                 3
+eax            0x5                 5
+edx            0x3                 3
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11b2 <calculate+41>:	mov    -0x4(%rbp),%eax
+
+(gdb) x/3bx $rip
+0x5aae619c11b2 <calculate+41>:	0x8b	0x45	0xfc
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$13 = 0
+
+
+=== sample 12 / 0x5AAE619C11B2 ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11b5      0x5aae619c11b5 <calculate+44>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x5                 5
+rdx            0x3                 3
+eax            0x5                 5
+edx            0x3                 3
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11b5 <calculate+44>:	mov    %eax,0x2e61(%rip)        # 0x5aae619c401c <observed>
+
+(gdb) x/6bx $rip
+0x5aae619c11b5 <calculate+44>:	0x89	0x05	0x61	0x2e	0x00	0x00
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x00	0x00	0x00	0x00
+
+(gdb) p observed
+$14 = 0
+
+
+=== sample 13 / 0x5AAE619C11B5 ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11bb      0x5aae619c11bb <calculate+50>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x5                 5
+rdx            0x3                 3
+eax            0x5                 5
+edx            0x3                 3
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11bb <calculate+50>:	mov    -0x4(%rbp),%eax
+
+(gdb) x/3bx $rip
+0x5aae619c11bb <calculate+50>:	0x8b	0x45	0xfc
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x05	0x00	0x00	0x00
+
+(gdb) p observed
+$15 = 5
+
+
+=== sample 14 / 0x5AAE619C11BB ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11be      0x5aae619c11be <calculate+53>
+rsp            0x7ffd69d79570      0x7ffd69d79570
+rbp            0x7ffd69d79580      0x7ffd69d79580
+rax            0x5                 5
+rdx            0x3                 3
+eax            0x5                 5
+edx            0x3                 3
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11be <calculate+53>:	leave
+
+(gdb) x/1bx $rip
+0x5aae619c11be <calculate+53>:	0xc9
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x05	0x00	0x00	0x00
+
+(gdb) p observed
+$16 = 5
+
+
+=== sample 15 / 0x5AAE619C11BE ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c11bf      0x5aae619c11bf <calculate+54>
+rsp            0x7ffd69d79588      0x7ffd69d79588
+rbp            0x7ffd69d795c0      0x7ffd69d795c0
+rax            0x5                 5
+rdx            0x3                 3
+eax            0x5                 5
+edx            0x3                 3
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c11bf <calculate+54>:	ret
+
+(gdb) x/1bx $rip
+0x5aae619c11bf <calculate+54>:	0xc3
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x05	0x00	0x00	0x00
+
+(gdb) p observed
+$17 = 5
+
+
+=== sample 16 / 0x5AAE619C11BF ===
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdx eax edx eflags
+rip            0x5aae619c120c      0x5aae619c120c <main+76>
+rsp            0x7ffd69d79590      0x7ffd69d79590
+rbp            0x7ffd69d795c0      0x7ffd69d795c0
+rax            0x5                 5
+rdx            0x3                 3
+eax            0x5                 5
+edx            0x3                 3
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5aae619c120c <main+76>:	mov    %eax,-0x24(%rbp)
+
+(gdb) x/3bx $rip
+0x5aae619c120c <main+76>:	0x89	0x45	0xdc
+
+(gdb) x/8bx inputs
+0x5aae619c4010 <inputs>:	0x03	0x00	0x00	0x00	0x02	0x00	0x00	0x00
+
+(gdb) x/2dw inputs
+0x5aae619c4010 <inputs>:	3	2
+
+(gdb) x/4bx &observed
+0x5aae619c401c <observed>:	0x05	0x00	0x00	0x00
+
+(gdb) p observed
+$18 = 5
+
+
+=== sample 17 / 0x5AAE619C120C ===
+
+(gdb) continue
+
+
+(gdb) show disable-randomization
+Disabling randomization of debuggee's virtual address space is off.

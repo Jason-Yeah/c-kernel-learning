@@ -1,0 +1,191 @@
+Captured: 2026-11-05T13:41:11.890Z
+Source SHA256: f30ca723b7d3b27badf8a6ebdddcd1e895eeee1064d40566d037334e9fe155a6
+ELF SHA256: 0c6794238b643941be1809a5970617c5f6f00dda6b09f699c4aeb4379fcaa357
+Compile: gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/fork-memory.c -o .trace-build/fork-memory
+Scope: VA, values and mapping permissions observed. No PFNs/physical copying/PTE internals inferred from matching VAs or maps; COW internals remain a mechanism model.
+
+=== RUN default ===
+(gdb) run > .trace-build/fork-memory-default.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New inferior 2 (process 1065658)]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+
+=== default / phase-1 / PID 1065652 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>
+rsp            0x7fff334a7c48      0x7fff334a7c48
+rbp            0x7fff334a7c50      0x7fff334a7c50
+rax            0x1                 1
+
+(gdb) x/i $rip
+=> 0x6052555312c1 <checkpoint+24>:	nop
+
+(gdb) info inferiors
+Num  Description       Connection           Executable        
+* 1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory 
+  2    process 1065658   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory
+
+(gdb) p private_page
+$1 = (volatile int *) 0x7ab5feda4000
+
+(gdb) p *private_page
+$2 = 40
+
+(gdb) p shared_page
+$3 = (volatile int *) 0x7ab5feda3000
+
+(gdb) p *shared_page
+$4 = 50
+
+(gdb) p global_data
+$5 = 10
+
+(gdb) p global_bss
+$6 = 0
+
+(gdb) p *stack_local
+$7 = 20
+
+(gdb) p *heap_object
+$8 = 30
+
+(gdb) continue
+[Switching to Thread 0x7ab5fed96740 (LWP 1065658)]
+
+
+=== default / phase-2 / PID 1065658 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>
+rsp            0x7fff334a7c48      0x7fff334a7c48
+rbp            0x7fff334a7c50      0x7fff334a7c50
+rax            0x2                 2
+
+(gdb) x/i $rip
+=> 0x6052555312c1 <checkpoint+24>:	nop
+
+(gdb) info inferiors
+Num  Description       Connection           Executable        
+  1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory 
+* 2    process 1065658   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory
+
+(gdb) p private_page
+$9 = (volatile int *) 0x7ab5feda4000
+
+(gdb) p *private_page
+$10 = 40
+
+(gdb) p shared_page
+$11 = (volatile int *) 0x7ab5feda3000
+
+(gdb) p *shared_page
+$12 = 50
+
+(gdb) p global_data
+$13 = 10
+
+(gdb) p global_bss
+$14 = 0
+
+(gdb) p *stack_local
+$15 = 20
+
+(gdb) p *heap_object
+$16 = 30
+
+(gdb) continue
+
+
+
+=== default / phase-3 / PID 1065658 / sample 2 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>
+rsp            0x7fff334a7c48      0x7fff334a7c48
+rbp            0x7fff334a7c50      0x7fff334a7c50
+rax            0x3                 3
+
+(gdb) x/i $rip
+=> 0x6052555312c1 <checkpoint+24>:	nop
+
+(gdb) info inferiors
+Num  Description       Connection           Executable        
+  1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory 
+* 2    process 1065658   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory
+
+(gdb) p private_page
+$17 = (volatile int *) 0x7ab5feda4000
+
+(gdb) p *private_page
+$18 = 400
+
+(gdb) p shared_page
+$19 = (volatile int *) 0x7ab5feda3000
+
+(gdb) p *shared_page
+$20 = 500
+
+(gdb) p global_data
+$21 = 100
+
+(gdb) p global_bss
+$22 = 200
+
+(gdb) p *stack_local
+$23 = 200
+
+(gdb) p *heap_object
+$24 = 300
+
+(gdb) continue
+
+
+(gdb) continue
+
+
+
+=== default / phase-4 / PID 1065652 / sample 3 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x6052555312c1      0x6052555312c1 <checkpoint+24>
+rsp            0x7fff334a7c48      0x7fff334a7c48
+rbp            0x7fff334a7c50      0x7fff334a7c50
+rax            0x4                 4
+
+(gdb) x/i $rip
+=> 0x6052555312c1 <checkpoint+24>:	nop
+
+(gdb) info inferiors
+Num  Description       Connection           Executable        
+* 1    process 1065652   1 (native)           /home/jason/study/ck_study/animation/.trace-build/fork-memory
+
+(gdb) p private_page
+$25 = (volatile int *) 0x7ab5feda4000
+
+(gdb) p *private_page
+$26 = 40
+
+(gdb) p shared_page
+$27 = (volatile int *) 0x7ab5feda3000
+
+(gdb) p *shared_page
+$28 = 500
+
+(gdb) p global_data
+$29 = 10
+
+(gdb) p global_bss
+$30 = 0
+
+(gdb) p *stack_local
+$31 = 20
+
+(gdb) p *heap_object
+$32 = 30
+
+(gdb) continue
+

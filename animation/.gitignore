@@ -1,0 +1,6 @@
+node_modules/
+.preview.log
+.preview.pid
+film-artifacts/
+dist/
+.trace-build/

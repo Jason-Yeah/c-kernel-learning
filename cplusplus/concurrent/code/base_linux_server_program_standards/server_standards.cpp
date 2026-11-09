@@ -21,6 +21,7 @@ public:
     syslog_session(const syslog_session &) = delete;
     syslog_session &operator=(const syslog_session &) = delete;
 };
+
 int main(int argc, char **)
 try
 {

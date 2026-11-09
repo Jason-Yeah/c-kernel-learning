@@ -1,0 +1,316 @@
+Captured: 2026-11-05T13:41:12.581Z
+Source SHA256: 1c71d812f360b665544674ea21bc0baed6bfbe144758a4b8f47af35b4b9e0774
+ELF SHA256: 4c25533a8ece2936bd89891e45a9aa2af181c1f52cc404b375414771c88fe730
+Compile: gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/vm-access.c -o .trace-build/vm-access
+Scope: Actual mmap/permissions/present flags/read values/signals. No hardware TLB or PFN inferred; a first anonymous read may use Linux's shared zero page, not a newly allocated private frame. Collector never dereferences the cold target before access; minor-fault deltas can include debugger effects.
+
+=== RUN resident-a ===
+(gdb) run resident-a > .trace-build/vm-access-resident-a.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x8180000000000000", "present": true, "swapped": false, "exclusive": true, "pfnExposed": false}
+
+/proc maps target: 764b27574000-764b27578000 rw-p 00000000 00:00 0 
+
+
+=== resident-a / phase-1 / PID 1065675 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x55d4026134d2      0x55d4026134d2 <main+681>
+rsp            0x7ffdcd68bb40      0x7ffdcd68bb40
+rbp            0x7ffdcd68bc00      0x7ffdcd68bc00
+rax            0xd9                217
+
+(gdb) x/i $rip
+=> 0x55d4026134d2 <main+681>:	nop
+
+(gdb) p/x target
+$1 = 0x764b2757402d
+
+(gdb) p page_size
+$2 = 4096
+
+(gdb) continue
+
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x8180000000000000", "present": true, "swapped": false, "exclusive": true, "pfnExposed": false}
+
+/proc maps target: 764b27574000-764b27578000 rw-p 00000000 00:00 0 
+
+
+=== resident-a / phase-2 / PID 1065675 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x55d402613529      0x55d402613529 <main+768>
+rsp            0x7ffdcd68bb40      0x7ffdcd68bb40
+rbp            0x7ffdcd68bc00      0x7ffdcd68bc00
+rax            0xd9                217
+
+(gdb) x/i $rip
+=> 0x55d402613529 <main+768>:	nop
+
+(gdb) p/x target
+$3 = 0x764b2757402d
+
+(gdb) p page_size
+$4 = 4096
+
+(gdb) x/1bx target
+0x764b2757402d:	0x7b
+
+(gdb) p/x value
+$5 = 0x7b
+
+(gdb) p after_faults - before_faults
+$6 = 0
+
+(gdb) continue
+
+
+=== RUN resident-b ===
+(gdb) run resident-b > .trace-build/vm-access-resident-b.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x8180000000000000", "present": true, "swapped": false, "exclusive": true, "pfnExposed": false}
+
+/proc maps target: 70de2ecfe000-70de2ed02000 rw-p 00000000 00:00 0 
+
+
+=== resident-b / phase-1 / PID 1065688 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5ac404c234d2      0x5ac404c234d2 <main+681>
+rsp            0x7ffef79e0200      0x7ffef79e0200
+rbp            0x7ffef79e02c0      0x7ffef79e02c0
+rax            0xda                218
+
+(gdb) x/i $rip
+=> 0x5ac404c234d2 <main+681>:	nop
+
+(gdb) p/x target
+$1 = 0x70de2ecfe02d
+
+(gdb) p page_size
+$2 = 4096
+
+(gdb) continue
+
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x8180000000000000", "present": true, "swapped": false, "exclusive": true, "pfnExposed": false}
+
+/proc maps target: 70de2ecfe000-70de2ed02000 rw-p 00000000 00:00 0 
+
+
+=== resident-b / phase-2 / PID 1065688 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5ac404c23529      0x5ac404c23529 <main+768>
+rsp            0x7ffef79e0200      0x7ffef79e0200
+rbp            0x7ffef79e02c0      0x7ffef79e02c0
+rax            0xda                218
+
+(gdb) x/i $rip
+=> 0x5ac404c23529 <main+768>:	nop
+
+(gdb) p/x target
+$3 = 0x70de2ecfe02d
+
+(gdb) p page_size
+$4 = 4096
+
+(gdb) x/1bx target
+0x70de2ecfe02d:	0xa6
+
+(gdb) p/x value
+$5 = 0xa6
+
+(gdb) p after_faults - before_faults
+$6 = 0
+
+(gdb) continue
+
+
+=== RUN cold ===
+(gdb) run cold > .trace-build/vm-access-cold.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x80000000000000", "present": false, "swapped": false, "exclusive": false, "pfnExposed": false}
+
+/proc maps target: 7bbaa82a5000-7bbaa82a9000 rw-p 00000000 00:00 0 
+
+
+=== cold / phase-1 / PID 1065701 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x645c620374d2      0x645c620374d2 <main+681>
+rsp            0x7ffe50b6c120      0x7ffe50b6c120
+rbp            0x7ffe50b6c1e0      0x7ffe50b6c1e0
+rax            0xda                218
+
+(gdb) x/i $rip
+=> 0x645c620374d2 <main+681>:	nop
+
+(gdb) p/x target
+$1 = 0x7bbaa82a602d
+
+(gdb) p page_size
+$2 = 4096
+
+(gdb) continue
+
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x8080000000000000", "present": true, "swapped": false, "exclusive": false, "pfnExposed": false}
+
+/proc maps target: 7bbaa82a5000-7bbaa82a9000 rw-p 00000000 00:00 0 
+
+
+=== cold / phase-2 / PID 1065701 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x645c62037529      0x645c62037529 <main+768>
+rsp            0x7ffe50b6c120      0x7ffe50b6c120
+rbp            0x7ffe50b6c1e0      0x7ffe50b6c1e0
+rax            0xdb                219
+
+(gdb) x/i $rip
+=> 0x645c62037529 <main+768>:	nop
+
+(gdb) p/x target
+$3 = 0x7bbaa82a602d
+
+(gdb) p page_size
+$4 = 4096
+
+(gdb) x/1bx target
+0x7bbaa82a602d:	0x00
+
+(gdb) p/x value
+$5 = 0x0
+
+(gdb) p after_faults - before_faults
+$6 = 1
+
+(gdb) continue
+
+
+=== RUN readonly ===
+(gdb) run readonly > .trace-build/vm-access-readonly.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x8180000000000000", "present": true, "swapped": false, "exclusive": true, "pfnExposed": false}
+
+/proc maps target: 7f4bb7e2f000-7f4bb7e30000 r--p 00000000 00:00 0 
+
+
+=== readonly / phase-1 / PID 1065714 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x609c01e4f4d2      0x609c01e4f4d2 <main+681>
+rsp            0x7ffcd794a1c0      0x7ffcd794a1c0
+rbp            0x7ffcd794a280      0x7ffcd794a280
+rax            0xd9                217
+
+(gdb) x/i $rip
+=> 0x609c01e4f4d2 <main+681>:	nop
+
+(gdb) p/x target
+$1 = 0x7f4bb7e2f02d
+
+(gdb) p page_size
+$2 = 4096
+
+(gdb) continue
+
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x8180000000000000", "present": true, "swapped": false, "exclusive": true, "pfnExposed": false}
+
+/proc maps target: 7f4bb7e2f000-7f4bb7e30000 r--p 00000000 00:00 0 
+
+
+=== readonly / signal / PID 1065714 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x609c01e4f4e0      0x609c01e4f4e0 <main+695>
+rsp            0x7ffcd794a1c0      0x7ffcd794a1c0
+rbp            0x7ffcd794a280      0x7ffcd794a280
+rax            0x7f4bb7e2f02d      139963184377901
+
+(gdb) x/i $rip
+=> 0x609c01e4f4e0 <main+695>:	movb   $0xff,(%rax)
+
+(gdb) p $_siginfo
+$3 = {si_signo = 11, si_errno = 0, si_code = 2, _sifields = {_pad = {-1209864147, 32587, 0 <repeats 26 times>}, _kill = {si_pid = -1209864147, si_uid = 32587}, _timer = {si_tid = -1209864147, si_overrun = 32587, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _rt = {si_pid = -1209864147, si_uid = 32587, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _sigchld = {si_pid = -1209864147, si_uid = 32587, si_status = 0, si_utime = 0, si_stime = 0}, _sigfault = {si_addr = 0x7f4bb7e2f02d, _addr_lsb = 0, _addr_bnd = {_lower = 0x0, _upper = 0x0}}, _sigpoll = {si_band = 139963184377901, si_fd = 0}, _sigsys = {_call_addr = 0x7f4bb7e2f02d, _syscall = 0, _arch = 0}}}
+
+(gdb) p/x target
+$4 = 0x7f4bb7e2f02d
+
+(gdb) p page_size
+$5 = 4096
+
+(gdb) x/1bx target
+0x7f4bb7e2f02d:	0xaa
+
+(gdb) kill
+[Inferior 1 (process 1065714) killed]
+
+=== RUN unmapped ===
+(gdb) run unmapped > .trace-build/vm-access-unmapped.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x0", "present": false, "swapped": false, "exclusive": false, "pfnExposed": false}
+
+/proc maps target: None
+
+
+=== unmapped / phase-1 / PID 1065727 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5cc8c8c334d2      0x5cc8c8c334d2 <main+681>
+rsp            0x7ffe6412d450      0x7ffe6412d450
+rbp            0x7ffe6412d510      0x7ffe6412d510
+rax            0xd7                215
+
+(gdb) x/i $rip
+=> 0x5cc8c8c334d2 <main+681>:	nop
+
+(gdb) p/x target
+$1 = 0x72595618002d
+
+(gdb) p page_size
+$2 = 4096
+
+(gdb) continue
+
+
+/proc pagemap flags (no PFN inferred): {"raw": "0x0", "present": false, "swapped": false, "exclusive": false, "pfnExposed": false}
+
+/proc maps target: None
+
+
+=== unmapped / signal / PID 1065727 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5cc8c8c334ec      0x5cc8c8c334ec <main+707>
+rsp            0x7ffe6412d450      0x7ffe6412d450
+rbp            0x7ffe6412d510      0x7ffe6412d510
+rax            0x72595618002d      125728022069293
+
+(gdb) x/i $rip
+=> 0x5cc8c8c334ec <main+707>:	movzbl (%rax),%eax
+
+(gdb) p $_siginfo
+$3 = {si_signo = 11, si_errno = 0, si_code = 1, _sifields = {_pad = {1444413485, 29273, 0 <repeats 26 times>}, _kill = {si_pid = 1444413485, si_uid = 29273}, _timer = {si_tid = 1444413485, si_overrun = 29273, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _rt = {si_pid = 1444413485, si_uid = 29273, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _sigchld = {si_pid = 1444413485, si_uid = 29273, si_status = 0, si_utime = 0, si_stime = 0}, _sigfault = {si_addr = 0x72595618002d, _addr_lsb = 0, _addr_bnd = {_lower = 0x0, _upper = 0x0}}, _sigpoll = {si_band = 125728022069293, si_fd = 0}, _sigsys = {_call_addr = 0x72595618002d, _syscall = 0, _arch = 0}}}
+
+(gdb) p/x target
+$4 = 0x72595618002d
+
+(gdb) p page_size
+$5 = 4096
+
+(gdb) kill
+[Inferior 1 (process 1065727) killed]

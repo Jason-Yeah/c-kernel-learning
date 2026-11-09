@@ -1,0 +1,43 @@
+.integer-bits-scene .scene-heading {font-size:42px;letter-spacing:-1px}
+.ibit-word,.ibit-ribbon {color:#fff;font-family:var(--mono);height:126px}
+.ibit-word > *, .ibit-ribbon > * {position:absolute}
+.ibit-name {left:0;top:0;font:650 26px/32px var(--mono);white-space:nowrap}
+.ibit-type {left:0;top:36px;font:20px/28px var(--mono);width:210px}
+.ibit-full {left:220px;top:0;font:650 28px/34px var(--mono);white-space:nowrap}
+.ibit-fold-index {left:220px;top:34px;width:200px;text-align:center;font:20px/24px var(--mono)}
+.ibit-fold-value {left:220px;top:62px;width:200px;height:48px;display:grid;place-items:center;border:1px solid #fff;font:650 25px/32px var(--mono);background:#000}
+.ibit-index {top:34px;width:84px;text-align:center;font:20px/24px var(--mono)}
+.ibit-cell {top:62px;width:84px;height:48px;display:grid;place-items:center;border:1px solid #64a4ff;background:#000}
+.ibit-cell b {font:650 30px/36px var(--mono);color:#fff}
+.ibit-target .ibit-cell {border-color:#69e2f4}
+.ibit-target .ibit-index {top:116px}
+.ibit-target .ibit-fold-index {top:116px}
+.ibit-ribbon-name {left:0;top:0;font:650 24px/32px var(--mono);white-space:nowrap}
+.ibit-ribbon-hex {right:0;top:0;font:650 28px/32px var(--mono)}
+.ibit-ribbon-type {left:0;top:138px;font:20px/28px var(--mono)}
+.ibit-ribbon-index {top:38px;text-align:center;font:20px/24px var(--mono)}
+.ibit-ribbon-cell {top:70px;height:52px;display:grid;place-items:center;background:#000;border:1px solid #64a4ff}
+.ibit-ribbon-cell b {font:650 30px/36px var(--mono)}
+.ibit-ribbon.ibit-output .ibit-ribbon-cell {border-color:#69e2f4}
+.ibit-incoming .ibit-ribbon-name,.ibit-incoming .ibit-ribbon-hex {top:170px}
+.ibit-incoming .ibit-ribbon-index {top:128px}
+.ibit-source {font:20px/30px var(--mono);color:#fff}
+.ibit-codeline {display:flex;gap:16px;white-space:pre}
+.ibit-codeline i {font:18px/30px var(--mono);width:30px;flex-shrink:0;text-align:right;font-style:normal}
+.ibit-codeline code {font:inherit;white-space:pre}
+.ibit-operator {font:650 34px/42px var(--mono)}
+.ibit-short {font:20px/30px var(--sans);color:#fff}
+.ibit-strong {font:650 26px/36px var(--mono)}
+.ibit-formula {font:24px/38px var(--mono)}
+.ibit-formula b {font-weight:650}
+.ibit-blocked {border-left:3px solid #ff667b;padding:12px 20px;background:#000;font:24px/38px var(--mono)}
+.ibit-blocked strong {display:block;color:#ff667b;font-size:30px}
+.ibit-result {font:650 30px/42px var(--mono)}
+.integer-observations {max-width:1300px;margin:24px auto;color:#fff;line-height:1.65;background:#000}
+.integer-observations summary {cursor:pointer;font-size:21px;font-weight:600}
+.integer-observations p {max-width:100%}
+.integer-table-scroll {overflow:auto;max-width:100%;margin:20px 0}
+.integer-observations table {border-collapse:collapse;white-space:nowrap;font:16px/1.6 var(--mono);width:100%}
+.integer-observations th,.integer-observations td {border:1px solid #65717d;padding:8px 12px;text-align:left}
+.integer-observations pre {overflow:auto;max-height:350px;padding:16px;background:#000;border:1px solid #65717d;font:16px/1.7 var(--mono)}
+@media(max-width:700px){.integer-observations {margin:20px 16px;min-width:0}.integer-observations pre {white-space:pre-wrap;overflow-wrap:anywhere}.integer-observations table {width:max-content}}

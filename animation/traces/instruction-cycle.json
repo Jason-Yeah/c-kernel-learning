@@ -1,0 +1,1902 @@
+{
+  "schemaVersion": 1,
+  "id": "instruction-cycle",
+  "provenance": {
+    "kind": "gdb-plus-model",
+    "capturedAt": "2026-11-06T09:03:19.553Z",
+    "source": {
+      "path": "experiments/instruction-cycle.c",
+      "content": "#include <stdio.h>\n#include <sys/resource.h>\n\nvolatile int inputs[2] = {3, 2};\nvolatile int observed;\n\n__attribute__((noinline)) int calculate(void)\n{\n    int left = inputs[0];\n    int right = inputs[1];\n    int result = left + right;\n    observed = result;\n    return result;\n}\n\nint main(void)\n{\n    struct rlimit core = {0, 0};\n    if (setrlimit(RLIMIT_CORE, &core) != 0)\n        return 1;\n    int result = calculate();\n    printf(\"inputs=%d,%d observed=%d return=%d\\n\",\n           inputs[0], inputs[1], observed, result);\n    return result == 5 && observed == 5 ? 0 : 2;\n}\n",
+      "sha256": "3beb4436378756eebe5f9573f4781b4aebc3a13f645428fe88594b25e58d4d18"
+    },
+    "binary": {
+      "path": "traces/instruction-cycle/program.elf",
+      "sha256": "26d25f70cafc64dfa3e248888e35f5204b820b765f407fc8f02cb696ffee36da"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic experiments/instruction-cycle.c -o .trace-build/instruction-cycle/program",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-fno-ipa-stack-alignment",
+      "-mno-red-zone",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "scope": "Actual x86-64 instruction boundaries, bytes, registers and memory. Fetch/decode/ALU/control arrows are explanatory; no hardware cycles, decoder/pipeline/Cache/TLB or speculative execution measured."
+  },
+  "loadBias": "0x5AAE619C0000",
+  "elfSymbols": {
+    "calculate": {
+      "index": 25,
+      "table": ".symtab",
+      "name": "calculate",
+      "binding": 1,
+      "type": 2,
+      "sectionIndex": 16,
+      "section": ".text",
+      "value": "0x1189",
+      "size": 55
+    },
+    "inputs": {
+      "index": 27,
+      "table": ".symtab",
+      "name": "inputs",
+      "binding": 1,
+      "type": 1,
+      "sectionIndex": 25,
+      "section": ".data",
+      "value": "0x4010",
+      "size": 8
+    },
+    "observed": {
+      "index": 30,
+      "table": ".symtab",
+      "name": "observed",
+      "binding": 1,
+      "type": 1,
+      "sectionIndex": 26,
+      "section": ".bss",
+      "value": "0x401C",
+      "size": 4
+    }
+  },
+  "function": {
+    "address": "0x5AAE619C1189",
+    "size": 55,
+    "bytes": [
+      243,
+      15,
+      30,
+      250,
+      85,
+      72,
+      137,
+      229,
+      72,
+      131,
+      236,
+      16,
+      139,
+      5,
+      117,
+      46,
+      0,
+      0,
+      137,
+      69,
+      244,
+      139,
+      5,
+      112,
+      46,
+      0,
+      0,
+      137,
+      69,
+      248,
+      139,
+      85,
+      244,
+      139,
+      69,
+      248,
+      1,
+      208,
+      137,
+      69,
+      252,
+      139,
+      69,
+      252,
+      137,
+      5,
+      97,
+      46,
+      0,
+      0,
+      139,
+      69,
+      252,
+      201,
+      195
+    ],
+    "instructions": [
+      {
+        "address": "0x5AAE619C1189",
+        "length": 4,
+        "asm": "endbr64",
+        "bytes": [
+          243,
+          15,
+          30,
+          250
+        ]
+      },
+      {
+        "address": "0x5AAE619C118D",
+        "length": 1,
+        "asm": "push   %rbp",
+        "bytes": [
+          85
+        ]
+      },
+      {
+        "address": "0x5AAE619C118E",
+        "length": 3,
+        "asm": "mov    %rsp,%rbp",
+        "bytes": [
+          72,
+          137,
+          229
+        ]
+      },
+      {
+        "address": "0x5AAE619C1191",
+        "length": 4,
+        "asm": "sub    $0x10,%rsp",
+        "bytes": [
+          72,
+          131,
+          236,
+          16
+        ]
+      },
+      {
+        "address": "0x5AAE619C1195",
+        "length": 6,
+        "asm": "mov    0x2e75(%rip),%eax        # 0x5aae619c4010 <inputs>",
+        "bytes": [
+          139,
+          5,
+          117,
+          46,
+          0,
+          0
+        ]
+      },
+      {
+        "address": "0x5AAE619C119B",
+        "length": 3,
+        "asm": "mov    %eax,-0xc(%rbp)",
+        "bytes": [
+          137,
+          69,
+          244
+        ]
+      },
+      {
+        "address": "0x5AAE619C119E",
+        "length": 6,
+        "asm": "mov    0x2e70(%rip),%eax        # 0x5aae619c4014 <inputs+4>",
+        "bytes": [
+          139,
+          5,
+          112,
+          46,
+          0,
+          0
+        ]
+      },
+      {
+        "address": "0x5AAE619C11A4",
+        "length": 3,
+        "asm": "mov    %eax,-0x8(%rbp)",
+        "bytes": [
+          137,
+          69,
+          248
+        ]
+      },
+      {
+        "address": "0x5AAE619C11A7",
+        "length": 3,
+        "asm": "mov    -0xc(%rbp),%edx",
+        "bytes": [
+          139,
+          85,
+          244
+        ]
+      },
+      {
+        "address": "0x5AAE619C11AA",
+        "length": 3,
+        "asm": "mov    -0x8(%rbp),%eax",
+        "bytes": [
+          139,
+          69,
+          248
+        ]
+      },
+      {
+        "address": "0x5AAE619C11AD",
+        "length": 2,
+        "asm": "add    %edx,%eax",
+        "bytes": [
+          1,
+          208
+        ]
+      },
+      {
+        "address": "0x5AAE619C11AF",
+        "length": 3,
+        "asm": "mov    %eax,-0x4(%rbp)",
+        "bytes": [
+          137,
+          69,
+          252
+        ]
+      },
+      {
+        "address": "0x5AAE619C11B2",
+        "length": 3,
+        "asm": "mov    -0x4(%rbp),%eax",
+        "bytes": [
+          139,
+          69,
+          252
+        ]
+      },
+      {
+        "address": "0x5AAE619C11B5",
+        "length": 6,
+        "asm": "mov    %eax,0x2e61(%rip)        # 0x5aae619c401c <observed>",
+        "bytes": [
+          137,
+          5,
+          97,
+          46,
+          0,
+          0
+        ]
+      },
+      {
+        "address": "0x5AAE619C11BB",
+        "length": 3,
+        "asm": "mov    -0x4(%rbp),%eax",
+        "bytes": [
+          139,
+          69,
+          252
+        ]
+      },
+      {
+        "address": "0x5AAE619C11BE",
+        "length": 1,
+        "asm": "leave",
+        "bytes": [
+          201
+        ]
+      },
+      {
+        "address": "0x5AAE619C11BF",
+        "length": 1,
+        "asm": "ret",
+        "bytes": [
+          195
+        ]
+      },
+      {
+        "address": "0x5AAE619C11C0",
+        "length": 4,
+        "asm": "endbr64",
+        "bytes": [
+          243,
+          15,
+          30,
+          250
+        ]
+      }
+    ]
+  },
+  "returnAddress": "0x5AAE619C120C",
+  "events": {
+    "entry": 0,
+    "load": 4,
+    "loaded": 5,
+    "add": 10,
+    "added": 11,
+    "store": 13,
+    "stored": 14,
+    "ret": 16,
+    "returned": 17
+  },
+  "samples": [
+    {
+      "index": 0,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C1189",
+        "rsp": "0x7FFD69D79588",
+        "rbp": "0x7FFD69D795C0",
+        "rax": "0x0",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x0",
+        "edx": "0x69D795A0",
+        "eflags": "0x246"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 8,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C1189",
+        "length": 4,
+        "asm": "endbr64",
+        "bytes": [
+          243,
+          15,
+          30,
+          250
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c1189      0x5aae619c1189 <calculate>\nrsp            0x7ffd69d79588      0x7ffd69d79588\nrbp            0x7ffd69d795c0      0x7ffd69d795c0\nrax            0x0                 0\nrdx            0x7ffd69d795a0      140726379189664\neax            0x0                 0\nedx            0x69d795a0          1775736224\neflags         0x246               [ PF ZF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c1189 <calculate>:\tendbr64"
+        },
+        {
+          "command": "x/4bx $rip",
+          "output": "0x5aae619c1189 <calculate>:\t0xf3\t0x0f\t0x1e\t0xfa"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$1 = 0"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C118D",
+        "rsp": "0x7FFD69D79588",
+        "rbp": "0x7FFD69D795C0",
+        "rax": "0x0",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x0",
+        "edx": "0x69D795A0",
+        "eflags": "0x246"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 8,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C118D",
+        "length": 1,
+        "asm": "push   %rbp",
+        "bytes": [
+          85
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c118d      0x5aae619c118d <calculate+4>\nrsp            0x7ffd69d79588      0x7ffd69d79588\nrbp            0x7ffd69d795c0      0x7ffd69d795c0\nrax            0x0                 0\nrdx            0x7ffd69d795a0      140726379189664\neax            0x0                 0\nedx            0x69d795a0          1775736224\neflags         0x246               [ PF ZF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c118d <calculate+4>:\tpush   %rbp"
+        },
+        {
+          "command": "x/1bx $rip",
+          "output": "0x5aae619c118d <calculate+4>:\t0x55"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$2 = 0"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C118E",
+        "rsp": "0x7FFD69D79580",
+        "rbp": "0x7FFD69D795C0",
+        "rax": "0x0",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x0",
+        "edx": "0x69D795A0",
+        "eflags": "0x246"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 8,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C118E",
+        "length": 3,
+        "asm": "mov    %rsp,%rbp",
+        "bytes": [
+          72,
+          137,
+          229
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c118e      0x5aae619c118e <calculate+5>\nrsp            0x7ffd69d79580      0x7ffd69d79580\nrbp            0x7ffd69d795c0      0x7ffd69d795c0\nrax            0x0                 0\nrdx            0x7ffd69d795a0      140726379189664\neax            0x0                 0\nedx            0x69d795a0          1775736224\neflags         0x246               [ PF ZF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c118e <calculate+5>:\tmov    %rsp,%rbp"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c118e <calculate+5>:\t0x48\t0x89\t0xe5"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$3 = 0"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C1191",
+        "rsp": "0x7FFD69D79580",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x0",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x0",
+        "edx": "0x69D795A0",
+        "eflags": "0x246"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 8,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C1191",
+        "length": 4,
+        "asm": "sub    $0x10,%rsp",
+        "bytes": [
+          72,
+          131,
+          236,
+          16
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c1191      0x5aae619c1191 <calculate+8>\nrsp            0x7ffd69d79580      0x7ffd69d79580\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x0                 0\nrdx            0x7ffd69d795a0      140726379189664\neax            0x0                 0\nedx            0x69d795a0          1775736224\neflags         0x246               [ PF ZF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c1191 <calculate+8>:\tsub    $0x10,%rsp"
+        },
+        {
+          "command": "x/4bx $rip",
+          "output": "0x5aae619c1191 <calculate+8>:\t0x48\t0x83\t0xec\t0x10"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$4 = 0"
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C1195",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x0",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x0",
+        "edx": "0x69D795A0",
+        "eflags": "0x202"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 9,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C1195",
+        "length": 6,
+        "asm": "mov    0x2e75(%rip),%eax        # 0x5aae619c4010 <inputs>",
+        "bytes": [
+          139,
+          5,
+          117,
+          46,
+          0,
+          0
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c1195      0x5aae619c1195 <calculate+12>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x0                 0\nrdx            0x7ffd69d795a0      140726379189664\neax            0x0                 0\nedx            0x69d795a0          1775736224\neflags         0x202               [ IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c1195 <calculate+12>:\tmov    0x2e75(%rip),%eax        # 0x5aae619c4010 <inputs>"
+        },
+        {
+          "command": "x/6bx $rip",
+          "output": "0x5aae619c1195 <calculate+12>:\t0x8b\t0x05\t0x75\t0x2e\t0x00\t0x00"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$5 = 0"
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C119B",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x3",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x3",
+        "edx": "0x69D795A0",
+        "eflags": "0x202"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 9,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C119B",
+        "length": 3,
+        "asm": "mov    %eax,-0xc(%rbp)",
+        "bytes": [
+          137,
+          69,
+          244
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c119b      0x5aae619c119b <calculate+18>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x3                 3\nrdx            0x7ffd69d795a0      140726379189664\neax            0x3                 3\nedx            0x69d795a0          1775736224\neflags         0x202               [ IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c119b <calculate+18>:\tmov    %eax,-0xc(%rbp)"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c119b <calculate+18>:\t0x89\t0x45\t0xf4"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$6 = 0"
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C119E",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x3",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x3",
+        "edx": "0x69D795A0",
+        "eflags": "0x202"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 10,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C119E",
+        "length": 6,
+        "asm": "mov    0x2e70(%rip),%eax        # 0x5aae619c4014 <inputs+4>",
+        "bytes": [
+          139,
+          5,
+          112,
+          46,
+          0,
+          0
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c119e      0x5aae619c119e <calculate+21>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x3                 3\nrdx            0x7ffd69d795a0      140726379189664\neax            0x3                 3\nedx            0x69d795a0          1775736224\neflags         0x202               [ IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c119e <calculate+21>:\tmov    0x2e70(%rip),%eax        # 0x5aae619c4014 <inputs+4>"
+        },
+        {
+          "command": "x/6bx $rip",
+          "output": "0x5aae619c119e <calculate+21>:\t0x8b\t0x05\t0x70\t0x2e\t0x00\t0x00"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$7 = 0"
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11A4",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x2",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x2",
+        "edx": "0x69D795A0",
+        "eflags": "0x202"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 10,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11A4",
+        "length": 3,
+        "asm": "mov    %eax,-0x8(%rbp)",
+        "bytes": [
+          137,
+          69,
+          248
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11a4      0x5aae619c11a4 <calculate+27>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x2                 2\nrdx            0x7ffd69d795a0      140726379189664\neax            0x2                 2\nedx            0x69d795a0          1775736224\neflags         0x202               [ IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11a4 <calculate+27>:\tmov    %eax,-0x8(%rbp)"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c11a4 <calculate+27>:\t0x89\t0x45\t0xf8"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$8 = 0"
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11A7",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x2",
+        "rdx": "0x7FFD69D795A0",
+        "eax": "0x2",
+        "edx": "0x69D795A0",
+        "eflags": "0x202"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 11,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11A7",
+        "length": 3,
+        "asm": "mov    -0xc(%rbp),%edx",
+        "bytes": [
+          139,
+          85,
+          244
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11a7      0x5aae619c11a7 <calculate+30>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x2                 2\nrdx            0x7ffd69d795a0      140726379189664\neax            0x2                 2\nedx            0x69d795a0          1775736224\neflags         0x202               [ IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11a7 <calculate+30>:\tmov    -0xc(%rbp),%edx"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c11a7 <calculate+30>:\t0x8b\t0x55\t0xf4"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$9 = 0"
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11AA",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x2",
+        "rdx": "0x3",
+        "eax": "0x2",
+        "edx": "0x3",
+        "eflags": "0x202"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 11,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11AA",
+        "length": 3,
+        "asm": "mov    -0x8(%rbp),%eax",
+        "bytes": [
+          139,
+          69,
+          248
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11aa      0x5aae619c11aa <calculate+33>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x2                 2\nrdx            0x3                 3\neax            0x2                 2\nedx            0x3                 3\neflags         0x202               [ IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11aa <calculate+33>:\tmov    -0x8(%rbp),%eax"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c11aa <calculate+33>:\t0x8b\t0x45\t0xf8"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$10 = 0"
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11AD",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x2",
+        "rdx": "0x3",
+        "eax": "0x2",
+        "edx": "0x3",
+        "eflags": "0x202"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 11,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11AD",
+        "length": 2,
+        "asm": "add    %edx,%eax",
+        "bytes": [
+          1,
+          208
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11ad      0x5aae619c11ad <calculate+36>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x2                 2\nrdx            0x3                 3\neax            0x2                 2\nedx            0x3                 3\neflags         0x202               [ IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11ad <calculate+36>:\tadd    %edx,%eax"
+        },
+        {
+          "command": "x/2bx $rip",
+          "output": "0x5aae619c11ad <calculate+36>:\t0x01\t0xd0"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$11 = 0"
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11AF",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x5",
+        "rdx": "0x3",
+        "eax": "0x5",
+        "edx": "0x3",
+        "eflags": "0x206"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 11,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11AF",
+        "length": 3,
+        "asm": "mov    %eax,-0x4(%rbp)",
+        "bytes": [
+          137,
+          69,
+          252
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11af      0x5aae619c11af <calculate+38>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x5                 5\nrdx            0x3                 3\neax            0x5                 5\nedx            0x3                 3\neflags         0x206               [ PF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11af <calculate+38>:\tmov    %eax,-0x4(%rbp)"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c11af <calculate+38>:\t0x89\t0x45\t0xfc"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$12 = 0"
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11B2",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x5",
+        "rdx": "0x3",
+        "eax": "0x5",
+        "edx": "0x3",
+        "eflags": "0x206"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 12,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11B2",
+        "length": 3,
+        "asm": "mov    -0x4(%rbp),%eax",
+        "bytes": [
+          139,
+          69,
+          252
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11b2      0x5aae619c11b2 <calculate+41>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x5                 5\nrdx            0x3                 3\neax            0x5                 5\nedx            0x3                 3\neflags         0x206               [ PF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11b2 <calculate+41>:\tmov    -0x4(%rbp),%eax"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c11b2 <calculate+41>:\t0x8b\t0x45\t0xfc"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$13 = 0"
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11B5",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x5",
+        "rdx": "0x3",
+        "eax": "0x5",
+        "edx": "0x3",
+        "eflags": "0x206"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 12,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11B5",
+        "length": 6,
+        "asm": "mov    %eax,0x2e61(%rip)        # 0x5aae619c401c <observed>",
+        "bytes": [
+          137,
+          5,
+          97,
+          46,
+          0,
+          0
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11b5      0x5aae619c11b5 <calculate+44>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x5                 5\nrdx            0x3                 3\neax            0x5                 5\nedx            0x3                 3\neflags         0x206               [ PF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11b5 <calculate+44>:\tmov    %eax,0x2e61(%rip)        # 0x5aae619c401c <observed>"
+        },
+        {
+          "command": "x/6bx $rip",
+          "output": "0x5aae619c11b5 <calculate+44>:\t0x89\t0x05\t0x61\t0x2e\t0x00\t0x00"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x00\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$14 = 0"
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11BB",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x5",
+        "rdx": "0x3",
+        "eax": "0x5",
+        "edx": "0x3",
+        "eflags": "0x206"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 13,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11BB",
+        "length": 3,
+        "asm": "mov    -0x4(%rbp),%eax",
+        "bytes": [
+          139,
+          69,
+          252
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          5,
+          0,
+          0,
+          0
+        ],
+        "value": 5
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11bb      0x5aae619c11bb <calculate+50>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x5                 5\nrdx            0x3                 3\neax            0x5                 5\nedx            0x3                 3\neflags         0x206               [ PF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11bb <calculate+50>:\tmov    -0x4(%rbp),%eax"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c11bb <calculate+50>:\t0x8b\t0x45\t0xfc"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x05\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$15 = 5"
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11BE",
+        "rsp": "0x7FFD69D79570",
+        "rbp": "0x7FFD69D79580",
+        "rax": "0x5",
+        "rdx": "0x3",
+        "eax": "0x5",
+        "edx": "0x3",
+        "eflags": "0x206"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 14,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11BE",
+        "length": 1,
+        "asm": "leave",
+        "bytes": [
+          201
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          5,
+          0,
+          0,
+          0
+        ],
+        "value": 5
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11be      0x5aae619c11be <calculate+53>\nrsp            0x7ffd69d79570      0x7ffd69d79570\nrbp            0x7ffd69d79580      0x7ffd69d79580\nrax            0x5                 5\nrdx            0x3                 3\neax            0x5                 5\nedx            0x3                 3\neflags         0x206               [ PF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11be <calculate+53>:\tleave"
+        },
+        {
+          "command": "x/1bx $rip",
+          "output": "0x5aae619c11be <calculate+53>:\t0xc9"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x05\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$16 = 5"
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C11BF",
+        "rsp": "0x7FFD69D79588",
+        "rbp": "0x7FFD69D795C0",
+        "rax": "0x5",
+        "rdx": "0x3",
+        "eax": "0x5",
+        "edx": "0x3",
+        "eflags": "0x206"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 14,
+        "function": "calculate"
+      },
+      "instruction": {
+        "address": "0x5AAE619C11BF",
+        "length": 1,
+        "asm": "ret",
+        "bytes": [
+          195
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          5,
+          0,
+          0,
+          0
+        ],
+        "value": 5
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c11bf      0x5aae619c11bf <calculate+54>\nrsp            0x7ffd69d79588      0x7ffd69d79588\nrbp            0x7ffd69d795c0      0x7ffd69d795c0\nrax            0x5                 5\nrdx            0x3                 3\neax            0x5                 5\nedx            0x3                 3\neflags         0x206               [ PF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c11bf <calculate+54>:\tret"
+        },
+        {
+          "command": "x/1bx $rip",
+          "output": "0x5aae619c11bf <calculate+54>:\t0xc3"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x05\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$17 = 5"
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "pid": 1281148,
+      "registers": {
+        "rip": "0x5AAE619C120C",
+        "rsp": "0x7FFD69D79590",
+        "rbp": "0x7FFD69D795C0",
+        "rax": "0x5",
+        "rdx": "0x3",
+        "eax": "0x5",
+        "edx": "0x3",
+        "eflags": "0x206"
+      },
+      "source": {
+        "file": "experiments/instruction-cycle.c",
+        "line": 21,
+        "function": "main"
+      },
+      "instruction": {
+        "address": "0x5AAE619C120C",
+        "length": 3,
+        "asm": "mov    %eax,-0x24(%rbp)",
+        "bytes": [
+          137,
+          69,
+          220
+        ]
+      },
+      "inputs": {
+        "address": "0x5AAE619C4010",
+        "bytes": [
+          3,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        "values": [
+          3,
+          2
+        ]
+      },
+      "output": {
+        "address": "0x5AAE619C401C",
+        "bytes": [
+          5,
+          0,
+          0,
+          0
+        ],
+        "value": 5
+      },
+      "commands": [
+        {
+          "command": "info registers rip rsp rbp rax rdx eax edx eflags",
+          "output": "rip            0x5aae619c120c      0x5aae619c120c <main+76>\nrsp            0x7ffd69d79590      0x7ffd69d79590\nrbp            0x7ffd69d795c0      0x7ffd69d795c0\nrax            0x5                 5\nrdx            0x3                 3\neax            0x5                 5\nedx            0x3                 3\neflags         0x206               [ PF IF ]"
+        },
+        {
+          "command": "x/i $rip",
+          "output": "=> 0x5aae619c120c <main+76>:\tmov    %eax,-0x24(%rbp)"
+        },
+        {
+          "command": "x/3bx $rip",
+          "output": "0x5aae619c120c <main+76>:\t0x89\t0x45\t0xdc"
+        },
+        {
+          "command": "x/8bx inputs",
+          "output": "0x5aae619c4010 <inputs>:\t0x03\t0x00\t0x00\t0x00\t0x02\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "x/2dw inputs",
+          "output": "0x5aae619c4010 <inputs>:\t3\t2"
+        },
+        {
+          "command": "x/4bx &observed",
+          "output": "0x5aae619c401c <observed>:\t0x05\t0x00\t0x00\t0x00"
+        },
+        {
+          "command": "p observed",
+          "output": "$18 = 5"
+        }
+      ]
+    }
+  ],
+  "exitCode": 0,
+  "stdout": "inputs=3,2 observed=5 return=5\n",
+  "reports": [
+    {
+      "key": "disassembly",
+      "command": "objdump -d .trace-build/instruction-cycle/program",
+      "output": "\n.trace-build/instruction-cycle/program:     file format elf64-x86-64\n\n\nDisassembly of section .init:\n\n0000000000001000 <_init>:\n    1000:\tf3 0f 1e fa          \tendbr64\n    1004:\t48 83 ec 08          \tsub    $0x8,%rsp\n    1008:\t48 8b 05 d9 2f 00 00 \tmov    0x2fd9(%rip),%rax        # 3fe8 <__gmon_start__@Base>\n    100f:\t48 85 c0             \ttest   %rax,%rax\n    1012:\t74 02                \tje     1016 <_init+0x16>\n    1014:\tff d0                \tcall   *%rax\n    1016:\t48 83 c4 08          \tadd    $0x8,%rsp\n    101a:\tc3                   \tret\n\nDisassembly of section .plt:\n\n0000000000001020 <.plt>:\n    1020:\tff 35 8a 2f 00 00    \tpush   0x2f8a(%rip)        # 3fb0 <_GLOBAL_OFFSET_TABLE_+0x8>\n    1026:\tff 25 8c 2f 00 00    \tjmp    *0x2f8c(%rip)        # 3fb8 <_GLOBAL_OFFSET_TABLE_+0x10>\n    102c:\t0f 1f 40 00          \tnopl   0x0(%rax)\n    1030:\tf3 0f 1e fa          \tendbr64\n    1034:\t68 00 00 00 00       \tpush   $0x0\n    1039:\te9 e2 ff ff ff       \tjmp    1020 <_init+0x20>\n    103e:\t66 90                \txchg   %ax,%ax\n    1040:\tf3 0f 1e fa          \tendbr64\n    1044:\t68 01 00 00 00       \tpush   $0x1\n    1049:\te9 d2 ff ff ff       \tjmp    1020 <_init+0x20>\n    104e:\t66 90                \txchg   %ax,%ax\n    1050:\tf3 0f 1e fa          \tendbr64\n    1054:\t68 02 00 00 00       \tpush   $0x2\n    1059:\te9 c2 ff ff ff       \tjmp    1020 <_init+0x20>\n    105e:\t66 90                \txchg   %ax,%ax\n\nDisassembly of section .plt.got:\n\n0000000000001060 <__cxa_finalize@plt>:\n    1060:\tf3 0f 1e fa          \tendbr64\n    1064:\tff 25 8e 2f 00 00    \tjmp    *0x2f8e(%rip)        # 3ff8 <__cxa_finalize@GLIBC_2.2.5>\n    106a:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n\nDisassembly of section .plt.sec:\n\n0000000000001070 <__stack_chk_fail@plt>:\n    1070:\tf3 0f 1e fa          \tendbr64\n    1074:\tff 25 46 2f 00 00    \tjmp    *0x2f46(%rip)        # 3fc0 <__stack_chk_fail@GLIBC_2.4>\n    107a:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n\n0000000000001080 <printf@plt>:\n    1080:\tf3 0f 1e fa          \tendbr64\n    1084:\tff 25 3e 2f 00 00    \tjmp    *0x2f3e(%rip)        # 3fc8 <printf@GLIBC_2.2.5>\n    108a:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n\n0000000000001090 <setrlimit@plt>:\n    1090:\tf3 0f 1e fa          \tendbr64\n    1094:\tff 25 36 2f 00 00    \tjmp    *0x2f36(%rip)        # 3fd0 <setrlimit@GLIBC_2.2.5>\n    109a:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n\nDisassembly of section .text:\n\n00000000000010a0 <_start>:\n    10a0:\tf3 0f 1e fa          \tendbr64\n    10a4:\t31 ed                \txor    %ebp,%ebp\n    10a6:\t49 89 d1             \tmov    %rdx,%r9\n    10a9:\t5e                   \tpop    %rsi\n    10aa:\t48 89 e2             \tmov    %rsp,%rdx\n    10ad:\t48 83 e4 f0          \tand    $0xfffffffffffffff0,%rsp\n    10b1:\t50                   \tpush   %rax\n    10b2:\t54                   \tpush   %rsp\n    10b3:\t45 31 c0             \txor    %r8d,%r8d\n    10b6:\t31 c9                \txor    %ecx,%ecx\n    10b8:\t48 8d 3d 01 01 00 00 \tlea    0x101(%rip),%rdi        # 11c0 <main>\n    10bf:\tff 15 13 2f 00 00    \tcall   *0x2f13(%rip)        # 3fd8 <__libc_start_main@GLIBC_2.34>\n    10c5:\tf4                   \thlt\n    10c6:\t66 2e 0f 1f 84 00 00 \tcs nopw 0x0(%rax,%rax,1)\n    10cd:\t00 00 00 \n\n00000000000010d0 <deregister_tm_clones>:\n    10d0:\t48 8d 3d 41 2f 00 00 \tlea    0x2f41(%rip),%rdi        # 4018 <__TMC_END__>\n    10d7:\t48 8d 05 3a 2f 00 00 \tlea    0x2f3a(%rip),%rax        # 4018 <__TMC_END__>\n    10de:\t48 39 f8             \tcmp    %rdi,%rax\n    10e1:\t74 15                \tje     10f8 <deregister_tm_clones+0x28>\n    10e3:\t48 8b 05 f6 2e 00 00 \tmov    0x2ef6(%rip),%rax        # 3fe0 <_ITM_deregisterTMCloneTable@Base>\n    10ea:\t48 85 c0             \ttest   %rax,%rax\n    10ed:\t74 09                \tje     10f8 <deregister_tm_clones+0x28>\n    10ef:\tff e0                \tjmp    *%rax\n    10f1:\t0f 1f 80 00 00 00 00 \tnopl   0x0(%rax)\n    10f8:\tc3                   \tret\n    10f9:\t0f 1f 80 00 00 00 00 \tnopl   0x0(%rax)\n\n0000000000001100 <register_tm_clones>:\n    1100:\t48 8d 3d 11 2f 00 00 \tlea    0x2f11(%rip),%rdi        # 4018 <__TMC_END__>\n    1107:\t48 8d 35 0a 2f 00 00 \tlea    0x2f0a(%rip),%rsi        # 4018 <__TMC_END__>\n    110e:\t48 29 fe             \tsub    %rdi,%rsi\n    1111:\t48 89 f0             \tmov    %rsi,%rax\n    1114:\t48 c1 ee 3f          \tshr    $0x3f,%rsi\n    1118:\t48 c1 f8 03          \tsar    $0x3,%rax\n    111c:\t48 01 c6             \tadd    %rax,%rsi\n    111f:\t48 d1 fe             \tsar    $1,%rsi\n    1122:\t74 14                \tje     1138 <register_tm_clones+0x38>\n    1124:\t48 8b 05 c5 2e 00 00 \tmov    0x2ec5(%rip),%rax        # 3ff0 <_ITM_registerTMCloneTable@Base>\n    112b:\t48 85 c0             \ttest   %rax,%rax\n    112e:\t74 08                \tje     1138 <register_tm_clones+0x38>\n    1130:\tff e0                \tjmp    *%rax\n    1132:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n    1138:\tc3                   \tret\n    1139:\t0f 1f 80 00 00 00 00 \tnopl   0x0(%rax)\n\n0000000000001140 <__do_global_dtors_aux>:\n    1140:\tf3 0f 1e fa          \tendbr64\n    1144:\t80 3d cd 2e 00 00 00 \tcmpb   $0x0,0x2ecd(%rip)        # 4018 <__TMC_END__>\n    114b:\t75 2b                \tjne    1178 <__do_global_dtors_aux+0x38>\n    114d:\t55                   \tpush   %rbp\n    114e:\t48 83 3d a2 2e 00 00 \tcmpq   $0x0,0x2ea2(%rip)        # 3ff8 <__cxa_finalize@GLIBC_2.2.5>\n    1155:\t00 \n    1156:\t48 89 e5             \tmov    %rsp,%rbp\n    1159:\t74 0c                \tje     1167 <__do_global_dtors_aux+0x27>\n    115b:\t48 8b 3d a6 2e 00 00 \tmov    0x2ea6(%rip),%rdi        # 4008 <__dso_handle>\n    1162:\te8 f9 fe ff ff       \tcall   1060 <__cxa_finalize@plt>\n    1167:\te8 64 ff ff ff       \tcall   10d0 <deregister_tm_clones>\n    116c:\tc6 05 a5 2e 00 00 01 \tmovb   $0x1,0x2ea5(%rip)        # 4018 <__TMC_END__>\n    1173:\t5d                   \tpop    %rbp\n    1174:\tc3                   \tret\n    1175:\t0f 1f 00             \tnopl   (%rax)\n    1178:\tc3                   \tret\n    1179:\t0f 1f 80 00 00 00 00 \tnopl   0x0(%rax)\n\n0000000000001180 <frame_dummy>:\n    1180:\tf3 0f 1e fa          \tendbr64\n    1184:\te9 77 ff ff ff       \tjmp    1100 <register_tm_clones>\n\n0000000000001189 <calculate>:\n    1189:\tf3 0f 1e fa          \tendbr64\n    118d:\t55                   \tpush   %rbp\n    118e:\t48 89 e5             \tmov    %rsp,%rbp\n    1191:\t48 83 ec 10          \tsub    $0x10,%rsp\n    1195:\t8b 05 75 2e 00 00    \tmov    0x2e75(%rip),%eax        # 4010 <inputs>\n    119b:\t89 45 f4             \tmov    %eax,-0xc(%rbp)\n    119e:\t8b 05 70 2e 00 00    \tmov    0x2e70(%rip),%eax        # 4014 <inputs+0x4>\n    11a4:\t89 45 f8             \tmov    %eax,-0x8(%rbp)\n    11a7:\t8b 55 f4             \tmov    -0xc(%rbp),%edx\n    11aa:\t8b 45 f8             \tmov    -0x8(%rbp),%eax\n    11ad:\t01 d0                \tadd    %edx,%eax\n    11af:\t89 45 fc             \tmov    %eax,-0x4(%rbp)\n    11b2:\t8b 45 fc             \tmov    -0x4(%rbp),%eax\n    11b5:\t89 05 61 2e 00 00    \tmov    %eax,0x2e61(%rip)        # 401c <observed>\n    11bb:\t8b 45 fc             \tmov    -0x4(%rbp),%eax\n    11be:\tc9                   \tleave\n    11bf:\tc3                   \tret\n\n00000000000011c0 <main>:\n    11c0:\tf3 0f 1e fa          \tendbr64\n    11c4:\t55                   \tpush   %rbp\n    11c5:\t48 89 e5             \tmov    %rsp,%rbp\n    11c8:\t48 83 ec 30          \tsub    $0x30,%rsp\n    11cc:\t64 48 8b 04 25 28 00 \tmov    %fs:0x28,%rax\n    11d3:\t00 00 \n    11d5:\t48 89 45 f8          \tmov    %rax,-0x8(%rbp)\n    11d9:\t31 c0                \txor    %eax,%eax\n    11db:\t48 c7 45 e0 00 00 00 \tmovq   $0x0,-0x20(%rbp)\n    11e2:\t00 \n    11e3:\t48 c7 45 e8 00 00 00 \tmovq   $0x0,-0x18(%rbp)\n    11ea:\t00 \n    11eb:\t48 8d 45 e0          \tlea    -0x20(%rbp),%rax\n    11ef:\t48 89 c6             \tmov    %rax,%rsi\n    11f2:\tbf 04 00 00 00       \tmov    $0x4,%edi\n    11f7:\te8 94 fe ff ff       \tcall   1090 <setrlimit@plt>\n    11fc:\t85 c0                \ttest   %eax,%eax\n    11fe:\t74 07                \tje     1207 <main+0x47>\n    1200:\tb8 01 00 00 00       \tmov    $0x1,%eax\n    1205:\teb 53                \tjmp    125a <main+0x9a>\n    1207:\te8 7d ff ff ff       \tcall   1189 <calculate>\n    120c:\t89 45 dc             \tmov    %eax,-0x24(%rbp)\n    120f:\t8b 0d 07 2e 00 00    \tmov    0x2e07(%rip),%ecx        # 401c <observed>\n    1215:\t8b 15 f9 2d 00 00    \tmov    0x2df9(%rip),%edx        # 4014 <inputs+0x4>\n    121b:\t8b 05 ef 2d 00 00    \tmov    0x2def(%rip),%eax        # 4010 <inputs>\n    1221:\t8b 75 dc             \tmov    -0x24(%rbp),%esi\n    1224:\t41 89 f0             \tmov    %esi,%r8d\n    1227:\t89 c6                \tmov    %eax,%esi\n    1229:\t48 8d 05 d8 0d 00 00 \tlea    0xdd8(%rip),%rax        # 2008 <_IO_stdin_used+0x8>\n    1230:\t48 89 c7             \tmov    %rax,%rdi\n    1233:\tb8 00 00 00 00       \tmov    $0x0,%eax\n    1238:\te8 43 fe ff ff       \tcall   1080 <printf@plt>\n    123d:\t83 7d dc 05          \tcmpl   $0x5,-0x24(%rbp)\n    1241:\t75 12                \tjne    1255 <main+0x95>\n    1243:\t8b 05 d3 2d 00 00    \tmov    0x2dd3(%rip),%eax        # 401c <observed>\n    1249:\t83 f8 05             \tcmp    $0x5,%eax\n    124c:\t75 07                \tjne    1255 <main+0x95>\n    124e:\tb8 00 00 00 00       \tmov    $0x0,%eax\n    1253:\teb 05                \tjmp    125a <main+0x9a>\n    1255:\tb8 02 00 00 00       \tmov    $0x2,%eax\n    125a:\t48 8b 55 f8          \tmov    -0x8(%rbp),%rdx\n    125e:\t64 48 2b 14 25 28 00 \tsub    %fs:0x28,%rdx\n    1265:\t00 00 \n    1267:\t74 05                \tje     126e <main+0xae>\n    1269:\te8 02 fe ff ff       \tcall   1070 <__stack_chk_fail@plt>\n    126e:\tc9                   \tleave\n    126f:\tc3                   \tret\n\nDisassembly of section .fini:\n\n0000000000001270 <_fini>:\n    1270:\tf3 0f 1e fa          \tendbr64\n    1274:\t48 83 ec 08          \tsub    $0x8,%rsp\n    1278:\t48 83 c4 08          \tadd    $0x8,%rsp\n    127c:\tc3                   \tret\n"
+    },
+    {
+      "key": "elf",
+      "command": "readelf -h .trace-build/instruction-cycle/program",
+      "output": "ELF Header:\n  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 \n  Class:                             ELF64\n  Data:                              2's complement, little endian\n  Version:                           1 (current)\n  OS/ABI:                            UNIX - System V\n  ABI Version:                       0\n  Type:                              DYN (Position-Independent Executable file)\n  Machine:                           Advanced Micro Devices X86-64\n  Version:                           0x1\n  Entry point address:               0x10a0\n  Start of program headers:          64 (bytes into file)\n  Start of section headers:          43640 (bytes into file)\n  Flags:                             0x0\n  Size of this header:               64 (bytes)\n  Size of program headers:           56 (bytes)\n  Number of program headers:         13\n  Size of section headers:           64 (bytes)\n  Number of section headers:         38\n  Section header string table index: 37\n"
+    }
+  ]
+}

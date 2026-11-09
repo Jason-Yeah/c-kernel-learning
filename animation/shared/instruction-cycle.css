@@ -1,0 +1,56 @@
+.instruction-scene .scene-heading {
+  font-size: 36px;
+  line-height: 1.35;
+}
+.instruction-scene .code-snippet pre {
+  font-size: 21px;
+  line-height: 1.65;
+}
+.instruction-scene .code-line i {
+  width: 34px;
+}
+.instruction-scene .reg-value {
+  font-size: 28px;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+.instruction-scene .reg-label {
+  font-size: 21px;
+}
+.instruction-scene .reg-name {
+  font-size: 26px;
+}
+.cycle-formula {
+  font: 27px/1.7 var(--mono);
+}
+.cycle-small {
+  font-size: 20px;
+  line-height: 1.6;
+}
+.cycle-roles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  width: 1200px;
+}
+.cycle-role {
+  border-top: 1px solid #fff;
+  padding: 18px 10px;
+  font-size: 24px;
+  line-height: 1.6;
+}
+.cycle-role strong {
+  display: block;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.cycle-effects {
+  white-space: pre-wrap;
+  border-left: 2px solid #69e2f4;
+  padding: 12px 16px;
+  font: 16px/1.7 var(--mono);
+  overflow-wrap: anywhere;
+}
+.instruction-scene .decode-byte {
+  font: 34px var(--mono);
+}

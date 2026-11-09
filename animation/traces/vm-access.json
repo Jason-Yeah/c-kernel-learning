@@ -1,0 +1,759 @@
+{
+  "schemaVersion": 1,
+  "id": "vm-access",
+  "provenance": {
+    "kind": "gdb-plus-model",
+    "capturedAt": "2026-11-05T13:41:12.581Z",
+    "source": {
+      "path": "experiments/vm-access.c",
+      "content": "#define _GNU_SOURCE\n/* The collector must not read the cold target page before the program accesses it. */\n#include <stdio.h>\n#include <string.h>\n#include <sys/mman.h>\n#include <sys/resource.h>\n#include <unistd.h>\n\nvolatile int trace_phase;\nvolatile unsigned char *target;\nvolatile unsigned char value;\nlong page_size;\nlong before_faults, after_faults;\n\nint main(int argc, char **argv)\n{\n    struct rlimit no_core = {0, 0};\n    struct rusage usage;\n    if (argc != 2 || setrlimit(RLIMIT_CORE, &no_core) != 0)\n        return 2;\n    page_size = sysconf(_SC_PAGESIZE);\n    unsigned char *base = mmap(NULL, 2 * (size_t)page_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);\n    if (base == MAP_FAILED)\n        return 3;\n    int writing = 0;\n    if (strcmp(argv[1], \"resident-a\") == 0 || strcmp(argv[1], \"resident-b\") == 0) {\n        target = base + 0x2D;\n        *target = strcmp(argv[1], \"resident-a\") == 0 ? 0x7B : 0xA6;\n    } else if (strcmp(argv[1], \"cold\") == 0) {\n        target = base + page_size + 0x2D;\n    } else if (strcmp(argv[1], \"readonly\") == 0) {\n        target = base + 0x2D;\n        *target = 0xAA;\n        if (mprotect(base, (size_t)page_size, PROT_READ) != 0)\n            return 4;\n        writing = 1;\n    } else if (strcmp(argv[1], \"unmapped\") == 0) {\n        target = base + page_size + 0x2D;\n        if (munmap(base + page_size, (size_t)page_size) != 0)\n            return 5;\n    } else {\n        return 6;\n    }\n    if (getrusage(RUSAGE_SELF, &usage) != 0)\n        return 7;\n    before_faults = usage.ru_minflt;\n    trace_phase = 1;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_VM_BEFORE */\n    if (writing)\n        *target = 0xFF;\n    else\n        value = *target;\n    if (getrusage(RUSAGE_SELF, &usage) != 0)\n        return 8;\n    after_faults = usage.ru_minflt;\n    trace_phase = 2;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_VM_AFTER */\n    printf(\"address=%p value=%02X page_size=%ld minor_delta=%ld\\n\", (void *)target, (unsigned)value, page_size, after_faults - before_faults);\n    return 0;\n}\n",
+      "sha256": "1c71d812f360b665544674ea21bc0baed6bfbe144758a4b8f47af35b4b9e0774"
+    },
+    "binary": {
+      "path": ".trace-build/vm-access",
+      "sha256": "4c25533a8ece2936bd89891e45a9aa2af181c1f52cc404b375414771c88fe730"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/vm-access.c -o .trace-build/vm-access",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-fno-ipa-stack-alignment",
+      "-mno-red-zone",
+      "-fno-stack-protector",
+      "-U_FORTIFY_SOURCE",
+      "-D_FORTIFY_SOURCE=0",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "limits": "Actual mmap/permissions/present flags/read values/signals. No hardware TLB or PFN inferred; a first anonymous read may use Linux's shared zero page, not a newly allocated private frame. Collector never dereferences the cold target before access; minor-fault deltas can include debugger effects.",
+    "replay": "Offline replay of actual local GDB stops; the website does not execute programs or control GDB."
+  },
+  "runs": {
+    "resident-a": {
+      "case": "resident-a",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065675,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x55D4026134D2",
+            "rsp": "0x7FFDCD68BB40",
+            "rbp": "0x7FFDCD68BC00",
+            "rax": "0xD9",
+            "rdi": "0x0",
+            "rsi": "0x7FFDCD68BB50"
+          },
+          "fields": {
+            "target": "0x764B2757402D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 217,
+            "afterFaults": 0,
+            "mapping": "764b27574000-764b27578000 rw-p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x8180000000000000",
+              "present": true,
+              "swapped": false,
+              "exclusive": true,
+              "pfnExposed": false
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x55d4026134d2      0x55d4026134d2 <main+681>\nrsp            0x7ffdcd68bb40      0x7ffdcd68bb40\nrbp            0x7ffdcd68bc00      0x7ffdcd68bc00\nrax            0xd9                217"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x55d4026134d2 <main+681>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$1 = 0x764b2757402d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$2 = 4096"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065675,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 57,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 57,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x55D402613529",
+            "rsp": "0x7FFDCD68BB40",
+            "rbp": "0x7FFDCD68BC00",
+            "rax": "0xD9",
+            "rdi": "0x0",
+            "rsi": "0x7FFDCD68BB50"
+          },
+          "fields": {
+            "target": "0x764B2757402D",
+            "pageSize": 4096,
+            "value": 123,
+            "beforeFaults": 217,
+            "afterFaults": 217,
+            "mapping": "764b27574000-764b27578000 rw-p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x8180000000000000",
+              "present": true,
+              "swapped": false,
+              "exclusive": true,
+              "pfnExposed": false
+            },
+            "byte": 123
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x55d402613529      0x55d402613529 <main+768>\nrsp            0x7ffdcd68bb40      0x7ffdcd68bb40\nrbp            0x7ffdcd68bc00      0x7ffdcd68bc00\nrax            0xd9                217"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x55d402613529 <main+768>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$3 = 0x764b2757402d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$4 = 4096"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x764b2757402d:\t0x7b"
+            },
+            {
+              "command": "p/x value",
+              "output": "$5 = 0x7b"
+            },
+            {
+              "command": "p after_faults - before_faults",
+              "output": "$6 = 0"
+            }
+          ]
+        }
+      ],
+      "stdout": "address=0x764b2757402d value=7B page_size=4096 minor_delta=0\n"
+    },
+    "resident-b": {
+      "case": "resident-b",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065688,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5AC404C234D2",
+            "rsp": "0x7FFEF79E0200",
+            "rbp": "0x7FFEF79E02C0",
+            "rax": "0xDA",
+            "rdi": "0x0",
+            "rsi": "0x7FFEF79E0210"
+          },
+          "fields": {
+            "target": "0x70DE2ECFE02D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 218,
+            "afterFaults": 0,
+            "mapping": "70de2ecfe000-70de2ed02000 rw-p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x8180000000000000",
+              "present": true,
+              "swapped": false,
+              "exclusive": true,
+              "pfnExposed": false
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5ac404c234d2      0x5ac404c234d2 <main+681>\nrsp            0x7ffef79e0200      0x7ffef79e0200\nrbp            0x7ffef79e02c0      0x7ffef79e02c0\nrax            0xda                218"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5ac404c234d2 <main+681>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$1 = 0x70de2ecfe02d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$2 = 4096"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065688,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 57,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 57,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5AC404C23529",
+            "rsp": "0x7FFEF79E0200",
+            "rbp": "0x7FFEF79E02C0",
+            "rax": "0xDA",
+            "rdi": "0x0",
+            "rsi": "0x7FFEF79E0210"
+          },
+          "fields": {
+            "target": "0x70DE2ECFE02D",
+            "pageSize": 4096,
+            "value": 166,
+            "beforeFaults": 218,
+            "afterFaults": 218,
+            "mapping": "70de2ecfe000-70de2ed02000 rw-p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x8180000000000000",
+              "present": true,
+              "swapped": false,
+              "exclusive": true,
+              "pfnExposed": false
+            },
+            "byte": 166
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5ac404c23529      0x5ac404c23529 <main+768>\nrsp            0x7ffef79e0200      0x7ffef79e0200\nrbp            0x7ffef79e02c0      0x7ffef79e02c0\nrax            0xda                218"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5ac404c23529 <main+768>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$3 = 0x70de2ecfe02d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$4 = 4096"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x70de2ecfe02d:\t0xa6"
+            },
+            {
+              "command": "p/x value",
+              "output": "$5 = 0xa6"
+            },
+            {
+              "command": "p after_faults - before_faults",
+              "output": "$6 = 0"
+            }
+          ]
+        }
+      ],
+      "stdout": "address=0x70de2ecfe02d value=A6 page_size=4096 minor_delta=0\n"
+    },
+    "cold": {
+      "case": "cold",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065701,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x645C620374D2",
+            "rsp": "0x7FFE50B6C120",
+            "rbp": "0x7FFE50B6C1E0",
+            "rax": "0xDA",
+            "rdi": "0x0",
+            "rsi": "0x7FFE50B6C130"
+          },
+          "fields": {
+            "target": "0x7BBAA82A602D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 218,
+            "afterFaults": 0,
+            "mapping": "7bbaa82a5000-7bbaa82a9000 rw-p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x80000000000000",
+              "present": false,
+              "swapped": false,
+              "exclusive": false,
+              "pfnExposed": false
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x645c620374d2      0x645c620374d2 <main+681>\nrsp            0x7ffe50b6c120      0x7ffe50b6c120\nrbp            0x7ffe50b6c1e0      0x7ffe50b6c1e0\nrax            0xda                218"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x645c620374d2 <main+681>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$1 = 0x7bbaa82a602d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$2 = 4096"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065701,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 57,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 57,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x645C62037529",
+            "rsp": "0x7FFE50B6C120",
+            "rbp": "0x7FFE50B6C1E0",
+            "rax": "0xDB",
+            "rdi": "0x0",
+            "rsi": "0x7FFE50B6C130"
+          },
+          "fields": {
+            "target": "0x7BBAA82A602D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 218,
+            "afterFaults": 219,
+            "mapping": "7bbaa82a5000-7bbaa82a9000 rw-p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x8080000000000000",
+              "present": true,
+              "swapped": false,
+              "exclusive": false,
+              "pfnExposed": false
+            },
+            "byte": 0
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x645c62037529      0x645c62037529 <main+768>\nrsp            0x7ffe50b6c120      0x7ffe50b6c120\nrbp            0x7ffe50b6c1e0      0x7ffe50b6c1e0\nrax            0xdb                219"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x645c62037529 <main+768>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$3 = 0x7bbaa82a602d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$4 = 4096"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x7bbaa82a602d:\t0x00"
+            },
+            {
+              "command": "p/x value",
+              "output": "$5 = 0x0"
+            },
+            {
+              "command": "p after_faults - before_faults",
+              "output": "$6 = 1"
+            }
+          ]
+        }
+      ],
+      "stdout": "address=0x7bbaa82a602d value=00 page_size=4096 minor_delta=1\n"
+    },
+    "readonly": {
+      "case": "readonly",
+      "architecture": "i386:x86-64",
+      "outcome": "signal",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": null
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065714,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x609C01E4F4D2",
+            "rsp": "0x7FFCD794A1C0",
+            "rbp": "0x7FFCD794A280",
+            "rax": "0xD9",
+            "rdi": "0x0",
+            "rsi": "0x7FFCD794A1D0"
+          },
+          "fields": {
+            "target": "0x7F4BB7E2F02D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 217,
+            "afterFaults": 0,
+            "mapping": "7f4bb7e2f000-7f4bb7e30000 r--p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x8180000000000000",
+              "present": true,
+              "swapped": false,
+              "exclusive": true,
+              "pfnExposed": false
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x609c01e4f4d2      0x609c01e4f4d2 <main+681>\nrsp            0x7ffcd794a1c0      0x7ffcd794a1c0\nrbp            0x7ffcd794a280      0x7ffcd794a280\nrax            0xd9                217"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x609c01e4f4d2 <main+681>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$1 = 0x7f4bb7e2f02d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$2 = 4096"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "signal",
+          "phase": 1,
+          "pid": 1065714,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 50,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 50,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x609C01E4F4E0",
+            "rsp": "0x7FFCD794A1C0",
+            "rbp": "0x7FFCD794A280",
+            "rax": "0x7F4BB7E2F02D",
+            "rdi": "0x0",
+            "rsi": "0x7FFCD794A1D0"
+          },
+          "fields": {
+            "target": "0x7F4BB7E2F02D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 217,
+            "afterFaults": 0,
+            "mapping": "7f4bb7e2f000-7f4bb7e30000 r--p 00000000 00:00 0 ",
+            "page": {
+              "raw": "0x8180000000000000",
+              "present": true,
+              "swapped": false,
+              "exclusive": true,
+              "pfnExposed": false
+            },
+            "byte": 170
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x609c01e4f4e0      0x609c01e4f4e0 <main+695>\nrsp            0x7ffcd794a1c0      0x7ffcd794a1c0\nrbp            0x7ffcd794a280      0x7ffcd794a280\nrax            0x7f4bb7e2f02d      139963184377901"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x609c01e4f4e0 <main+695>:\tmovb   $0xff,(%rax)"
+            },
+            {
+              "command": "p $_siginfo",
+              "output": "$3 = {si_signo = 11, si_errno = 0, si_code = 2, _sifields = {_pad = {-1209864147, 32587, 0 <repeats 26 times>}, _kill = {si_pid = -1209864147, si_uid = 32587}, _timer = {si_tid = -1209864147, si_overrun = 32587, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _rt = {si_pid = -1209864147, si_uid = 32587, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _sigchld = {si_pid = -1209864147, si_uid = 32587, si_status = 0, si_utime = 0, si_stime = 0}, _sigfault = {si_addr = 0x7f4bb7e2f02d, _addr_lsb = 0, _addr_bnd = {_lower = 0x0, _upper = 0x0}}, _sigpoll = {si_band = 139963184377901, si_fd = 0}, _sigsys = {_call_addr = 0x7f4bb7e2f02d, _syscall = 0, _arch = 0}}}"
+            },
+            {
+              "command": "p/x target",
+              "output": "$4 = 0x7f4bb7e2f02d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$5 = 4096"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x7f4bb7e2f02d:\t0xaa"
+            }
+          ],
+          "signal": {
+            "name": "SIGSEGV",
+            "number": 11,
+            "code": 2,
+            "address": "0x7F4BB7E2F02D"
+          }
+        }
+      ],
+      "stdout": ""
+    },
+    "unmapped": {
+      "case": "unmapped",
+      "architecture": "i386:x86-64",
+      "outcome": "signal",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": null
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065727,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 48,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5CC8C8C334D2",
+            "rsp": "0x7FFE6412D450",
+            "rbp": "0x7FFE6412D510",
+            "rax": "0xD7",
+            "rdi": "0x0",
+            "rsi": "0x7FFE6412D460"
+          },
+          "fields": {
+            "target": "0x72595618002D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 215,
+            "afterFaults": 0,
+            "mapping": null,
+            "page": {
+              "raw": "0x0",
+              "present": false,
+              "swapped": false,
+              "exclusive": false,
+              "pfnExposed": false
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5cc8c8c334d2      0x5cc8c8c334d2 <main+681>\nrsp            0x7ffe6412d450      0x7ffe6412d450\nrbp            0x7ffe6412d510      0x7ffe6412d510\nrax            0xd7                215"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5cc8c8c334d2 <main+681>:\tnop"
+            },
+            {
+              "command": "p/x target",
+              "output": "$1 = 0x72595618002d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$2 = 4096"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "signal",
+          "phase": 1,
+          "pid": 1065727,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/vm-access.c",
+            "line": 52,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/vm-access.c",
+            "line": 52,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5CC8C8C334EC",
+            "rsp": "0x7FFE6412D450",
+            "rbp": "0x7FFE6412D510",
+            "rax": "0x72595618002D",
+            "rdi": "0x0",
+            "rsi": "0x7FFE6412D460"
+          },
+          "fields": {
+            "target": "0x72595618002D",
+            "pageSize": 4096,
+            "value": 0,
+            "beforeFaults": 215,
+            "afterFaults": 0,
+            "mapping": null,
+            "page": {
+              "raw": "0x0",
+              "present": false,
+              "swapped": false,
+              "exclusive": false,
+              "pfnExposed": false
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5cc8c8c334ec      0x5cc8c8c334ec <main+707>\nrsp            0x7ffe6412d450      0x7ffe6412d450\nrbp            0x7ffe6412d510      0x7ffe6412d510\nrax            0x72595618002d      125728022069293"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5cc8c8c334ec <main+707>:\tmovzbl (%rax),%eax"
+            },
+            {
+              "command": "p $_siginfo",
+              "output": "$3 = {si_signo = 11, si_errno = 0, si_code = 1, _sifields = {_pad = {1444413485, 29273, 0 <repeats 26 times>}, _kill = {si_pid = 1444413485, si_uid = 29273}, _timer = {si_tid = 1444413485, si_overrun = 29273, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _rt = {si_pid = 1444413485, si_uid = 29273, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _sigchld = {si_pid = 1444413485, si_uid = 29273, si_status = 0, si_utime = 0, si_stime = 0}, _sigfault = {si_addr = 0x72595618002d, _addr_lsb = 0, _addr_bnd = {_lower = 0x0, _upper = 0x0}}, _sigpoll = {si_band = 125728022069293, si_fd = 0}, _sigsys = {_call_addr = 0x72595618002d, _syscall = 0, _arch = 0}}}"
+            },
+            {
+              "command": "p/x target",
+              "output": "$4 = 0x72595618002d"
+            },
+            {
+              "command": "p page_size",
+              "output": "$5 = 4096"
+            }
+          ],
+          "signal": {
+            "name": "SIGSEGV",
+            "number": 11,
+            "code": 1,
+            "address": "0x72595618002D"
+          }
+        }
+      ],
+      "stdout": ""
+    }
+  }
+}

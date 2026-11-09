@@ -1,0 +1,14 @@
+.byte-order-scene { pointer-events: none; }
+.byte-order-scene .scene-heading { font-size: 36px; line-height: 1.35; }
+.byte-order-scene .code-snippet pre { font-size: 21px; line-height: 1.65; }
+.byte-order-scene .code-line i { width: 34px; }
+.byte-order-actors .reg-label { font-size: 21px; }
+.byte-order-actors .reg-value { font-size: 28px; letter-spacing: -0.5px; white-space: nowrap; }
+.byte-order-actors #bo-word .reg-label { font-size: 26px; }
+.byte-order-actors #bo-word .reg-value { font-size: 50px; font-weight: 650; }
+.byte-order-actors .significance > strong { font-size: 21px; line-height: 26px; font-weight: 500; }
+.significance-bytes { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; margin-top: 8px; }
+.significance-bytes > div { border-top: 2px solid #64a4ff; padding: 10px; text-align: center; }
+.significance-bytes b { display: block; font: 650 34px/40px var(--mono); }
+.significance-bytes span { display: block; margin-top: 4px; font: 20px/24px var(--mono); white-space: nowrap; }
+.byte-order-observation { font: 17px/1.7 var(--mono); overflow-wrap: anywhere; border-left: 2px solid #69e2f4; padding: 12px 16px; }

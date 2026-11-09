@@ -1,0 +1,4502 @@
+{
+  "schemaVersion": 1,
+  "id": "stack-recursion",
+  "provenance": {
+    "kind": "gdb-plus-model",
+    "capturedAt": "2026-11-05T13:41:10.990Z",
+    "source": {
+      "path": "experiments/stack-recursion.c",
+      "content": "/* A process-local stack limit makes exhaustion reproducible without host changes. */\n#include <stdio.h>\n#include <string.h>\n#include <sys/resource.h>\n\nvolatile unsigned bounded_depth;\nvolatile unsigned observed_sum;\nvolatile int trace_phase;\nunsigned long stack_limit;\n\n__attribute__((noinline)) static unsigned f(unsigned depth)\n{\n    volatile unsigned char block[4096];\n    block[0] = (unsigned char)depth;\n    block[sizeof block - 1] = (unsigned char)depth;\n    trace_phase = 1;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_RECURSION_ENTER */\n    unsigned child = 0;\n    if (bounded_depth == 0 || depth < bounded_depth)\n        child = f(depth + 1);\n    trace_phase = 2;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_RECURSION_LEAVE */\n    return child + block[0];\n}\n\nint main(int argc, char **argv)\n{\n    struct rlimit limit, no_core = {0, 0};\n    if (argc != 2 || getrlimit(RLIMIT_STACK, &limit) != 0)\n        return 2;\n    if (limit.rlim_max != RLIM_INFINITY && limit.rlim_max < 256 * 1024)\n        return 2;\n    limit.rlim_cur = 256 * 1024;\n    if (setrlimit(RLIMIT_STACK, &limit) != 0 || setrlimit(RLIMIT_CORE, &no_core) != 0)\n        return 2;\n    stack_limit = limit.rlim_cur;\n    if (strcmp(argv[1], \"bounded\") == 0)\n        bounded_depth = 4;\n    else if (strcmp(argv[1], \"exhaust\") != 0)\n        return 2;\n    observed_sum = f(1);\n    trace_phase = 3;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_RECURSION_RESULT */\n    printf(\"bounded sum = %u\\n\", observed_sum);\n    return observed_sum == 10 ? 0 : 1;\n}\n",
+      "sha256": "b2382b67f9db2fda5a0b1caa90e10002143e8c30e0c5fb5bbece9bf04c518e8e"
+    },
+    "binary": {
+      "path": ".trace-build/stack-recursion",
+      "sha256": "31e0e9fefbd629464b5ab33afcf42d5b6cb43e8f2ff5542d4899db07ac759e11"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/stack-recursion.c -o .trace-build/stack-recursion",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-fno-ipa-stack-alignment",
+      "-mno-red-zone",
+      "-fno-stack-protector",
+      "-U_FORTIFY_SOURCE",
+      "-D_FORTIFY_SOURCE=0",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "limits": "Actual depth/register/fault observations. Eight drawn frames are a reading aid, not the measured maximum; normal return is a separate run.",
+    "replay": "Offline replay of actual local GDB stops; the website does not execute programs or control GDB."
+  },
+  "runs": {
+    "exhaust": {
+      "case": "exhaust",
+      "architecture": "i386:x86-64",
+      "outcome": "signal",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": null
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965E6600",
+            "rbp": "0x7FFD965E7620",
+            "rax": "0x1",
+            "rdi": "0x1",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 1,
+            "blockAddress": "0x7FFD965E6610",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9343"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965e6600      0x7ffd965e6600\nrbp            0x7ffd965e7620      0x7ffd965e7620\nrax            0x1                 1"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$1 = 1"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$2 = 0x7ffd965e6610"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$3 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$4 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965E55D0",
+            "rbp": "0x7FFD965E65F0",
+            "rax": "0x2",
+            "rdi": "0x2",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 2,
+            "blockAddress": "0x7FFD965E55E0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965e55d0      0x7ffd965e55d0\nrbp            0x7ffd965e65f0      0x7ffd965e65f0\nrax            0x2                 2"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$5 = 2"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$6 = 0x7ffd965e55e0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$7 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$8 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965E45A0",
+            "rbp": "0x7FFD965E55C0",
+            "rax": "0x3",
+            "rdi": "0x3",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 3,
+            "blockAddress": "0x7FFD965E45B0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965e45a0      0x7ffd965e45a0\nrbp            0x7ffd965e55c0      0x7ffd965e55c0\nrax            0x3                 3"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$9 = 3"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$10 = 0x7ffd965e45b0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$11 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$12 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965E3570",
+            "rbp": "0x7FFD965E4590",
+            "rax": "0x4",
+            "rdi": "0x4",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 4,
+            "blockAddress": "0x7FFD965E3580",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965e3570      0x7ffd965e3570\nrbp            0x7ffd965e4590      0x7ffd965e4590\nrax            0x4                 4"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$13 = 4"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$14 = 0x7ffd965e3580"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$15 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$16 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965E2540",
+            "rbp": "0x7FFD965E3560",
+            "rax": "0x5",
+            "rdi": "0x5",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 5,
+            "blockAddress": "0x7FFD965E2550",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965e2540      0x7ffd965e2540\nrbp            0x7ffd965e3560      0x7ffd965e3560\nrax            0x5                 5"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$17 = 5"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$18 = 0x7ffd965e2550"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$19 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$20 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965E1510",
+            "rbp": "0x7FFD965E2530",
+            "rax": "0x6",
+            "rdi": "0x6",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 6,
+            "blockAddress": "0x7FFD965E1520",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965e1510      0x7ffd965e1510\nrbp            0x7ffd965e2530      0x7ffd965e2530\nrax            0x6                 6"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$21 = 6"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$22 = 0x7ffd965e1520"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$23 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$24 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965E04E0",
+            "rbp": "0x7FFD965E1500",
+            "rax": "0x7",
+            "rdi": "0x7",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 7,
+            "blockAddress": "0x7FFD965E04F0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965e04e0      0x7ffd965e04e0\nrbp            0x7ffd965e1500      0x7ffd965e1500\nrax            0x7                 7"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$25 = 7"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$26 = 0x7ffd965e04f0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$27 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$28 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965DF4B0",
+            "rbp": "0x7FFD965E04D0",
+            "rax": "0x8",
+            "rdi": "0x8",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 8,
+            "blockAddress": "0x7FFD965DF4C0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965df4b0      0x7ffd965df4b0\nrbp            0x7ffd965e04d0      0x7ffd965e04d0\nrax            0x8                 8"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$29 = 8"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$30 = 0x7ffd965df4c0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$31 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$32 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965DE480",
+            "rbp": "0x7FFD965DF4A0",
+            "rax": "0x9",
+            "rdi": "0x9",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 9,
+            "blockAddress": "0x7FFD965DE490",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965de480      0x7ffd965de480\nrbp            0x7ffd965df4a0      0x7ffd965df4a0\nrax            0x9                 9"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$33 = 9"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$34 = 0x7ffd965de490"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$35 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$36 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965DD450",
+            "rbp": "0x7FFD965DE470",
+            "rax": "0xA",
+            "rdi": "0xA",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 10,
+            "blockAddress": "0x7FFD965DD460",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965dd450      0x7ffd965dd450\nrbp            0x7ffd965de470      0x7ffd965de470\nrax            0xa                 10"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$37 = 10"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$38 = 0x7ffd965dd460"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$39 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$40 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965DC420",
+            "rbp": "0x7FFD965DD440",
+            "rax": "0xB",
+            "rdi": "0xB",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 11,
+            "blockAddress": "0x7FFD965DC430",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965dc420      0x7ffd965dc420\nrbp            0x7ffd965dd440      0x7ffd965dd440\nrax            0xb                 11"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$41 = 11"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$42 = 0x7ffd965dc430"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$43 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$44 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965DB3F0",
+            "rbp": "0x7FFD965DC410",
+            "rax": "0xC",
+            "rdi": "0xC",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 12,
+            "blockAddress": "0x7FFD965DB400",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965db3f0      0x7ffd965db3f0\nrbp            0x7ffd965dc410      0x7ffd965dc410\nrax            0xc                 12"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$45 = 12"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$46 = 0x7ffd965db400"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$47 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$48 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965DA3C0",
+            "rbp": "0x7FFD965DB3E0",
+            "rax": "0xD",
+            "rdi": "0xD",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 13,
+            "blockAddress": "0x7FFD965DA3D0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965da3c0      0x7ffd965da3c0\nrbp            0x7ffd965db3e0      0x7ffd965db3e0\nrax            0xd                 13"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$49 = 13"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$50 = 0x7ffd965da3d0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$51 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$52 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D9390",
+            "rbp": "0x7FFD965DA3B0",
+            "rax": "0xE",
+            "rdi": "0xE",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 14,
+            "blockAddress": "0x7FFD965D93A0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d9390      0x7ffd965d9390\nrbp            0x7ffd965da3b0      0x7ffd965da3b0\nrax            0xe                 14"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$53 = 14"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$54 = 0x7ffd965d93a0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$55 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$56 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D8360",
+            "rbp": "0x7FFD965D9380",
+            "rax": "0xF",
+            "rdi": "0xF",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 15,
+            "blockAddress": "0x7FFD965D8370",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d8360      0x7ffd965d8360\nrbp            0x7ffd965d9380      0x7ffd965d9380\nrax            0xf                 15"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$57 = 15"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$58 = 0x7ffd965d8370"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$59 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$60 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 15,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D7330",
+            "rbp": "0x7FFD965D8350",
+            "rax": "0x10",
+            "rdi": "0x10",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 16,
+            "blockAddress": "0x7FFD965D7340",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d7330      0x7ffd965d7330\nrbp            0x7ffd965d8350      0x7ffd965d8350\nrax            0x10                16"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$61 = 16"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$62 = 0x7ffd965d7340"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$63 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$64 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 16,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D6300",
+            "rbp": "0x7FFD965D7320",
+            "rax": "0x11",
+            "rdi": "0x11",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 17,
+            "blockAddress": "0x7FFD965D6310",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d6300      0x7ffd965d6300\nrbp            0x7ffd965d7320      0x7ffd965d7320\nrax            0x11                17"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$65 = 17"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$66 = 0x7ffd965d6310"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$67 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$68 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 17,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D52D0",
+            "rbp": "0x7FFD965D62F0",
+            "rax": "0x12",
+            "rdi": "0x12",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 18,
+            "blockAddress": "0x7FFD965D52E0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d52d0      0x7ffd965d52d0\nrbp            0x7ffd965d62f0      0x7ffd965d62f0\nrax            0x12                18"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$69 = 18"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$70 = 0x7ffd965d52e0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$71 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$72 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 18,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D42A0",
+            "rbp": "0x7FFD965D52C0",
+            "rax": "0x13",
+            "rdi": "0x13",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 19,
+            "blockAddress": "0x7FFD965D42B0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d42a0      0x7ffd965d42a0\nrbp            0x7ffd965d52c0      0x7ffd965d52c0\nrax            0x13                19"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$73 = 19"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$74 = 0x7ffd965d42b0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$75 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$76 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 19,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D3270",
+            "rbp": "0x7FFD965D4290",
+            "rax": "0x14",
+            "rdi": "0x14",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 20,
+            "blockAddress": "0x7FFD965D3280",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d3270      0x7ffd965d3270\nrbp            0x7ffd965d4290      0x7ffd965d4290\nrax            0x14                20"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$77 = 20"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$78 = 0x7ffd965d3280"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$79 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$80 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 20,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D2240",
+            "rbp": "0x7FFD965D3260",
+            "rax": "0x15",
+            "rdi": "0x15",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 21,
+            "blockAddress": "0x7FFD965D2250",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d2240      0x7ffd965d2240\nrbp            0x7ffd965d3260      0x7ffd965d3260\nrax            0x15                21"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$81 = 21"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$82 = 0x7ffd965d2250"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$83 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$84 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 21,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D1210",
+            "rbp": "0x7FFD965D2230",
+            "rax": "0x16",
+            "rdi": "0x16",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 22,
+            "blockAddress": "0x7FFD965D1220",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d1210      0x7ffd965d1210\nrbp            0x7ffd965d2230      0x7ffd965d2230\nrax            0x16                22"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$85 = 22"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$86 = 0x7ffd965d1220"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$87 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$88 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 22,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965D01E0",
+            "rbp": "0x7FFD965D1200",
+            "rax": "0x17",
+            "rdi": "0x17",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 23,
+            "blockAddress": "0x7FFD965D01F0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965d01e0      0x7ffd965d01e0\nrbp            0x7ffd965d1200      0x7ffd965d1200\nrax            0x17                23"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$89 = 23"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$90 = 0x7ffd965d01f0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$91 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$92 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 23,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965CF1B0",
+            "rbp": "0x7FFD965D01D0",
+            "rax": "0x18",
+            "rdi": "0x18",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 24,
+            "blockAddress": "0x7FFD965CF1C0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965cf1b0      0x7ffd965cf1b0\nrbp            0x7ffd965d01d0      0x7ffd965d01d0\nrax            0x18                24"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$93 = 24"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$94 = 0x7ffd965cf1c0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$95 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$96 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 24,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965CE180",
+            "rbp": "0x7FFD965CF1A0",
+            "rax": "0x19",
+            "rdi": "0x19",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 25,
+            "blockAddress": "0x7FFD965CE190",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965ce180      0x7ffd965ce180\nrbp            0x7ffd965cf1a0      0x7ffd965cf1a0\nrax            0x19                25"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$97 = 25"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$98 = 0x7ffd965ce190"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$99 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$100 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 25,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965CD150",
+            "rbp": "0x7FFD965CE170",
+            "rax": "0x1A",
+            "rdi": "0x1A",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 26,
+            "blockAddress": "0x7FFD965CD160",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965cd150      0x7ffd965cd150\nrbp            0x7ffd965ce170      0x7ffd965ce170\nrax            0x1a                26"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$101 = 26"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$102 = 0x7ffd965cd160"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$103 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$104 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 26,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965CC120",
+            "rbp": "0x7FFD965CD140",
+            "rax": "0x1B",
+            "rdi": "0x1B",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 27,
+            "blockAddress": "0x7FFD965CC130",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965cc120      0x7ffd965cc120\nrbp            0x7ffd965cd140      0x7ffd965cd140\nrax            0x1b                27"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$105 = 27"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$106 = 0x7ffd965cc130"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$107 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$108 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 27,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965CB0F0",
+            "rbp": "0x7FFD965CC110",
+            "rax": "0x1C",
+            "rdi": "0x1C",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 28,
+            "blockAddress": "0x7FFD965CB100",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965cb0f0      0x7ffd965cb0f0\nrbp            0x7ffd965cc110      0x7ffd965cc110\nrax            0x1c                28"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$109 = 28"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$110 = 0x7ffd965cb100"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$111 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$112 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 28,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965CA0C0",
+            "rbp": "0x7FFD965CB0E0",
+            "rax": "0x1D",
+            "rdi": "0x1D",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 29,
+            "blockAddress": "0x7FFD965CA0D0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965ca0c0      0x7ffd965ca0c0\nrbp            0x7ffd965cb0e0      0x7ffd965cb0e0\nrax            0x1d                29"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$113 = 29"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$114 = 0x7ffd965ca0d0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$115 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$116 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 29,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C9090",
+            "rbp": "0x7FFD965CA0B0",
+            "rax": "0x1E",
+            "rdi": "0x1E",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 30,
+            "blockAddress": "0x7FFD965C90A0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c9090      0x7ffd965c9090\nrbp            0x7ffd965ca0b0      0x7ffd965ca0b0\nrax            0x1e                30"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$117 = 30"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$118 = 0x7ffd965c90a0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$119 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$120 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 30,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C8060",
+            "rbp": "0x7FFD965C9080",
+            "rax": "0x1F",
+            "rdi": "0x1F",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 31,
+            "blockAddress": "0x7FFD965C8070",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c8060      0x7ffd965c8060\nrbp            0x7ffd965c9080      0x7ffd965c9080\nrax            0x1f                31"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$121 = 31"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$122 = 0x7ffd965c8070"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$123 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$124 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 31,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C7030",
+            "rbp": "0x7FFD965C8050",
+            "rax": "0x20",
+            "rdi": "0x20",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c7000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 32,
+            "blockAddress": "0x7FFD965C7040",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c7030      0x7ffd965c7030\nrbp            0x7ffd965c8050      0x7ffd965c8050\nrax            0x20                32"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$125 = 32"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$126 = 0x7ffd965c7040"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$127 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$128 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 32,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C6000",
+            "rbp": "0x7FFD965C7020",
+            "rax": "0x21",
+            "rdi": "0x21",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c6000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 33,
+            "blockAddress": "0x7FFD965C6010",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c6000      0x7ffd965c6000\nrbp            0x7ffd965c7020      0x7ffd965c7020\nrax            0x21                33"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$129 = 33"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$130 = 0x7ffd965c6010"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$131 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$132 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 33,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C4FD0",
+            "rbp": "0x7FFD965C5FF0",
+            "rax": "0x22",
+            "rdi": "0x22",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c4000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 34,
+            "blockAddress": "0x7FFD965C4FE0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c4fd0      0x7ffd965c4fd0\nrbp            0x7ffd965c5ff0      0x7ffd965c5ff0\nrax            0x22                34"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$133 = 34"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$134 = 0x7ffd965c4fe0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$135 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$136 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 34,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C3FA0",
+            "rbp": "0x7FFD965C4FC0",
+            "rax": "0x23",
+            "rdi": "0x23",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c3000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 35,
+            "blockAddress": "0x7FFD965C3FB0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c3fa0      0x7ffd965c3fa0\nrbp            0x7ffd965c4fc0      0x7ffd965c4fc0\nrax            0x23                35"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$137 = 35"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$138 = 0x7ffd965c3fb0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$139 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$140 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 35,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C2F70",
+            "rbp": "0x7FFD965C3F90",
+            "rax": "0x24",
+            "rdi": "0x24",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c2000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 36,
+            "blockAddress": "0x7FFD965C2F80",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c2f70      0x7ffd965c2f70\nrbp            0x7ffd965c3f90      0x7ffd965c3f90\nrax            0x24                36"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$141 = 36"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$142 = 0x7ffd965c2f80"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$143 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$144 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 36,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C1F40",
+            "rbp": "0x7FFD965C2F60",
+            "rax": "0x25",
+            "rdi": "0x25",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c1000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 37,
+            "blockAddress": "0x7FFD965C1F50",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c1f40      0x7ffd965c1f40\nrbp            0x7ffd965c2f60      0x7ffd965c2f60\nrax            0x25                37"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$145 = 37"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$146 = 0x7ffd965c1f50"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$147 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$148 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 37,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965C0F10",
+            "rbp": "0x7FFD965C1F30",
+            "rax": "0x26",
+            "rdi": "0x26",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965c0000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 38,
+            "blockAddress": "0x7FFD965C0F20",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965c0f10      0x7ffd965c0f10\nrbp            0x7ffd965c1f30      0x7ffd965c1f30\nrax            0x26                38"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$149 = 38"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$150 = 0x7ffd965c0f20"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$151 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$152 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 38,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965BFEE0",
+            "rbp": "0x7FFD965C0F00",
+            "rax": "0x27",
+            "rdi": "0x27",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965bf000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 39,
+            "blockAddress": "0x7FFD965BFEF0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965bfee0      0x7ffd965bfee0\nrbp            0x7ffd965c0f00      0x7ffd965c0f00\nrax            0x27                39"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$153 = 39"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$154 = 0x7ffd965bfef0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$155 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$156 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 39,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965BEEB0",
+            "rbp": "0x7FFD965BFED0",
+            "rax": "0x28",
+            "rdi": "0x28",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965be000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 40,
+            "blockAddress": "0x7FFD965BEEC0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965beeb0      0x7ffd965beeb0\nrbp            0x7ffd965bfed0      0x7ffd965bfed0\nrax            0x28                40"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$157 = 40"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$158 = 0x7ffd965beec0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$159 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$160 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 40,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965BDE80",
+            "rbp": "0x7FFD965BEEA0",
+            "rax": "0x29",
+            "rdi": "0x29",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965bd000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 41,
+            "blockAddress": "0x7FFD965BDE90",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965bde80      0x7ffd965bde80\nrbp            0x7ffd965beea0      0x7ffd965beea0\nrax            0x29                41"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$161 = 41"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$162 = 0x7ffd965bde90"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$163 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$164 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 41,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965BCE50",
+            "rbp": "0x7FFD965BDE70",
+            "rax": "0x2A",
+            "rdi": "0x2A",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965bc000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 42,
+            "blockAddress": "0x7FFD965BCE60",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965bce50      0x7ffd965bce50\nrbp            0x7ffd965bde70      0x7ffd965bde70\nrax            0x2a                42"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$165 = 42"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$166 = 0x7ffd965bce60"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$167 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$168 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 42,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965BBE20",
+            "rbp": "0x7FFD965BCE40",
+            "rax": "0x2B",
+            "rdi": "0x2B",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965bb000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 43,
+            "blockAddress": "0x7FFD965BBE30",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965bbe20      0x7ffd965bbe20\nrbp            0x7ffd965bce40      0x7ffd965bce40\nrax            0x2b                43"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$169 = 43"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$170 = 0x7ffd965bbe30"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$171 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$172 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 43,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965BADF0",
+            "rbp": "0x7FFD965BBE10",
+            "rax": "0x2C",
+            "rdi": "0x2C",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965ba000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 44,
+            "blockAddress": "0x7FFD965BAE00",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965badf0      0x7ffd965badf0\nrbp            0x7ffd965bbe10      0x7ffd965bbe10\nrax            0x2c                44"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$173 = 44"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$174 = 0x7ffd965bae00"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$175 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$176 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 44,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B9DC0",
+            "rbp": "0x7FFD965BADE0",
+            "rax": "0x2D",
+            "rdi": "0x2D",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b9000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 45,
+            "blockAddress": "0x7FFD965B9DD0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b9dc0      0x7ffd965b9dc0\nrbp            0x7ffd965bade0      0x7ffd965bade0\nrax            0x2d                45"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$177 = 45"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$178 = 0x7ffd965b9dd0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$179 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$180 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 45,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B8D90",
+            "rbp": "0x7FFD965B9DB0",
+            "rax": "0x2E",
+            "rdi": "0x2E",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b8000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 46,
+            "blockAddress": "0x7FFD965B8DA0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b8d90      0x7ffd965b8d90\nrbp            0x7ffd965b9db0      0x7ffd965b9db0\nrax            0x2e                46"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$181 = 46"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$182 = 0x7ffd965b8da0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$183 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$184 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 46,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B7D60",
+            "rbp": "0x7FFD965B8D80",
+            "rax": "0x2F",
+            "rdi": "0x2F",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b7000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 47,
+            "blockAddress": "0x7FFD965B7D70",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b7d60      0x7ffd965b7d60\nrbp            0x7ffd965b8d80      0x7ffd965b8d80\nrax            0x2f                47"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$185 = 47"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$186 = 0x7ffd965b7d70"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$187 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$188 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 47,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B6D30",
+            "rbp": "0x7FFD965B7D50",
+            "rax": "0x30",
+            "rdi": "0x30",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b6000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 48,
+            "blockAddress": "0x7FFD965B6D40",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b6d30      0x7ffd965b6d30\nrbp            0x7ffd965b7d50      0x7ffd965b7d50\nrax            0x30                48"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$189 = 48"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$190 = 0x7ffd965b6d40"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$191 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$192 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 48,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B5D00",
+            "rbp": "0x7FFD965B6D20",
+            "rax": "0x31",
+            "rdi": "0x31",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b5000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 49,
+            "blockAddress": "0x7FFD965B5D10",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b5d00      0x7ffd965b5d00\nrbp            0x7ffd965b6d20      0x7ffd965b6d20\nrax            0x31                49"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$193 = 49"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$194 = 0x7ffd965b5d10"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$195 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$196 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 49,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B4CD0",
+            "rbp": "0x7FFD965B5CF0",
+            "rax": "0x32",
+            "rdi": "0x32",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b4000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 50,
+            "blockAddress": "0x7FFD965B4CE0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b4cd0      0x7ffd965b4cd0\nrbp            0x7ffd965b5cf0      0x7ffd965b5cf0\nrax            0x32                50"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$197 = 50"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$198 = 0x7ffd965b4ce0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$199 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$200 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 50,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B3CA0",
+            "rbp": "0x7FFD965B4CC0",
+            "rax": "0x33",
+            "rdi": "0x33",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b3000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 51,
+            "blockAddress": "0x7FFD965B3CB0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b3ca0      0x7ffd965b3ca0\nrbp            0x7ffd965b4cc0      0x7ffd965b4cc0\nrax            0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$201 = 51"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$202 = 0x7ffd965b3cb0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$203 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$204 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 51,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B2C70",
+            "rbp": "0x7FFD965B3C90",
+            "rax": "0x34",
+            "rdi": "0x34",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b2000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 52,
+            "blockAddress": "0x7FFD965B2C80",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b2c70      0x7ffd965b2c70\nrbp            0x7ffd965b3c90      0x7ffd965b3c90\nrax            0x34                52"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$205 = 52"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$206 = 0x7ffd965b2c80"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$207 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$208 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 52,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B1C40",
+            "rbp": "0x7FFD965B2C60",
+            "rax": "0x35",
+            "rdi": "0x35",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b1000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 53,
+            "blockAddress": "0x7FFD965B1C50",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b1c40      0x7ffd965b1c40\nrbp            0x7ffd965b2c60      0x7ffd965b2c60\nrax            0x35                53"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$209 = 53"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$210 = 0x7ffd965b1c50"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$211 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$212 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 53,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965B0C10",
+            "rbp": "0x7FFD965B1C30",
+            "rax": "0x36",
+            "rdi": "0x36",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965b0000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 54,
+            "blockAddress": "0x7FFD965B0C20",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965b0c10      0x7ffd965b0c10\nrbp            0x7ffd965b1c30      0x7ffd965b1c30\nrax            0x36                54"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$213 = 54"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$214 = 0x7ffd965b0c20"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$215 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$216 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 54,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965AFBE0",
+            "rbp": "0x7FFD965B0C00",
+            "rax": "0x37",
+            "rdi": "0x37",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965af000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 55,
+            "blockAddress": "0x7FFD965AFBF0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965afbe0      0x7ffd965afbe0\nrbp            0x7ffd965b0c00      0x7ffd965b0c00\nrax            0x37                55"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$217 = 55"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$218 = 0x7ffd965afbf0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$219 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$220 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 55,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965AEBB0",
+            "rbp": "0x7FFD965AFBD0",
+            "rax": "0x38",
+            "rdi": "0x38",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965ae000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 56,
+            "blockAddress": "0x7FFD965AEBC0",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965aebb0      0x7ffd965aebb0\nrbp            0x7ffd965afbd0      0x7ffd965afbd0\nrax            0x38                56"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$221 = 56"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$222 = 0x7ffd965aebc0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$223 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$224 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 56,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965ADB80",
+            "rbp": "0x7FFD965AEBA0",
+            "rax": "0x39",
+            "rdi": "0x39",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965ad000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 57,
+            "blockAddress": "0x7FFD965ADB90",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965adb80      0x7ffd965adb80\nrbp            0x7ffd965aeba0      0x7ffd965aeba0\nrax            0x39                57"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$225 = 57"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$226 = 0x7ffd965adb90"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$227 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$228 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 57,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965ACB50",
+            "rbp": "0x7FFD965ADB70",
+            "rax": "0x3A",
+            "rdi": "0x3A",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965ac000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 58,
+            "blockAddress": "0x7FFD965ACB60",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965acb50      0x7ffd965acb50\nrbp            0x7ffd965adb70      0x7ffd965adb70\nrax            0x3a                58"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$229 = 58"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$230 = 0x7ffd965acb60"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$231 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$232 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 58,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965ABB20",
+            "rbp": "0x7FFD965ACB40",
+            "rax": "0x3B",
+            "rdi": "0x3B",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965ab000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 59,
+            "blockAddress": "0x7FFD965ABB30",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965abb20      0x7ffd965abb20\nrbp            0x7ffd965acb40      0x7ffd965acb40\nrax            0x3b                59"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$233 = 59"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$234 = 0x7ffd965abb30"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$235 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$236 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 59,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91E6",
+            "rsp": "0x7FFD965AAAF0",
+            "rbp": "0x7FFD965ABB10",
+            "rax": "0x3C",
+            "rdi": "0x3C",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965aa000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 60,
+            "blockAddress": "0x7FFD965AAB00",
+            "blockBytes": 4096,
+            "savedReturn": "0x61142E8C9216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>\nrsp            0x7ffd965aaaf0      0x7ffd965aaaf0\nrbp            0x7ffd965abb10      0x7ffd965abb10\nrax            0x3c                60"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$237 = 60"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$238 = 0x7ffd965aab00"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$239 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$240 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 60,
+          "event": "signal",
+          "phase": 1,
+          "pid": 1065564,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 12,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 12,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x61142E8C91B8",
+            "rsp": "0x7FFD965A9AE0",
+            "rbp": "0x7FFD965AAAE0",
+            "rax": "0x3D",
+            "rdi": "0x3D",
+            "rsi": "0x61142E8CA00C"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 0,
+            "stackMapping": "7ffd965a9000-7ffd965ea000 rw-p 00000000 00:00 0                          [stack]",
+            "recursiveFrames": [
+              {
+                "function": "f",
+                "pc": "0x61142E8C91B8"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              },
+              {
+                "function": "f",
+                "pc": "0x61142E8C9216"
+              }
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x61142e8c91b8      0x61142e8c91b8 <f+15>\nrsp            0x7ffd965a9ae0      0x7ffd965a9ae0\nrbp            0x7ffd965aaae0      0x7ffd965aaae0\nrax            0x3d                61"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61142e8c91b8 <f+15>:\torq    $0x0,(%rsp)"
+            },
+            {
+              "command": "p $_siginfo",
+              "output": "$241 = {si_signo = 11, si_errno = 0, si_code = 1, _sifields = {_pad = {-1772447008, 32765, 0 <repeats 26 times>}, _kill = {si_pid = -1772447008, si_uid = 32765}, _timer = {si_tid = -1772447008, si_overrun = 32765, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _rt = {si_pid = -1772447008, si_uid = 32765, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _sigchld = {si_pid = -1772447008, si_uid = 32765, si_status = 0, si_utime = 0, si_stime = 0}, _sigfault = {si_addr = 0x7ffd965a9ae0, _addr_lsb = 0, _addr_bnd = {_lower = 0x0, _upper = 0x0}}, _sigpoll = {si_band = 140727125973728, si_fd = 0}, _sigsys = {_call_addr = 0x7ffd965a9ae0, _syscall = 0, _arch = 0}}}"
+            },
+            {
+              "command": "bt 8",
+              "output": "#0  0x000061142e8c91b8 in f (depth=0) at experiments/stack-recursion.c:12\n#1  0x000061142e8c9216 in f (depth=60) at experiments/stack-recursion.c:20\n#2  0x000061142e8c9216 in f (depth=59) at experiments/stack-recursion.c:20\n#3  0x000061142e8c9216 in f (depth=58) at experiments/stack-recursion.c:20\n#4  0x000061142e8c9216 in f (depth=57) at experiments/stack-recursion.c:20\n#5  0x000061142e8c9216 in f (depth=56) at experiments/stack-recursion.c:20\n#6  0x000061142e8c9216 in f (depth=55) at experiments/stack-recursion.c:20\n#7  0x000061142e8c9216 in f (depth=54) at experiments/stack-recursion.c:20"
+            }
+          ],
+          "signal": {
+            "name": "SIGSEGV",
+            "number": 11,
+            "code": 1,
+            "address": "0x7FFD965A9AE0"
+          }
+        }
+      ],
+      "stdout": ""
+    },
+    "bounded": {
+      "case": "bounded",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C61E6",
+            "rsp": "0x7FFE5A6537C0",
+            "rbp": "0x7FFE5A6547E0",
+            "rax": "0x1",
+            "rdi": "0x1",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 1,
+            "blockAddress": "0x7FFE5A6537D0",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6343"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>\nrsp            0x7ffe5a6537c0      0x7ffe5a6537c0\nrbp            0x7ffe5a6547e0      0x7ffe5a6547e0\nrax            0x1                 1"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c61e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$1 = 1"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$2 = 0x7ffe5a6537d0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$3 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$4 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C61E6",
+            "rsp": "0x7FFE5A652790",
+            "rbp": "0x7FFE5A6537B0",
+            "rax": "0x2",
+            "rdi": "0x2",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 2,
+            "blockAddress": "0x7FFE5A6527A0",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>\nrsp            0x7ffe5a652790      0x7ffe5a652790\nrbp            0x7ffe5a6537b0      0x7ffe5a6537b0\nrax            0x2                 2"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c61e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$5 = 2"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$6 = 0x7ffe5a6527a0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$7 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$8 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C61E6",
+            "rsp": "0x7FFE5A651760",
+            "rbp": "0x7FFE5A652780",
+            "rax": "0x3",
+            "rdi": "0x3",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 3,
+            "blockAddress": "0x7FFE5A651770",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>\nrsp            0x7ffe5a651760      0x7ffe5a651760\nrbp            0x7ffe5a652780      0x7ffe5a652780\nrax            0x3                 3"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c61e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$9 = 3"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$10 = 0x7ffe5a651770"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$11 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$12 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 17,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C61E6",
+            "rsp": "0x7FFE5A650730",
+            "rbp": "0x7FFE5A651750",
+            "rax": "0x4",
+            "rdi": "0x4",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 4,
+            "blockAddress": "0x7FFE5A650740",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6216"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>\nrsp            0x7ffe5a650730      0x7ffe5a650730\nrbp            0x7ffe5a651750      0x7ffe5a651750\nrax            0x4                 4"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c61e6 <f+61>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$13 = 4"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$14 = 0x7ffe5a650740"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$15 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$16 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C6223",
+            "rsp": "0x7FFE5A650730",
+            "rbp": "0x7FFE5A651750",
+            "rax": "0x4",
+            "rdi": "0x4",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 4,
+            "blockAddress": "0x7FFE5A650740",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6216",
+            "childResult": 0
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c6223      0x5d46952c6223 <f+122>\nrsp            0x7ffe5a650730      0x7ffe5a650730\nrbp            0x7ffe5a651750      0x7ffe5a651750\nrax            0x4                 4"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c6223 <f+122>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$17 = 4"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$18 = 0x7ffe5a650740"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$19 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$20 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C6223",
+            "rsp": "0x7FFE5A651760",
+            "rbp": "0x7FFE5A652780",
+            "rax": "0x4",
+            "rdi": "0x4",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 3,
+            "blockAddress": "0x7FFE5A651770",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6216",
+            "childResult": 4
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c6223      0x5d46952c6223 <f+122>\nrsp            0x7ffe5a651760      0x7ffe5a651760\nrbp            0x7ffe5a652780      0x7ffe5a652780\nrax            0x4                 4"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c6223 <f+122>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$21 = 3"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$22 = 0x7ffe5a651770"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$23 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$24 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C6223",
+            "rsp": "0x7FFE5A652790",
+            "rbp": "0x7FFE5A6537B0",
+            "rax": "0x7",
+            "rdi": "0x4",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 2,
+            "blockAddress": "0x7FFE5A6527A0",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6216",
+            "childResult": 7
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c6223      0x5d46952c6223 <f+122>\nrsp            0x7ffe5a652790      0x7ffe5a652790\nrbp            0x7ffe5a6537b0      0x7ffe5a6537b0\nrax            0x7                 7"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c6223 <f+122>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$25 = 2"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$26 = 0x7ffe5a6527a0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$27 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$28 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 22,
+            "function": "f"
+          },
+          "registers": {
+            "rip": "0x5D46952C6223",
+            "rsp": "0x7FFE5A6537C0",
+            "rbp": "0x7FFE5A6547E0",
+            "rax": "0x9",
+            "rdi": "0x4",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "depth": 1,
+            "blockAddress": "0x7FFE5A6537D0",
+            "blockBytes": 4096,
+            "savedReturn": "0x5D46952C6343",
+            "childResult": 9
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c6223      0x5d46952c6223 <f+122>\nrsp            0x7ffe5a6537c0      0x7ffe5a6537c0\nrbp            0x7ffe5a6547e0      0x7ffe5a6547e0\nrax            0x9                 9"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c6223 <f+122>:\tnop"
+            },
+            {
+              "command": "p depth",
+              "output": "$29 = 1"
+            },
+            {
+              "command": "p/x &block[0]",
+              "output": "$30 = 0x7ffe5a6537d0"
+            },
+            {
+              "command": "p sizeof block",
+              "output": "$31 = 4096"
+            },
+            {
+              "command": "p stack_limit",
+              "output": "$32 = 262144"
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "event": "phase-3",
+          "phase": 3,
+          "pid": 1065577,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/stack-recursion.c",
+            "line": 43,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/stack-recursion.c",
+            "line": 43,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5D46952C6353",
+            "rsp": "0x7FFE5A6547F0",
+            "rbp": "0x7FFE5A654820",
+            "rax": "0xA",
+            "rdi": "0x4",
+            "rsi": "0x5D46952C7004"
+          },
+          "fields": {
+            "stackLimit": 262144,
+            "boundedDepth": 4,
+            "stackMapping": "7ffe5a635000-7ffe5a657000 rw-p 00000000 00:00 0                          [stack]",
+            "result": 10
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5d46952c6353      0x5d46952c6353 <main+286>\nrsp            0x7ffe5a6547f0      0x7ffe5a6547f0\nrbp            0x7ffe5a654820      0x7ffe5a654820\nrax            0xa                 10"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5d46952c6353 <main+286>:\tnop"
+            },
+            {
+              "command": "p observed_sum",
+              "output": "$33 = 10"
+            }
+          ]
+        }
+      ],
+      "stdout": "bounded sum = 10\n"
+    }
+  }
+}

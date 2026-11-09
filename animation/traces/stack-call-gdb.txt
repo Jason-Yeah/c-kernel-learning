@@ -1,0 +1,167 @@
+Captured: 2026-11-05T13:41:09.852Z
+Source SHA256: d04d1f7d6ac99d8faba01eae7f63568ef445fa4dc5ff6ff98da3a310379645f1
+ELF SHA256: e0e63c966d73138806e923651de6a3a51a4cd473616c4994f474620a8dfbe46f
+Compile: gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic experiments/stack-call.c -o .trace-build/stack-call
+
+$ gdb -nx -q -batch -x scripts/gdb-stack.py
+Disabling randomization of debuggee's virtual address space is off.
+Temporary breakpoint 1 at 0x1183: file experiments/stack-call.c, line 22.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+=== main_before_call / sample 0 ===
+rip            0x6508b5907188      0x6508b5907188 <main+17>
+rsp            0x7ffdd8a5a820      0x7ffdd8a5a820
+rbp            0x7ffdd8a5a830      0x7ffdd8a5a830
+rdi            0x3                 3
+rsi            0x7ffdd8a5a958      140728238188888
+rax            0x6508b5907177      111088080286071
+0x7ffdd8a5a820:	0x00007ffdd8a5a910	0x00007ffdd8a5a958
+0x7ffdd8a5a830:	0x00007ffdd8a5a8d0	0x0000792c4342a1ca
+0x7ffdd8a5a840:	0x00007ffdd8a5a880	0x00007ffdd8a5a958
+0x7ffdd8a5a850:	0x00000001b5906040	0x00006508b5907177
+=> 0x6508b5907188 <main+17>:	call   0x6508b590714b <caller>
+
+=== caller_entry / sample 1 ===
+rip            0x6508b590714b      0x6508b590714b <caller>
+rsp            0x7ffdd8a5a818      0x7ffdd8a5a818
+rbp            0x7ffdd8a5a830      0x7ffdd8a5a830
+rdi            0x3                 3
+rsi            0x7ffdd8a5a958      140728238188888
+rax            0x6508b5907177      111088080286071
+0x7ffdd8a5a818:	0x00006508b590718d	0x00007ffdd8a5a910
+0x7ffdd8a5a828:	0x00007ffdd8a5a958	0x00007ffdd8a5a8d0
+0x7ffdd8a5a838:	0x0000792c4342a1ca	0x00007ffdd8a5a880
+0x7ffdd8a5a848:	0x00007ffdd8a5a958	0x00000001b5906040
+=> 0x6508b590714b <caller>:	endbr64
+
+=== caller_frame_ready / sample 8 ===
+rip            0x6508b5907160      0x6508b5907160 <caller+21>
+rsp            0x7ffdd8a5a7f0      0x7ffdd8a5a7f0
+rbp            0x7ffdd8a5a810      0x7ffdd8a5a810
+rdi            0x3                 3
+rsi            0x7ffdd8a5a958      140728238188888
+rax            0x3                 3
+0x7ffdd8a5a7f0:	0x0000000000000000	0x0000000300000000
+0x7ffdd8a5a800:	0x0000000000000000	0x0000000000000003
+0x7ffdd8a5a810:	0x00007ffdd8a5a830	0x00006508b590718d
+0x7ffdd8a5a820:	0x00007ffdd8a5a910	0x00007ffdd8a5a958
+=> 0x6508b5907160 <caller+21>:	mov    -0x8(%rbp),%eax
+
+=== caller_before_add / sample 11 ===
+rip            0x6508b590716a      0x6508b590716a <caller+31>
+rsp            0x7ffdd8a5a7f0      0x7ffdd8a5a7f0
+rbp            0x7ffdd8a5a810      0x7ffdd8a5a810
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x3                 3
+0x7ffdd8a5a7f0:	0x0000000000000000	0x0000000300000000
+0x7ffdd8a5a800:	0x0000000000000000	0x0000000000000003
+0x7ffdd8a5a810:	0x00007ffdd8a5a830	0x00006508b590718d
+0x7ffdd8a5a820:	0x00007ffdd8a5a910	0x00007ffdd8a5a958
+=> 0x6508b590716a <caller+31>:	call   0x6508b5907129 <add>
+
+=== add_entry / sample 12 ===
+rip            0x6508b5907129      0x6508b5907129 <add>
+rsp            0x7ffdd8a5a7e8      0x7ffdd8a5a7e8
+rbp            0x7ffdd8a5a810      0x7ffdd8a5a810
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x3                 3
+0x7ffdd8a5a7e8:	0x00006508b590716f	0x0000000000000000
+0x7ffdd8a5a7f8:	0x0000000300000000	0x0000000000000000
+0x7ffdd8a5a808:	0x0000000000000003	0x00007ffdd8a5a830
+0x7ffdd8a5a818:	0x00006508b590718d	0x00007ffdd8a5a910
+=> 0x6508b5907129 <add>:	endbr64
+
+=== add_frame_ready / sample 18 ===
+rip            0x6508b590713b      0x6508b590713b <add+18>
+rsp            0x7ffdd8a5a7c8      0x7ffdd8a5a7c8
+rbp            0x7ffdd8a5a7e0      0x7ffdd8a5a7e0
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x3                 3
+0x7ffdd8a5a7c8:	0x0000000300000002	0x000000b700000006
+0x7ffdd8a5a7d8:	0x0000000000000000	0x00007ffdd8a5a810
+0x7ffdd8a5a7e8:	0x00006508b590716f	0x0000000000000000
+0x7ffdd8a5a7f8:	0x0000000300000000	0x0000000000000000
+=> 0x6508b590713b <add+18>:	mov    -0x14(%rbp),%edx
+
+=== add_result_ready / sample 22 ===
+rip            0x6508b5907146      0x6508b5907146 <add+29>
+rsp            0x7ffdd8a5a7c8      0x7ffdd8a5a7c8
+rbp            0x7ffdd8a5a7e0      0x7ffdd8a5a7e0
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x5                 5
+0x7ffdd8a5a7c8:	0x0000000300000002	0x000000b700000006
+0x7ffdd8a5a7d8:	0x0000000500000000	0x00007ffdd8a5a810
+0x7ffdd8a5a7e8:	0x00006508b590716f	0x0000000000000000
+0x7ffdd8a5a7f8:	0x0000000300000000	0x0000000000000000
+=> 0x6508b5907146 <add+29>:	mov    -0x4(%rbp),%eax
+
+=== add_ret / sample 24 ===
+rip            0x6508b590714a      0x6508b590714a <add+33>
+rsp            0x7ffdd8a5a7e8      0x7ffdd8a5a7e8
+rbp            0x7ffdd8a5a810      0x7ffdd8a5a810
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x5                 5
+0x7ffdd8a5a7e8:	0x00006508b590716f	0x0000000000000000
+0x7ffdd8a5a7f8:	0x0000000300000000	0x0000000000000000
+0x7ffdd8a5a808:	0x0000000000000003	0x00007ffdd8a5a830
+0x7ffdd8a5a818:	0x00006508b590718d	0x00007ffdd8a5a910
+=> 0x6508b590714a <add+33>:	ret
+
+=== caller_after_add / sample 25 ===
+rip            0x6508b590716f      0x6508b590716f <caller+36>
+rsp            0x7ffdd8a5a7f0      0x7ffdd8a5a7f0
+rbp            0x7ffdd8a5a810      0x7ffdd8a5a810
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x5                 5
+0x7ffdd8a5a7f0:	0x0000000000000000	0x0000000300000000
+0x7ffdd8a5a800:	0x0000000000000000	0x0000000000000003
+0x7ffdd8a5a810:	0x00007ffdd8a5a830	0x00006508b590718d
+0x7ffdd8a5a820:	0x00007ffdd8a5a910	0x00007ffdd8a5a958
+=> 0x6508b590716f <caller+36>:	mov    %eax,-0x4(%rbp)
+
+=== caller_ret / sample 28 ===
+rip            0x6508b5907176      0x6508b5907176 <caller+43>
+rsp            0x7ffdd8a5a818      0x7ffdd8a5a818
+rbp            0x7ffdd8a5a830      0x7ffdd8a5a830
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x5                 5
+0x7ffdd8a5a818:	0x00006508b590718d	0x00007ffdd8a5a910
+0x7ffdd8a5a828:	0x00007ffdd8a5a958	0x00007ffdd8a5a8d0
+0x7ffdd8a5a838:	0x0000792c4342a1ca	0x00007ffdd8a5a880
+0x7ffdd8a5a848:	0x00007ffdd8a5a958	0x00000001b5906040
+=> 0x6508b5907176 <caller+43>:	ret
+
+=== main_after_call / sample 29 ===
+rip            0x6508b590718d      0x6508b590718d <main+22>
+rsp            0x7ffdd8a5a820      0x7ffdd8a5a820
+rbp            0x7ffdd8a5a830      0x7ffdd8a5a830
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x5                 5
+0x7ffdd8a5a820:	0x00007ffdd8a5a910	0x00007ffdd8a5a958
+0x7ffdd8a5a830:	0x00007ffdd8a5a8d0	0x0000792c4342a1ca
+0x7ffdd8a5a840:	0x00007ffdd8a5a880	0x00007ffdd8a5a958
+0x7ffdd8a5a850:	0x00000001b5906040	0x00006508b5907177
+=> 0x6508b590718d <main+22>:	mov    %eax,-0x4(%rbp)
+
+=== main_result_stored / sample 30 ===
+rip            0x6508b5907190      0x6508b5907190 <main+25>
+rsp            0x7ffdd8a5a820      0x7ffdd8a5a820
+rbp            0x7ffdd8a5a830      0x7ffdd8a5a830
+rdi            0x3                 3
+rsi            0x2                 2
+rax            0x5                 5
+0x7ffdd8a5a820:	0x00007ffdd8a5a910	0x00000005d8a5a958
+0x7ffdd8a5a830:	0x00007ffdd8a5a8d0	0x0000792c4342a1ca
+0x7ffdd8a5a840:	0x00007ffdd8a5a880	0x00007ffdd8a5a958
+0x7ffdd8a5a850:	0x00000001b5906040	0x00006508b5907177
+=> 0x6508b5907190 <main+25>:	cmpl   $0x5,-0x4(%rbp)
+

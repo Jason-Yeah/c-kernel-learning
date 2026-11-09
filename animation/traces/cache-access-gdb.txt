@@ -1,0 +1,272 @@
+Captured: 2026-11-05T13:41:11.164Z
+Source SHA256: 71809a95828dc7a1d6ab5d3841cab670bd715a11b6fb5ff347e092c2e9e37805
+ELF SHA256: 44f70143c0e7fc94904fdb349da86a4b9ea1116e61ca64546e5d13196c24f466
+Compile: gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/cache-access.c -o .trace-build/cache-access
+Scope: Actual C addresses, bytes and loads. GDB perturbs Cache and cannot observe hardware tags/LRU/HIT; the four-set two-way eight-byte Cache is an explicit mechanism model.
+
+=== RUN default ===
+(gdb) run > .trace-build/cache-access-default.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+
+=== default / phase-1 / PID 1065596 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea36191      0x62490ea36191 <main+72>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0xff                255
+
+(gdb) x/i $rip
+=> 0x62490ea36191 <main+72>:	nop
+
+(gdb) p/x &memory[0]
+$1 = 0x62490ea39080
+
+(gdb) x/16bx &memory[0]
+0x62490ea39080 <memory>:	0x11	0x18	0x1f	0x26	0x2d	0x34	0x3b	0x42
+0x62490ea39088 <memory+8>:	0x49	0x50	0x57	0x5e	0x65	0x6c	0x73	0x7a
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0x11                17
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$2 = 0
+
+(gdb) p/x target
+$3 = 0x62490ea39080
+
+(gdb) x/1bx target
+0x62490ea39080 <memory>:	0x11
+
+(gdb) p/x value
+$4 = 0x11
+
+(gdb) p/x $al
+$5 = 0x11
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 2 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0x26                38
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$6 = 1
+
+(gdb) p/x target
+$7 = 0x62490ea39083
+
+(gdb) x/1bx target
+0x62490ea39083 <memory+3>:	0x26
+
+(gdb) p/x value
+$8 = 0x26
+
+(gdb) p/x $al
+$9 = 0x26
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 3 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0xf1                241
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$10 = 2
+
+(gdb) p/x target
+$11 = 0x62490ea390a0
+
+(gdb) x/1bx target
+0x62490ea390a0 <memory+32>:	0xf1
+
+(gdb) p/x value
+$12 = 0xf1
+
+(gdb) p/x $al
+$13 = 0xf1
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 4 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0x11                17
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$14 = 3
+
+(gdb) p/x target
+$15 = 0x62490ea39080
+
+(gdb) x/1bx target
+0x62490ea39080 <memory>:	0x11
+
+(gdb) p/x value
+$16 = 0x11
+
+(gdb) p/x $al
+$17 = 0x11
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 5 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0xd1                209
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$18 = 4
+
+(gdb) p/x target
+$19 = 0x62490ea390c0
+
+(gdb) x/1bx target
+0x62490ea390c0 <memory+64>:	0xd1
+
+(gdb) p/x value
+$20 = 0xd1
+
+(gdb) p/x $al
+$21 = 0xd1
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 6 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0xf1                241
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$22 = 5
+
+(gdb) p/x target
+$23 = 0x62490ea390a0
+
+(gdb) x/1bx target
+0x62490ea390a0 <memory+32>:	0xf1
+
+(gdb) p/x value
+$24 = 0xf1
+
+(gdb) p/x $al
+$25 = 0xf1
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 7 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0x49                73
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$26 = 6
+
+(gdb) p/x target
+$27 = 0x62490ea39088
+
+(gdb) x/1bx target
+0x62490ea39088 <memory+8>:	0x49
+
+(gdb) p/x value
+$28 = 0x49
+
+(gdb) p/x $al
+$29 = 0x49
+
+(gdb) continue
+
+
+
+=== default / phase-2 / PID 1065596 / sample 8 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x62490ea361fe      0x62490ea361fe <main+181>
+rsp            0x7ffdd655a650      0x7ffdd655a650
+rbp            0x7ffdd655a660      0x7ffdd655a660
+rax            0x65                101
+
+(gdb) x/i $rip
+=> 0x62490ea361fe <main+181>:	nop
+
+(gdb) p step
+$30 = 7
+
+(gdb) p/x target
+$31 = 0x62490ea3908c
+
+(gdb) x/1bx target
+0x62490ea3908c <memory+12>:	0x65
+
+(gdb) p/x value
+$32 = 0x65
+
+(gdb) p/x $al
+$33 = 0x65
+
+(gdb) continue
+

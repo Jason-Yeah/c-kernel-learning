@@ -1,0 +1,3366 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "kind": "gdb-measured",
+    "capturedAt": "2026-11-05T13:41:09.852Z",
+    "source": {
+      "path": "experiments/stack-call.c",
+      "sha256": "d04d1f7d6ac99d8faba01eae7f63568ef445fa4dc5ff6ff98da3a310379645f1",
+      "content": "/* Safe, single-threaded experiment for GDB-driven animation.\n * Compilation and capture: npm run capture:stack\n * No buffer overflow, process injection or system-wide setting changes.\n */\n__attribute__((noinline))\nint add(int a, int b)\n{\n    int sum = a + b;\n    return sum; /* TRACE_ADD_RESULT */\n}\n\n__attribute__((noinline))\nint caller(int n)\n{\n    int local = n;\n    int result = add(local, 2); /* TRACE_CALL_ADD */\n    return result;\n}\n\nint main(void)\n{\n    int result = caller(3); /* TRACE_CALL_CALLER */\n    return result == 5 ? 0 : 1;\n}\n"
+    },
+    "binary": {
+      "path": ".trace-build/stack-call",
+      "sha256": "e0e63c966d73138806e923651de6a3a51a4cd473616c4994f474620a8dfbe46f"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic experiments/stack-call.c -o .trace-build/stack-call",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-fno-ipa-stack-alignment",
+      "-mno-red-zone",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "replay": "Offline replay of one capture; this website does not run GDB.",
+    "variableCaution": "Variables seen in scope may be uninitialized at entry. Animation uses register arguments before the prologue, and only verified locals after initialization.",
+    "geometryCaution": "Addresses and values are measured. Layout, arrows and teaching timing are designed, not a recording of CPU timing."
+  },
+  "architecture": "i386:x86-64",
+  "endian": "The target endianness is set automatically (currently little endian).",
+  "exitCode": 0,
+  "functions": {
+    "main": {
+      "address": "0x6508B5907177",
+      "source": [
+        {
+          "line": 20,
+          "text": "int main(void)"
+        },
+        {
+          "line": 21,
+          "text": "{"
+        },
+        {
+          "line": 22,
+          "text": "    int result = caller(3); /* TRACE_CALL_CALLER */"
+        },
+        {
+          "line": 23,
+          "text": "    return result == 5 ? 0 : 1;"
+        },
+        {
+          "line": 24,
+          "text": "}"
+        }
+      ],
+      "instructions": [
+        {
+          "address": "0x6508B5907177",
+          "length": 4,
+          "asm": "endbr64"
+        },
+        {
+          "address": "0x6508B590717B",
+          "length": 1,
+          "asm": "push   %rbp"
+        },
+        {
+          "address": "0x6508B590717C",
+          "length": 3,
+          "asm": "mov    %rsp,%rbp"
+        },
+        {
+          "address": "0x6508B590717F",
+          "length": 4,
+          "asm": "sub    $0x10,%rsp"
+        },
+        {
+          "address": "0x6508B5907183",
+          "length": 5,
+          "asm": "mov    $0x3,%edi"
+        },
+        {
+          "address": "0x6508B5907188",
+          "length": 5,
+          "asm": "call   0x6508b590714b <caller>"
+        },
+        {
+          "address": "0x6508B590718D",
+          "length": 3,
+          "asm": "mov    %eax,-0x4(%rbp)"
+        },
+        {
+          "address": "0x6508B5907190",
+          "length": 4,
+          "asm": "cmpl   $0x5,-0x4(%rbp)"
+        },
+        {
+          "address": "0x6508B5907194",
+          "length": 3,
+          "asm": "setne  %al"
+        },
+        {
+          "address": "0x6508B5907197",
+          "length": 3,
+          "asm": "movzbl %al,%eax"
+        },
+        {
+          "address": "0x6508B590719A",
+          "length": 1,
+          "asm": "leave"
+        },
+        {
+          "address": "0x6508B590719B",
+          "length": 1,
+          "asm": "ret"
+        }
+      ]
+    },
+    "caller": {
+      "address": "0x6508B590714B",
+      "source": [
+        {
+          "line": 13,
+          "text": "int caller(int n)"
+        },
+        {
+          "line": 14,
+          "text": "{"
+        },
+        {
+          "line": 15,
+          "text": "    int local = n;"
+        },
+        {
+          "line": 16,
+          "text": "    int result = add(local, 2); /* TRACE_CALL_ADD */"
+        },
+        {
+          "line": 17,
+          "text": "    return result;"
+        },
+        {
+          "line": 18,
+          "text": "}"
+        }
+      ],
+      "instructions": [
+        {
+          "address": "0x6508B590714B",
+          "length": 4,
+          "asm": "endbr64"
+        },
+        {
+          "address": "0x6508B590714F",
+          "length": 1,
+          "asm": "push   %rbp"
+        },
+        {
+          "address": "0x6508B5907150",
+          "length": 3,
+          "asm": "mov    %rsp,%rbp"
+        },
+        {
+          "address": "0x6508B5907153",
+          "length": 4,
+          "asm": "sub    $0x20,%rsp"
+        },
+        {
+          "address": "0x6508B5907157",
+          "length": 3,
+          "asm": "mov    %edi,-0x14(%rbp)"
+        },
+        {
+          "address": "0x6508B590715A",
+          "length": 3,
+          "asm": "mov    -0x14(%rbp),%eax"
+        },
+        {
+          "address": "0x6508B590715D",
+          "length": 3,
+          "asm": "mov    %eax,-0x8(%rbp)"
+        },
+        {
+          "address": "0x6508B5907160",
+          "length": 3,
+          "asm": "mov    -0x8(%rbp),%eax"
+        },
+        {
+          "address": "0x6508B5907163",
+          "length": 5,
+          "asm": "mov    $0x2,%esi"
+        },
+        {
+          "address": "0x6508B5907168",
+          "length": 2,
+          "asm": "mov    %eax,%edi"
+        },
+        {
+          "address": "0x6508B590716A",
+          "length": 5,
+          "asm": "call   0x6508b5907129 <add>"
+        },
+        {
+          "address": "0x6508B590716F",
+          "length": 3,
+          "asm": "mov    %eax,-0x4(%rbp)"
+        },
+        {
+          "address": "0x6508B5907172",
+          "length": 3,
+          "asm": "mov    -0x4(%rbp),%eax"
+        },
+        {
+          "address": "0x6508B5907175",
+          "length": 1,
+          "asm": "leave"
+        },
+        {
+          "address": "0x6508B5907176",
+          "length": 1,
+          "asm": "ret"
+        }
+      ]
+    },
+    "add": {
+      "address": "0x6508B5907129",
+      "source": [
+        {
+          "line": 6,
+          "text": "int add(int a, int b)"
+        },
+        {
+          "line": 7,
+          "text": "{"
+        },
+        {
+          "line": 8,
+          "text": "    int sum = a + b;"
+        },
+        {
+          "line": 9,
+          "text": "    return sum; /* TRACE_ADD_RESULT */"
+        },
+        {
+          "line": 10,
+          "text": "}"
+        }
+      ],
+      "instructions": [
+        {
+          "address": "0x6508B5907129",
+          "length": 4,
+          "asm": "endbr64"
+        },
+        {
+          "address": "0x6508B590712D",
+          "length": 1,
+          "asm": "push   %rbp"
+        },
+        {
+          "address": "0x6508B590712E",
+          "length": 3,
+          "asm": "mov    %rsp,%rbp"
+        },
+        {
+          "address": "0x6508B5907131",
+          "length": 4,
+          "asm": "sub    $0x18,%rsp"
+        },
+        {
+          "address": "0x6508B5907135",
+          "length": 3,
+          "asm": "mov    %edi,-0x14(%rbp)"
+        },
+        {
+          "address": "0x6508B5907138",
+          "length": 3,
+          "asm": "mov    %esi,-0x18(%rbp)"
+        },
+        {
+          "address": "0x6508B590713B",
+          "length": 3,
+          "asm": "mov    -0x14(%rbp),%edx"
+        },
+        {
+          "address": "0x6508B590713E",
+          "length": 3,
+          "asm": "mov    -0x18(%rbp),%eax"
+        },
+        {
+          "address": "0x6508B5907141",
+          "length": 2,
+          "asm": "add    %edx,%eax"
+        },
+        {
+          "address": "0x6508B5907143",
+          "length": 3,
+          "asm": "mov    %eax,-0x4(%rbp)"
+        },
+        {
+          "address": "0x6508B5907146",
+          "length": 3,
+          "asm": "mov    -0x4(%rbp),%eax"
+        },
+        {
+          "address": "0x6508B5907149",
+          "length": 1,
+          "asm": "leave"
+        },
+        {
+          "address": "0x6508B590714A",
+          "length": 1,
+          "asm": "ret"
+        }
+      ]
+    }
+  },
+  "events": {
+    "main_before_call": 0,
+    "caller_entry": 1,
+    "caller_frame_ready": 8,
+    "caller_before_add": 11,
+    "add_entry": 12,
+    "add_frame_ready": 18,
+    "add_result_ready": 22,
+    "add_ret": 24,
+    "caller_after_add": 25,
+    "caller_ret": 28,
+    "main_after_call": 29,
+    "main_result_stored": 30
+  },
+  "samples": [
+    {
+      "index": 0,
+      "pc": "0x6508B5907188",
+      "registers": {
+        "rip": "0x6508B5907188",
+        "rsp": "0x7FFDD8A5A820",
+        "rbp": "0x7FFDD8A5A830",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x6508B5907177"
+      },
+      "instruction": "call   0x6508b590714b <caller>",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 22
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A850",
+          "value": "0x1B5906040",
+          "bytes": "40 60 90 B5 01 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A858",
+          "value": "0x6508B5907177",
+          "bytes": "77 71 90 B5 08 65 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "pc": "0x6508B590714B",
+      "registers": {
+        "rip": "0x6508B590714B",
+        "rsp": "0x7FFDD8A5A818",
+        "rbp": "0x7FFDD8A5A830",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x6508B5907177"
+      },
+      "instruction": "endbr64",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 14
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A850",
+          "value": "0x1B5906040",
+          "bytes": "40 60 90 B5 01 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 0,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "pc": "0x6508B590714F",
+      "registers": {
+        "rip": "0x6508B590714F",
+        "rsp": "0x7FFDD8A5A818",
+        "rbp": "0x7FFDD8A5A830",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x6508B5907177"
+      },
+      "instruction": "push   %rbp",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 14
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A850",
+          "value": "0x1B5906040",
+          "bytes": "40 60 90 B5 01 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 0,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "pc": "0x6508B5907150",
+      "registers": {
+        "rip": "0x6508B5907150",
+        "rsp": "0x7FFDD8A5A810",
+        "rbp": "0x7FFDD8A5A830",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x6508B5907177"
+      },
+      "instruction": "mov    %rsp,%rbp",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 14
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 0,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "pc": "0x6508B5907153",
+      "registers": {
+        "rip": "0x6508B5907153",
+        "rsp": "0x7FFDD8A5A810",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x6508B5907177"
+      },
+      "instruction": "sub    $0x20,%rsp",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 14
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 0,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "pc": "0x6508B5907157",
+      "registers": {
+        "rip": "0x6508B5907157",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x6508B5907177"
+      },
+      "instruction": "mov    %edi,-0x14(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 14
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 0,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "pc": "0x6508B590715A",
+      "registers": {
+        "rip": "0x6508B590715A",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x6508B5907177"
+      },
+      "instruction": "mov    -0x14(%rbp),%eax",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 15
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 0,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "pc": "0x6508B590715D",
+      "registers": {
+        "rip": "0x6508B590715D",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x3"
+      },
+      "instruction": "mov    %eax,-0x8(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 15
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 0,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "pc": "0x6508B5907160",
+      "registers": {
+        "rip": "0x6508B5907160",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x3"
+      },
+      "instruction": "mov    -0x8(%rbp),%eax",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 16
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "pc": "0x6508B5907163",
+      "registers": {
+        "rip": "0x6508B5907163",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x7FFDD8A5A958",
+        "rax": "0x3"
+      },
+      "instruction": "mov    $0x2,%esi",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 16
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "pc": "0x6508B5907168",
+      "registers": {
+        "rip": "0x6508B5907168",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "mov    %eax,%edi",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 16
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "pc": "0x6508B590716A",
+      "registers": {
+        "rip": "0x6508B590716A",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "call   0x6508b5907129 <add>",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 16
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "pc": "0x6508B5907129",
+      "registers": {
+        "rip": "0x6508B5907129",
+        "rsp": "0x7FFDD8A5A7E8",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "endbr64",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 7
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": -660232200,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "pc": "0x6508B590712D",
+      "registers": {
+        "rip": "0x6508B590712D",
+        "rsp": "0x7FFDD8A5A7E8",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "push   %rbp",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 7
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": -660232200,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "pc": "0x6508B590712E",
+      "registers": {
+        "rip": "0x6508B590712E",
+        "rsp": "0x7FFDD8A5A7E0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "mov    %rsp,%rbp",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 7
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": -660232200,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "pc": "0x6508B5907131",
+      "registers": {
+        "rip": "0x6508B5907131",
+        "rsp": "0x7FFDD8A5A7E0",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "sub    $0x18,%rsp",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 7
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": -660232200,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "pc": "0x6508B5907135",
+      "registers": {
+        "rip": "0x6508B5907135",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "mov    %edi,-0x14(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 7
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x7FFDD8A5A7F8",
+          "bytes": "F8 A7 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": -660232200,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "pc": "0x6508B5907138",
+      "registers": {
+        "rip": "0x6508B5907138",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "mov    %esi,-0x18(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 7
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x3D8A5A7F8",
+          "bytes": "F8 A7 A5 D8 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": -660232200,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "pc": "0x6508B590713B",
+      "registers": {
+        "rip": "0x6508B590713B",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "mov    -0x14(%rbp),%edx",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 8
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x300000002",
+          "bytes": "02 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": 2,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "pc": "0x6508B590713E",
+      "registers": {
+        "rip": "0x6508B590713E",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x3"
+      },
+      "instruction": "mov    -0x18(%rbp),%eax",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 8
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x300000002",
+          "bytes": "02 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": 2,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "pc": "0x6508B5907141",
+      "registers": {
+        "rip": "0x6508B5907141",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x2"
+      },
+      "instruction": "add    %edx,%eax",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 8
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x300000002",
+          "bytes": "02 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": 2,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "pc": "0x6508B5907143",
+      "registers": {
+        "rip": "0x6508B5907143",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "mov    %eax,-0x4(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 8
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x300000002",
+          "bytes": "02 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": 2,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 0,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "pc": "0x6508B5907146",
+      "registers": {
+        "rip": "0x6508B5907146",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "mov    -0x4(%rbp),%eax",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 9
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x300000002",
+          "bytes": "02 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x500000000",
+          "bytes": "00 00 00 00 05 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": 2,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 5,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "pc": "0x6508B5907149",
+      "registers": {
+        "rip": "0x6508B5907149",
+        "rsp": "0x7FFDD8A5A7C8",
+        "rbp": "0x7FFDD8A5A7E0",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "leave",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 10
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7C8",
+          "value": "0x300000002",
+          "bytes": "02 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D0",
+          "value": "0xB700000006",
+          "bytes": "06 00 00 00 B7 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7D8",
+          "value": "0x500000000",
+          "bytes": "00 00 00 00 05 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E0",
+          "value": "0x7FFDD8A5A810",
+          "bytes": "10 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": 2,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 5,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "pc": "0x6508B590714A",
+      "registers": {
+        "rip": "0x6508B590714A",
+        "rsp": "0x7FFDD8A5A7E8",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "ret",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 10
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7E8",
+          "value": "0x6508B590716F",
+          "bytes": "6F 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "add",
+          "variables": {
+            "a": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7CC",
+              "type": "int"
+            },
+            "b": {
+              "value": 2,
+              "address": "0x7FFDD8A5A7C8",
+              "type": "int"
+            },
+            "sum": {
+              "value": 5,
+              "address": "0x7FFDD8A5A7DC",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "pc": "0x6508B590716F",
+      "registers": {
+        "rip": "0x6508B590716F",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "mov    %eax,-0x4(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 16
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x3",
+          "bytes": "03 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 0,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "pc": "0x6508B5907172",
+      "registers": {
+        "rip": "0x6508B5907172",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "mov    -0x4(%rbp),%eax",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 17
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x500000003",
+          "bytes": "03 00 00 00 05 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 5,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "pc": "0x6508B5907175",
+      "registers": {
+        "rip": "0x6508B5907175",
+        "rsp": "0x7FFDD8A5A7F0",
+        "rbp": "0x7FFDD8A5A810",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "leave",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 18
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A7F0",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A7F8",
+          "value": "0x300000000",
+          "bytes": "00 00 00 00 03 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A800",
+          "value": "0x0",
+          "bytes": "00 00 00 00 00 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A808",
+          "value": "0x500000003",
+          "bytes": "03 00 00 00 05 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A810",
+          "value": "0x7FFDD8A5A830",
+          "bytes": "30 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 5,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "pc": "0x6508B5907176",
+      "registers": {
+        "rip": "0x6508B5907176",
+        "rsp": "0x7FFDD8A5A818",
+        "rbp": "0x7FFDD8A5A830",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "ret",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 18
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A818",
+          "value": "0x6508B590718D",
+          "bytes": "8D 71 90 B5 08 65 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A850",
+          "value": "0x1B5906040",
+          "bytes": "40 60 90 B5 01 00 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "caller",
+          "variables": {
+            "n": {
+              "value": 3,
+              "address": "0x7FFDD8A5A7FC",
+              "type": "int"
+            },
+            "local": {
+              "value": 3,
+              "address": "0x7FFDD8A5A808",
+              "type": "int"
+            },
+            "result": {
+              "value": 5,
+              "address": "0x7FFDD8A5A80C",
+              "type": "int"
+            }
+          }
+        },
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "pc": "0x6508B590718D",
+      "registers": {
+        "rip": "0x6508B590718D",
+        "rsp": "0x7FFDD8A5A820",
+        "rbp": "0x7FFDD8A5A830",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "mov    %eax,-0x4(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 22
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A850",
+          "value": "0x1B5906040",
+          "bytes": "40 60 90 B5 01 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A858",
+          "value": "0x6508B5907177",
+          "bytes": "77 71 90 B5 08 65 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 32765,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "pc": "0x6508B5907190",
+      "registers": {
+        "rip": "0x6508B5907190",
+        "rsp": "0x7FFDD8A5A820",
+        "rbp": "0x7FFDD8A5A830",
+        "rdi": "0x3",
+        "rsi": "0x2",
+        "rax": "0x5"
+      },
+      "instruction": "cmpl   $0x5,-0x4(%rbp)",
+      "source": {
+        "file": "experiments/stack-call.c",
+        "line": 23
+      },
+      "stack": [
+        {
+          "address": "0x7FFDD8A5A820",
+          "value": "0x7FFDD8A5A910",
+          "bytes": "10 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A828",
+          "value": "0x5D8A5A958",
+          "bytes": "58 A9 A5 D8 05 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A830",
+          "value": "0x7FFDD8A5A8D0",
+          "bytes": "D0 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A838",
+          "value": "0x792C4342A1CA",
+          "bytes": "CA A1 42 43 2C 79 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A840",
+          "value": "0x7FFDD8A5A880",
+          "bytes": "80 A8 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A848",
+          "value": "0x7FFDD8A5A958",
+          "bytes": "58 A9 A5 D8 FD 7F 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A850",
+          "value": "0x1B5906040",
+          "bytes": "40 60 90 B5 01 00 00 00"
+        },
+        {
+          "address": "0x7FFDD8A5A858",
+          "value": "0x6508B5907177",
+          "bytes": "77 71 90 B5 08 65 00 00"
+        }
+      ],
+      "frames": [
+        {
+          "function": "main",
+          "variables": {
+            "result": {
+              "value": 5,
+              "address": "0x7FFDD8A5A82C",
+              "type": "int"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

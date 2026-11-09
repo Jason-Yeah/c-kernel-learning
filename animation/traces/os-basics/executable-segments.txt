@@ -1,0 +1,38 @@
+$ readelf -lW .trace-build/os-basics/os-demo
+
+Elf file type is DYN (Position-Independent Executable file)
+Entry point 0x1280
+There are 13 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x0002d8 0x0002d8 R   0x8
+  INTERP         0x000318 0x0000000000000318 0x0000000000000318 0x00001c 0x00001c R   0x1
+      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x000a18 0x000a18 R   0x1000
+  LOAD           0x001000 0x0000000000001000 0x0000000000001000 0x000925 0x000925 R E 0x1000
+  LOAD           0x002000 0x0000000000002000 0x0000000000002000 0x000224 0x000224 R   0x1000
+  LOAD           0x002d30 0x0000000000003d30 0x0000000000003d30 0x0002ec 0x000348 RW  0x1000
+  DYNAMIC        0x002d40 0x0000000000003d40 0x0000000000003d40 0x0001f0 0x0001f0 RW  0x8
+  NOTE           0x000338 0x0000000000000338 0x0000000000000338 0x000030 0x000030 R   0x8
+  NOTE           0x000368 0x0000000000000368 0x0000000000000368 0x000044 0x000044 R   0x4
+  GNU_PROPERTY   0x000338 0x0000000000000338 0x0000000000000338 0x000030 0x000030 R   0x8
+  GNU_EH_FRAME   0x002060 0x0000000000002060 0x0000000000002060 0x00005c 0x00005c R   0x4
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x10
+  GNU_RELRO      0x002d30 0x0000000000003d30 0x0000000000003d30 0x0002d0 0x0002d0 R   0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .interp 
+   02     .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt 
+   03     .init .plt .plt.got .plt.sec .text .fini 
+   04     .rodata .eh_frame_hdr .eh_frame 
+   05     .init_array .fini_array .dynamic .got .data .bss 
+   06     .dynamic 
+   07     .note.gnu.property 
+   08     .note.gnu.build-id .note.ABI-tag 
+   09     .note.gnu.property 
+   10     .eh_frame_hdr 
+   11     
+   12     .init_array .fini_array .dynamic .got 

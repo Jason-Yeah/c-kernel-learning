@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><title>OS 与程序运行基础 · 完整讲义 · CS / Motion</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='6' fill='%23090b0e'/%3E%3Cpath d='M7 7h16v4H7zm0 7h16v4H7zm0 7h16v2H7z' fill='%2369e2f4'/%3E%3C/svg%3E"><link rel="stylesheet" href="../shared/film.css"><link rel="stylesheet" href="../shared/diagrams.css"><link rel="stylesheet" href="../shared/evidence.css"><link rel="stylesheet" href="../shared/os-basics.css"></head><body><main class="os-reading-page"><nav><a href="./index.html">← 独立基础章 · 六节动画</a> · <a href="./os-basics.md">Markdown 原稿 ↗</a></nav><article><h1>OS 与程序运行基础：从文件到进程</h1>
+<p>这是独立导读章，对应六部可暂停、回退的动画：<a href="index.html">章节目录</a>。基准为 Linux x86-64、ELF64、小端和 SysV 函数 ABI。这里的“可重定向文件”按“可重定位目标文件 .o”解释；“虚拟进程”解释为进程抽象、虚拟地址空间和 CPU 上下文，不等同虚拟机。</p>
+<h2>1. 程序先是文件，运行以后才是进程</h2>
+<p>磁盘上的可执行文件保存机器代码、初始数据以及装载／动态链接所需信息。一个文件可以启动多次，产生多个 PID：它们可运行相同代码，却各有虚拟地址视图、寄存器现场、打开文件等资源。</p>
+<p>操作系统通过调度让程序获得 CPU 执行机会，通过虚拟内存让程序使用自己的地址坐标。CPU 时间共享不等于每个进程真的拥有一颗独占 CPU；独立地址空间也不意味着复制整个物理 RAM。</p>
+<p>本章实验都是单线程；多线程会共享进程地址空间，但各线程另有寄存器现场和栈，本章不展开这一专题。</p>
+<p>本章内存统一画成竖向数组：高地址在上、低地址在下，VA 向上增大。巨大空洞、其他映射和尺寸比例会被折叠；不是整台机器 RAM 的真实占用图。</p>
+<h2>2. C → 预处理 → 编译 → 汇编 → 链接</h2>
+<p>本章完整程序由三文件组成：</p>
+<ul><li><a href="../experiments/os-demo.h">os-demo.h</a>：接口声明和宏。</li><li><a href="../experiments/os-main.c">os-main.c</a>：main、内存对象、管道同步和 fork。</li><li><a href="../experiments/os-math.c">os-math.c</a>：外部函数与全局数据定义、寄存器探针。</li></ul>
+<p>以 GCC 的常用阶段开关为例（完整参数与命令在实验台）：</p>
+<pre><code>gcc -E os-main.c -o os-main.i       # 展开头文件与宏
+gcc -S os-main.c -o os-main.s       # C 翻译为汇编文本
+gcc -c os-main.c -o os-main.o       # 产生可重定位 ELF
+# os-math.c 同样独立编译
+gcc -pie os-main.o os-math.o -o os-demo</code></pre>
+<p>这些命令用于解释各阶段；复现本章应直接在动画项目中运行 <code>npm run capture:os</code>，采用已记录的 -O0、-g3、-fPIE、帧指针等完整构建条件，而不是假定省略参数后仍有相同指令／布局。</p>
+<p>头文件不是独立进程，通常被预处理进每个包含它的翻译单元。编译器决定具体指令与寄存器分配；汇编器把指令编码为字节并产生链接信息。链接器合并目标文件、寻找符号定义、执行相应重定位；<strong>链接完成不等于已经装载或运行</strong>。</p>
+<h2>3. 可重定位 ELF .o 内部有什么</h2>
+<p>.o 的 ELF 类型通常为 ET_REL，不是可直接启动的程序。文件头指出架构、节头表位置和数量。关键 section 包括：</p>
+<div class="reading-table"><table><thead><tr><th>节</th><th>用途</th></tr></thead><tbody><tr><td>.text</td><td>已编码的机器指令</td></tr><tr><td>.data</td><td>有初值的可写静态存储数据</td></tr><tr><td>.rodata</td><td>常量数据；不是所有带 const 的 C 对象都必在这里</td></tr><tr><td>.bss / SHT_NOBITS</td><td>逻辑零初值区域，不在文件存等尺寸的零字节</td></tr><tr><td>.symtab / .strtab</td><td>符号及名称信息</td></tr><tr><td>.rela.text</td><td>引用位置、符号、重定位类型与 addend</td></tr></tbody></table></div>
+<p>这些是关键节的概念列表，真实文件还有调试等其他节。文件图按文件 offset 向下增加，<strong>不是进程内存地址</strong>。UND 表示该翻译单元尚无定义：本例 main.o 引用 os_add、os_data，而 math.o 定义它们。</p>
+<p>本次实际选出 main.o 对 os_data 的 R_X86_64_PC32 引用。链接器写入有符号 32 位的 <code>S + A - P</code>：S 是最终符号值，A 是该记录的 addend，P 是重定位字段地址。本例 A=-4，CPU 用后继地址 P+4 加位移，正好指向 S。四个真实文件字节与公式已经核对。不能把这个公式推广到所有重定位类型；这些短地址也是链接时 VA，不是 ASLR 后的运行地址。</p>
+<h2>4. exec 与装载：section 不是 segment</h2>
+<p>执行 ELF 时，OS 主要看 program headers，尤其 PT_LOAD；把相应文件内容映射到进程地址空间，并为需要的零初始部分提供零值语义。不会把所有调试节、符号表都当程序内存搬进去，也不是一次性把整个文件读进物理 RAM。</p>
+<p>本实验是动态链接的 PIE（ET_DYN）。实际运行地址可以写成 <code>load bias + ELF VA</code>。本章用真实 <code>AT_ENTRY - e_entry</code> 求 load bias，并与 GDB main 入口核对；地址可能因 ASLR 改变，不保证所有执行恰好不同。</p>
+<p>PT_INTERP 指定动态解释器。本次 GDB 依次停在：动态解释器入口 → 应用 _start → main。解释器处理必要动态链接后转入应用启动代码，C 运行库再调用 main；<strong>main 不是首条用户指令</strong>，PLT 还可能延迟绑定。</p>
+<p>BSS 零初始化不是说它永远为零。程序运行后可以改变它；未初始化的自动栈变量也不能套用 BSS 的零初始化规则。</p>
+<h2>5. 竖向看进程虚拟地址空间</h2>
+<p>常见逻辑区域包括代码、只读数据、可写静态数据、堆／动态分配、匿名／文件映射、共享库和用户栈。图中最高位置是高 VA，最低位置是低 VA；实际每个对象的位置与权限应看本次 /proc/PID/maps 和 GDB。</p>
+<ul><li>代码与静态数据来自 ELF 的可装载区域。</li><li>本实验 local 位于 main 的栈帧中。栈通常向低地址扩展，但不是 C 标准对所有架构的保证。</li><li>malloc 返回动态对象的地址；对象可能由 brk 堆或 mmap 等机制提供，不能把每次 malloc 都固定归于 [heap]。</li><li>指针变量与所指内存是两个对象。本例 os_heap 本身是 BSS 中的全局指针，保存 malloc 对象的 VA；不能说所有指针变量都在栈。</li><li>本例 MAP_PRIVATE 和 MAP_SHARED 分别映射一页。库／mmap 的实际位置和顺序可变化。</li><li>虚拟地址不是物理地址；保留／映射不等于全部驻留，未映射空洞也不消耗同尺寸物理 RAM。</li></ul>
+<p>物理框 A/B/S、MMU 翻译、CPU 上下文切换为明确的机制解释；本章没有通过普通 GDB 测出真实 PFN、内核页表或每次调度。</p>
+<h2>6. fork 后父子内存怎样分布</h2>
+<p>本程序用两条管道约束：父前 → 子前 → 子改后 → 父同步后。子修改后先通知父，再等待父允许退出；不是靠 sleep 猜测同步。</p>
+<div class="reading-table"><table><thead><tr><th>对象</th><th>父前／子前</th><th>子改后</th><th>父同步后</th></tr></thead><tbody><tr><td>data</td><td>10</td><td>100</td><td>10</td></tr><tr><td>bss</td><td>0</td><td>200</td><td>0</td></tr><tr><td>local</td><td>20</td><td>200</td><td>20</td></tr><tr><td>malloc 对象</td><td>30</td><td>300</td><td>30</td></tr><tr><td>MAP_PRIVATE</td><td>40</td><td>400</td><td>40</td></tr><tr><td>MAP_SHARED</td><td>50</td><td>500</td><td>500</td></tr></tbody></table></div>
+<p>父子对应对象的 VA 在同一次 fork 中相同，但必须在各自地址空间里解释。父 fork 返回真实子 PID，子返回 0。相同 VA 并不直接证明物理同页；私有值隔离也不是观察到了内核 COW 复制。COW／PTE 的内部过程单独作为机制说明，更详细可看 <a href="../chapter8/fork-memory-layout.html">已有 fork 内存动画</a>。</p>
+<p>动画中“同步”传递的是管道控制字节，不是通过管道复制整数500给父；父自己读取共享映射。地址相同、值相同和显式共享，是需要分别判断的事情。</p>
+<h2>7. x86-64 寄存器各做什么</h2>
+<p>以下是本章的一般整数子集，不是完整 x86 寄存器全集：</p>
+<div class="reading-table"><table><thead><tr><th>名称</th><th>本章作用／约定</th></tr></thead><tbody><tr><td>RDI、RSI、RDX、RCX、R8、R9</td><td>Linux SysV 函数 ABI 的前六个常见整数／指针参数</td></tr><tr><td>RAX</td><td>常见整数返回值，也可用于临时运算</td></tr><tr><td>R10、R11</td><td>常见 caller-saved 临时寄存器</td></tr><tr><td>RBX、RBP、R12–R15</td><td>callee-saved；函数使用后须按 ABI 恢复</td></tr><tr><td>RSP</td><td>当前栈顶指针</td></tr><tr><td>RIP</td><td>当前指令地址；不是整数返回值</td></tr><tr><td>RFLAGS</td><td>零、符号、进位、溢出等状态位</td></tr></tbody></table></div>
+<p>通用寄存器也能保存普通整数或地址，并不是 RDI 只能传参、RAX 只能返回。某些指令有隐含用途，例如部分乘除指令使用 RDX:RAX、REP 使用计数寄存器、串操作使用 RSI/RDI 作为源／目标；这些 ISA 规则与 OS 的函数 ABI 是不同层次。</p>
+<p>RBP 在本构建中作帧指针，不是每个编译后程序必有的角色；SysV 参数规则也不是 Windows x64 或 Linux syscall 的同一套约定。函数入口先读参数寄存器，不能把尚未写入的 DWARF 形参当作已初始化值。</p>
+<p>本次 GDB 实际看到 os_add 的 RDI=3、RSI=2，ret 后 RAX=5、RSP 恢复、RIP 等于入口栈顶保存的后继地址。单独的安全寄存器探针把 RAX 先写为全1，再写 EAX=5，实际验证高32位清零；写 AX／AL 不具有相同规则。</p>
+<p>cmp 比较3与3后，本次 ZF=1、CF/SF/OF=0；结果真假和这些状态位不是同一个对象。GDB 单步相关 TF 不当作业务条件。x86 还包括向量、段、控制等寄存器，本章不全部展开。</p>
+<h2>证据与复现</h2>
+<pre><code>npm run capture:os   # GCC/binutils/GDB，3次受控运行
+npm run build
+npm run test:os     # 原始 ELF/GDB 与六部动画的独立核对</code></pre>
+<p><a href="../traces/os-basics.json">原始 JSON</a>、<a href="../traces/os-basics-gdb.txt">完整 GDB 文本</a>及页面实验台保存源码／ELF／.o SHA-256、完整编译参数、工具版本、ASLR、实际源行与原样输出。捕获结果为3次运行、51个停点、9份 binutils 报告；站点只离线回放。可下载 .o 和受控 os-demo.elf 作文件结构证据，不会自动运行，访客无需 GCC/GDB。</p>
+<p>保留 ASLR、仅禁用实验进程 core、不修改宿主安全配置。源程序已审查，采集器不是任意用户 C 自动转换器。几何、运动速度、物理框和调度时序都是教学设计；未实际观测的部分不冒充实测。</p></article><footer><a href="./index.html">返回本章动画目录 →</a></footer></main></body></html>

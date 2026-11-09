@@ -1,0 +1,41 @@
+{
+  "name": "csapp-animation-previews",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CS:APP directed animations, shared GSAP player and static chapter site.",
+  "type": "module",
+  "scripts": {
+    "start": "node preview-server.mjs",
+    "test:film": "npm run test:browser",
+    "test:models": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:example": "node tests/c-example.mjs",
+    "capture:stack": "node scripts/capture-stack.mjs",
+    "capture:experiments": "node scripts/capture-experiments.mjs",
+    "capture:os": "node scripts/capture-os-basics.mjs",
+    "capture:cycle": "node scripts/capture-instruction-cycle.mjs",
+    "capture:byte-order": "node scripts/capture-byte-order.mjs",
+    "capture:integers": "node scripts/capture-integer-bits.mjs",
+    "capture:control": "node scripts/capture-control-flow.mjs",
+    "capture:all": "npm run capture:stack && npm run capture:experiments && npm run capture:os && npm run capture:cycle && npm run capture:byte-order && npm run capture:integers && npm run capture:control",
+    "test:measured": "node tests/stack-trace-browser.mjs",
+    "test:buffer": "node tests/buffer-copy-browser.mjs",
+    "test:experiments": "node tests/experiments-browser.mjs",
+    "test:os": "node tests/os-basics-browser.mjs",
+    "test:cycle": "node tests/instruction-cycle-browser.mjs",
+    "test:byte-order": "node tests/byte-order-browser.mjs",
+    "test:continuity": "node tests/continuity-browser.mjs",
+    "test:integers": "node tests/integer-bits-browser.mjs",
+    "test:control": "node tests/control-flow-browser.mjs",
+    "pages": "node scripts/pages.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "npm run build && npm run test:models && npm run test:example && npm run test:buffer && npm run test:browser && npm run test:measured && npm run test:experiments && npm run test:os && npm run test:cycle && npm run test:byte-order && npm run test:continuity && npm run test:integers && npm run test:control"
+  },
+  "dependencies": {
+    "gsap": "3.15.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.64.1"
+  }
+}

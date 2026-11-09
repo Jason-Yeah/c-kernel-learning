@@ -1,0 +1,1352 @@
+{
+  "schemaVersion": 1,
+  "id": "byte-order",
+  "provenance": {
+    "kind": "gdb-measured",
+    "capturedAt": "2026-11-06T10:21:20.923Z",
+    "source": {
+      "path": "experiments/byte-order.c",
+      "content": "/* Reviewed fixed experiment: object representation and explicit BE encoding.\n * Linux x86-64, 8-bit bytes. No type punning through uint32_t pointers.\n * Observer checkpoints are not part of the byte-order mechanism.\n */\n#include <inttypes.h>\n#include <limits.h>\n#include <stdint.h>\n#include <stdio.h>\n#include <string.h>\n#include <sys/resource.h>\n\n_Static_assert(CHAR_BIT == 8 && sizeof(uint32_t) == 4, \"four 8-bit bytes required\");\nuint32_t word = UINT32_C(0x12345678);\nunsigned char be_encoded[4] = {0xCC, 0xCC, 0xCC, 0xCC};\nunsigned char probe_byte;\nunsigned read_index, encode_index;\nuint32_t native_read, raw_read, decoded_be;\nvolatile unsigned trace_phase;\n\n__attribute__((noinline)) static void checkpoint(unsigned phase)\n{\n    trace_phase = phase;\n    __asm__ volatile(\"\" ::: \"memory\");\n}\n\nint main(void)\n{\n    const struct rlimit no_core = {0, 0};\n    if (setrlimit(RLIMIT_CORE, &no_core) != 0) return 2;\n    const unsigned char *view = (const unsigned char *)&word;\n    checkpoint(1);\n    for (read_index = 0; read_index < sizeof word; ++read_index) {\n        probe_byte = view[read_index];\n        checkpoint(2);\n    }\n    for (encode_index = 0; encode_index < sizeof be_encoded; ++encode_index) {\n        be_encoded[encode_index] = (unsigned char)(word >> (24 - 8 * encode_index));\n        checkpoint(3);\n    }\n    memcpy(&native_read, &word, sizeof native_read);\n    checkpoint(4);\n    memcpy(&raw_read, be_encoded, sizeof raw_read);\n    checkpoint(5);\n    decoded_be = ((uint32_t)be_encoded[0] << 24)\n               | ((uint32_t)be_encoded[1] << 16)\n               | ((uint32_t)be_encoded[2] << 8)\n               | (uint32_t)be_encoded[3];\n    checkpoint(6);\n    printf(\"word=%08\" PRIX32 \" native=%08\" PRIX32 \" raw=%08\" PRIX32 \" decoded=%08\" PRIX32 \"\\n\",\n           word, native_read, raw_read, decoded_be);\n    return native_read == word && decoded_be == word && raw_read == UINT32_C(0x78563412) ? 0 : 1;\n}\n",
+      "sha256": "7dbb711fca8eac5acc7bc4d67c05d986a7076461218fe10ce66d6e7f586b508d"
+    },
+    "binary": {
+      "path": "traces/byte-order/program.elf",
+      "sha256": "609027c5a17dd5f04bf88ee3e6143a7c2b373b122e8660d5d9b3cef843f7cd9f"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -Wall -Wextra -Wpedantic experiments/byte-order.c -o .trace-build/byte-order/program",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "scope": "Actual native x86-64 little-endian word, four byte reads, explicit BE encoding array and memcpy/shift results. Not a big-endian CPU run; arrows and teaching time are explanatory."
+  },
+  "runs": {
+    "single": {
+      "samples": [
+        {
+          "index": 0,
+          "event": "ready",
+          "phase": 1,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 0,
+            "read_index": 0,
+            "encode_index": 0,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                204,
+                204,
+                204,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x57ACA5456010",
+            "rdi": "0x1",
+            "rsi": "0x4",
+            "rdx": "0x7FFC200CC4D0",
+            "eflags": "0x246"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x57aca5456010      96399018778640\nrdi            0x1                 1\nrsi            0x4                 4\nrdx            0x7ffc200cc4d0      140720846193872\neflags         0x246               [ PF ZF IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$1 = 1"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$2 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$3 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$4 = 0"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$5 = 0x0"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$6 = 0"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$7 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0xcc\t0xcc\t0xcc\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$8 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$9 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$10 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 31,
+            "function": "main"
+          }
+        },
+        {
+          "index": 1,
+          "event": "read-0",
+          "phase": 2,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 120,
+            "read_index": 0,
+            "encode_index": 0,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                204,
+                204,
+                204,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x78",
+            "rdi": "0x2",
+            "rsi": "0x4",
+            "rdx": "0x0",
+            "eflags": "0x202"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x78                120\nrdi            0x2                 2\nrsi            0x4                 4\nrdx            0x0                 0\neflags         0x202               [ IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$11 = 2"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$12 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$13 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$14 = 0"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$15 = 0x78"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$16 = 0"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$17 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0xcc\t0xcc\t0xcc\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$18 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$19 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$20 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 34,
+            "function": "main"
+          }
+        },
+        {
+          "index": 2,
+          "event": "read-1",
+          "phase": 2,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 86,
+            "read_index": 1,
+            "encode_index": 0,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                204,
+                204,
+                204,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x56",
+            "rdi": "0x2",
+            "rsi": "0x4",
+            "rdx": "0x1",
+            "eflags": "0x206"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x56                86\nrdi            0x2                 2\nrsi            0x4                 4\nrdx            0x1                 1\neflags         0x206               [ PF IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$21 = 2"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$22 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$23 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$24 = 1"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$25 = 0x56"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$26 = 0"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$27 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0xcc\t0xcc\t0xcc\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$28 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$29 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$30 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 34,
+            "function": "main"
+          }
+        },
+        {
+          "index": 3,
+          "event": "read-2",
+          "phase": 2,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 52,
+            "read_index": 2,
+            "encode_index": 0,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                204,
+                204,
+                204,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x34",
+            "rdi": "0x2",
+            "rsi": "0x4",
+            "rdx": "0x2",
+            "eflags": "0x206"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x34                52\nrdi            0x2                 2\nrsi            0x4                 4\nrdx            0x2                 2\neflags         0x206               [ PF IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$31 = 2"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$32 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$33 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$34 = 2"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$35 = 0x34"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$36 = 0"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$37 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0xcc\t0xcc\t0xcc\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$38 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$39 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$40 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 34,
+            "function": "main"
+          }
+        },
+        {
+          "index": 4,
+          "event": "read-3",
+          "phase": 2,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 3,
+            "encode_index": 0,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                204,
+                204,
+                204,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x12",
+            "rdi": "0x2",
+            "rsi": "0x4",
+            "rdx": "0x3",
+            "eflags": "0x202"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x12                18\nrdi            0x2                 2\nrsi            0x4                 4\nrdx            0x3                 3\neflags         0x202               [ IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$41 = 2"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$42 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$43 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$44 = 3"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$45 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$46 = 0"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$47 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0xcc\t0xcc\t0xcc\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$48 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$49 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$50 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 34,
+            "function": "main"
+          }
+        },
+        {
+          "index": 5,
+          "event": "encode-0",
+          "phase": 3,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 4,
+            "encode_index": 0,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                18,
+                204,
+                204,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x57ACA5456014",
+            "rdi": "0x3",
+            "rsi": "0x4",
+            "rdx": "0x0",
+            "eflags": "0x206"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x57aca5456014      96399018778644\nrdi            0x3                 3\nrsi            0x4                 4\nrdx            0x0                 0\neflags         0x206               [ PF IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$51 = 3"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$52 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$53 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$54 = 4"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$55 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$56 = 0"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$57 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0x12\t0xcc\t0xcc\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$58 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$59 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$60 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 38,
+            "function": "main"
+          }
+        },
+        {
+          "index": 6,
+          "event": "encode-1",
+          "phase": 3,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 4,
+            "encode_index": 1,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                18,
+                52,
+                204,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x57ACA5456014",
+            "rdi": "0x3",
+            "rsi": "0x4",
+            "rdx": "0x1",
+            "eflags": "0x202"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x57aca5456014      96399018778644\nrdi            0x3                 3\nrsi            0x4                 4\nrdx            0x1                 1\neflags         0x202               [ IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$61 = 3"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$62 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$63 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$64 = 4"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$65 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$66 = 1"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$67 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0x12\t0x34\t0xcc\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$68 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$69 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$70 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 38,
+            "function": "main"
+          }
+        },
+        {
+          "index": 7,
+          "event": "encode-2",
+          "phase": 3,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 4,
+            "encode_index": 2,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                18,
+                52,
+                86,
+                204
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x57ACA5456014",
+            "rdi": "0x3",
+            "rsi": "0x4",
+            "rdx": "0x2",
+            "eflags": "0x206"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x57aca5456014      96399018778644\nrdi            0x3                 3\nrsi            0x4                 4\nrdx            0x2                 2\neflags         0x206               [ PF IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$71 = 3"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$72 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$73 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$74 = 4"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$75 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$76 = 2"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$77 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0x12\t0x34\t0x56\t0xcc"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$78 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$79 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$80 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 38,
+            "function": "main"
+          }
+        },
+        {
+          "index": 8,
+          "event": "encode-3",
+          "phase": 3,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 4,
+            "encode_index": 3,
+            "native_read": 0,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                18,
+                52,
+                86,
+                120
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x57ACA5456014",
+            "rdi": "0x3",
+            "rsi": "0x4",
+            "rdx": "0x3",
+            "eflags": "0x246"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x57aca5456014      96399018778644\nrdi            0x3                 3\nrsi            0x4                 4\nrdx            0x3                 3\neflags         0x246               [ PF ZF IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$81 = 3"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$82 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$83 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$84 = 4"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$85 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$86 = 3"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$87 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0x12\t0x34\t0x56\t0x78"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$88 = 0x0"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$89 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$90 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 38,
+            "function": "main"
+          }
+        },
+        {
+          "index": 9,
+          "event": "native-read",
+          "phase": 4,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 4,
+            "encode_index": 4,
+            "native_read": 305419896,
+            "raw_read": 0,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                18,
+                52,
+                86,
+                120
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x12345678",
+            "rdi": "0x4",
+            "rsi": "0x4",
+            "rdx": "0x3",
+            "eflags": "0x202"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x12345678          305419896\nrdi            0x4                 4\nrsi            0x4                 4\nrdx            0x3                 3\neflags         0x202               [ IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$91 = 4"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$92 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$93 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$94 = 4"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$95 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$96 = 4"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$97 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0x12\t0x34\t0x56\t0x78"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$98 = 0x12345678"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$99 = 0x0"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$100 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 41,
+            "function": "main"
+          }
+        },
+        {
+          "index": 10,
+          "event": "raw-read",
+          "phase": 5,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 4,
+            "encode_index": 4,
+            "native_read": 305419896,
+            "raw_read": 2018915346,
+            "decoded_be": 0
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                18,
+                52,
+                86,
+                120
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x78563412",
+            "rdi": "0x5",
+            "rsi": "0x4",
+            "rdx": "0x3",
+            "eflags": "0x202"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x78563412          2018915346\nrdi            0x5                 5\nrsi            0x4                 4\nrdx            0x3                 3\neflags         0x202               [ IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$101 = 5"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$102 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$103 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$104 = 4"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$105 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$106 = 4"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$107 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0x12\t0x34\t0x56\t0x78"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$108 = 0x12345678"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$109 = 0x78563412"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$110 = 0x0"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 43,
+            "function": "main"
+          }
+        },
+        {
+          "index": 11,
+          "event": "decoded",
+          "phase": 6,
+          "pid": 1299727,
+          "fields": {
+            "word": 305419896,
+            "probe_byte": 18,
+            "read_index": 4,
+            "encode_index": 4,
+            "native_read": 305419896,
+            "raw_read": 2018915346,
+            "decoded_be": 305419896
+          },
+          "objects": {
+            "word": {
+              "address": "0x57ACA5456010",
+              "bytes": [
+                120,
+                86,
+                52,
+                18
+              ]
+            },
+            "be_encoded": {
+              "address": "0x57ACA5456014",
+              "bytes": [
+                18,
+                52,
+                86,
+                120
+              ]
+            }
+          },
+          "registers": {
+            "rip": "0x57ACA5453194",
+            "rsp": "0x7FFC200CC4B0",
+            "rbp": "0x7FFC200CC4B0",
+            "rax": "0x12345678",
+            "rdi": "0x6",
+            "rsi": "0x4",
+            "rdx": "0x12345600",
+            "eflags": "0x206"
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx eflags",
+              "output": "rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>\nrsp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrbp            0x7ffc200cc4b0      0x7ffc200cc4b0\nrax            0x12345678          305419896\nrdi            0x6                 6\nrsi            0x4                 4\nrdx            0x12345600          305419776\neflags         0x206               [ PF IF ]"
+            },
+            {
+              "command": "p/u phase",
+              "output": "$111 = 6"
+            },
+            {
+              "command": "p/x &word",
+              "output": "$112 = 0x57aca5456010"
+            },
+            {
+              "command": "p/x word",
+              "output": "$113 = 0x12345678"
+            },
+            {
+              "command": "x/4bx &word",
+              "output": "0x57aca5456010 <word>:\t0x78\t0x56\t0x34\t0x12"
+            },
+            {
+              "command": "p/u read_index",
+              "output": "$114 = 4"
+            },
+            {
+              "command": "p/x probe_byte",
+              "output": "$115 = 0x12"
+            },
+            {
+              "command": "p/u encode_index",
+              "output": "$116 = 4"
+            },
+            {
+              "command": "p/x &be_encoded",
+              "output": "$117 = 0x57aca5456014"
+            },
+            {
+              "command": "x/4bx be_encoded",
+              "output": "0x57aca5456014 <be_encoded>:\t0x12\t0x34\t0x56\t0x78"
+            },
+            {
+              "command": "p/x native_read",
+              "output": "$118 = 0x12345678"
+            },
+            {
+              "command": "p/x raw_read",
+              "output": "$119 = 0x78563412"
+            },
+            {
+              "command": "p/x decoded_be",
+              "output": "$120 = 0x12345678"
+            }
+          ],
+          "source": {
+            "file": "experiments/byte-order.c",
+            "line": 22,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/byte-order.c",
+            "line": 48,
+            "function": "main"
+          }
+        }
+      ]
+    }
+  },
+  "exitCode": 0,
+  "stdout": "word=12345678 native=12345678 raw=78563412 decoded=12345678\n"
+}

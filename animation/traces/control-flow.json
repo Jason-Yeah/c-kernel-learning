@@ -1,0 +1,1212 @@
+{
+  "schemaVersion": 1,
+  "id": "control-flow",
+  "provenance": {
+    "kind": "gdb-plus-model",
+    "capturedAt": "2026-11-08T07:28:53.631Z",
+    "source": {
+      "path": "experiments/control-flow.c",
+      "content": "/* Fixed, reviewed Linux x86-64 experiment. Only fault mode deliberately traps.\n * GNU asm marks exact instructions; kernel execution is not traced by GDB. */\n#define _GNU_SOURCE\n#include <errno.h>\n#include <sched.h>\n#include <stdint.h>\n#include <stdio.h>\n#include <string.h>\n#include <sys/mman.h>\n#include <sys/resource.h>\n#include <sys/syscall.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nint input_a = 3, input_b = 2, observed_sum;\nlong observed_pid, syscall_number = SYS_getpid, read_syscall_number = SYS_read;\nunsigned char *guard_page;\nlong page_size;\nunsigned char fault_value;\nint fault_read_complete;\nunsigned char sender_byte = 'K';\n\n__attribute__((noinline)) static void checkpoint(unsigned phase) {\n    __asm__ volatile(\"\" : : \"r\"(phase) : \"memory\");\n}\n__attribute__((noinline)) static int local_add(int a, int b) {\n    return a + b;\n}\n__attribute__((noinline)) static long raw_getpid(void) {\n    long result = SYS_getpid;\n    __asm__ volatile(\".globl ec_syscall\\nec_syscall:\\nsyscall\\n\"\n                     \".globl ec_syscall_after\\nec_syscall_after:\\n\"\n                     : \"+a\"(result) : : \"rcx\", \"r11\", \"memory\", \"cc\");\n    return result;\n}\n__attribute__((noinline)) static unsigned char fault_load(const unsigned char *p) {\n    unsigned char result;\n    __asm__ volatile(\".globl ec_fault\\nec_fault:\\nmovb (%%rdi), %%al\\n\"\n                     \".globl ec_fault_after\\nec_fault_after:\\n\"\n                     : \"=a\"(result) : \"D\"(p) : \"memory\");\n    return result;\n}\nstatic int inspect(void) {\n    checkpoint(1);\n    observed_sum = local_add(input_a, input_b);\n    checkpoint(2);\n    observed_pid = raw_getpid();\n    checkpoint(3);\n    printf(\"{\\\"event\\\":\\\"inspect-result\\\",\\\"pid\\\":%ld,\\\"sum\\\":%d}\\n\",\n           observed_pid, observed_sum);\n    return !(observed_sum == 5 && observed_pid == (long)getpid());\n}\nstatic int fault(void) {\n    page_size = sysconf(_SC_PAGESIZE);\n    if (page_size <= 0) return 2;\n    guard_page = mmap(NULL, (size_t)page_size, PROT_READ | PROT_WRITE,\n                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);\n    if (guard_page == MAP_FAILED) return 2;\n    guard_page[0] = 0xA5;\n    checkpoint(4); /* Only here is the protected target read by the debugger. */\n    if (mprotect(guard_page, (size_t)page_size, PROT_NONE) != 0) return 2;\n    fault_value = fault_load(guard_page); /* Deliberate instruction fault, own mapping. */\n    fault_read_complete = 1; /* Must NOT be reached in the recorded run. */\n    munmap(guard_page, (size_t)page_size);\n    return 3;\n}\nstatic int pin_one_allowed_cpu(void) {\n    cpu_set_t allowed, one;\n    if (sched_getaffinity(0, sizeof(allowed), &allowed) != 0) return -1;\n    for (int cpu = 0; cpu < CPU_SETSIZE; ++cpu) {\n        if (!CPU_ISSET(cpu, &allowed)) continue;\n        CPU_ZERO(&one);\n        CPU_SET(cpu, &one);\n        if (sched_setaffinity(0, sizeof(one), &one) != 0) return -1;\n        return cpu; /* This process and its child only; not the host mask. */\n    }\n    return -1;\n}\nstatic ssize_t read_one(int fd, unsigned char *p) {\n    ssize_t n;\n    do { n = read(fd, p, 1); } while (n < 0 && errno == EINTR);\n    return n;\n}\nstatic ssize_t write_one(int fd, const unsigned char *p) {\n    ssize_t n;\n    do { n = write(fd, p, 1); } while (n < 0 && errno == EINTR);\n    return n;\n}\nstatic int blocking(void) {\n    int cpu = pin_one_allowed_cpu(), pipefd[2];\n    if (cpu < 0 || pipe(pipefd) != 0) return 2;\n    pid_t child = fork();\n    if (child < 0) { close(pipefd[0]); close(pipefd[1]); return 2; }\n    if (child == 0) {\n        close(pipefd[0]);\n        unsigned char release = 0;\n        if (read_one(STDIN_FILENO, &release) != 1 || release != '!') _exit(4);\n        printf(\"{\\\"event\\\":\\\"helper-write\\\",\\\"pid\\\":%ld,\\\"ppid\\\":%ld,\\\"cpu\\\":%d,\\\"byte\\\":%u}\\n\",\n               (long)getpid(), (long)getppid(), sched_getcpu(), (unsigned)sender_byte);\n        ssize_t n = write_one(pipefd[1], &sender_byte);\n        close(pipefd[1]);\n        _exit(n == 1 ? 0 : 5);\n    }\n    close(pipefd[1]);\n    unsigned char received = 0xCC;\n    struct rusage before, after;\n    printf(\"{\\\"event\\\":\\\"blocking-ready\\\",\\\"pid\\\":%ld,\\\"child\\\":%ld,\\\"cpu\\\":%d,\\\"fd\\\":%d,\\\"buffer\\\":\\\"%p\\\",\\\"capacity\\\":1,\\\"beforeByte\\\":%u,\\\"readNumber\\\":%ld}\\n\",\n           (long)getpid(), (long)child, cpu, pipefd[0], (void *)&received,\n           (unsigned)received, read_syscall_number);\n    if (getrusage(RUSAGE_SELF, &before) != 0) return 2;\n    ssize_t n = read_one(pipefd[0], &received); /* Empty pipe: collector observes this wait. */\n    if (getrusage(RUSAGE_SELF, &after) != 0) return 2;\n    close(pipefd[0]);\n    int status = 0;\n    pid_t waited;\n    do { waited = waitpid(child, &status, 0); } while (waited < 0 && errno == EINTR);\n    printf(\"{\\\"event\\\":\\\"blocking-result\\\",\\\"pid\\\":%ld,\\\"cpu\\\":%d,\\\"readResult\\\":%ld,\\\"byte\\\":%u,\\\"capacity\\\":1,\\\"nvBefore\\\":%ld,\\\"nvAfter\\\":%ld,\\\"nivBefore\\\":%ld,\\\"nivAfter\\\":%ld,\\\"waited\\\":%ld,\\\"status\\\":%d}\\n\",\n           (long)getpid(), sched_getcpu(), (long)n, (unsigned)received,\n           before.ru_nvcsw, after.ru_nvcsw, before.ru_nivcsw, after.ru_nivcsw,\n           (long)waited, status);\n    return !(n == 1 && received == sender_byte && waited == child\n             && WIFEXITED(status) && WEXITSTATUS(status) == 0);\n}\nint main(int argc, char **argv) {\n    struct rlimit core = {0, 0};\n    if (setrlimit(RLIMIT_CORE, &core) != 0) return 2;\n    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0) return 2;\n    if (argc != 2) return 2;\n    if (strcmp(argv[1], \"inspect\") == 0) return inspect();\n    if (strcmp(argv[1], \"blocking\") == 0) return blocking();\n    if (strcmp(argv[1], \"fault\") == 0) return fault();\n    return 2;\n}\n",
+      "sha256": "ed8403fac3a5542a1a455a05127bda05e9d4932db101ecc06ddb76c5cc9a2430"
+    },
+    "binary": {
+      "path": "traces/control-flow/program.elf",
+      "sha256": "1870d3ce8becd1a38e324228dbf1c1698316e8292224e2c9741232b24fe2fad9"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -Wall -Wextra -Wpedantic experiments/control-flow.c -o .trace-build/control-flow/program",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "scope": "Actual user CALL/SYSCALL states and deliberate own-page SIGSEGV; separate non-GDB blocking read and /proc/rusage observations. Kernel entry, scheduling arrows, hardware interrupt and teaching time remain models, not live kernel/IRQ tracing."
+  },
+  "runs": {
+    "inspect": {
+      "samples": [
+        {
+          "index": 0,
+          "event": "ready",
+          "pid": 1803467,
+          "registers": {
+            "rip": "0x5E7F562A5414",
+            "rsp": "0x7FFFCBFC6530",
+            "rbp": "0x7FFFCBFC6530",
+            "rax": "0x0",
+            "rdi": "0x1",
+            "rsi": "0x5E7F562A61AD",
+            "rdx": "0x5E7F562A61AD",
+            "rcx": "0x0",
+            "r11": "0x246",
+            "eflags": "0x246",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 0,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 0,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x0",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 25,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 45,
+            "function": "inspect"
+          },
+          "instruction": {
+            "address": "0x5E7F562A5414",
+            "length": 3,
+            "asm": "mov    -0x4(%rbp),%eax",
+            "bytes": [
+              139,
+              69,
+              252
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x5e7f562a5414      0x5e7f562a5414 <checkpoint+11>\nrsp            0x7fffcbfc6530      0x7fffcbfc6530\nrbp            0x7fffcbfc6530      0x7fffcbfc6530\nrax            0x0                 0\nrdi            0x1                 1\nrsi            0x5e7f562a61ad      103900999475629\nrdx            0x5e7f562a61ad      103900999475629\nrcx            0x0                 0\nr11            0x246               582\neflags         0x246               [ PF ZF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5e7f562a5414 <checkpoint+11>:\tmov    -0x4(%rbp),%eax"
+            },
+            {
+              "command": "x/3bx $rip",
+              "output": "0x5e7f562a5414 <checkpoint+11>:\t0x8b\t0x45\t0xfc"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$1 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$2 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$3 = 0"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$4 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$5 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$6 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$7 = 0"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$8 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$9 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$10 = 0x0"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "function-entry",
+          "pid": 1803467,
+          "registers": {
+            "rip": "0x5E7F562A541A",
+            "rsp": "0x7FFFCBFC6538",
+            "rbp": "0x7FFFCBFC6540",
+            "rax": "0x3",
+            "rdi": "0x3",
+            "rsi": "0x2",
+            "rdx": "0x2",
+            "rcx": "0x0",
+            "r11": "0x246",
+            "eflags": "0x246",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 0,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 0,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x0",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 27,
+            "function": "local_add"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 46,
+            "function": "inspect"
+          },
+          "instruction": {
+            "address": "0x5E7F562A541A",
+            "length": 4,
+            "asm": "endbr64",
+            "bytes": [
+              243,
+              15,
+              30,
+              250
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x5e7f562a541a      0x5e7f562a541a <local_add>\nrsp            0x7fffcbfc6538      0x7fffcbfc6538\nrbp            0x7fffcbfc6540      0x7fffcbfc6540\nrax            0x3                 3\nrdi            0x3                 3\nrsi            0x2                 2\nrdx            0x2                 2\nrcx            0x0                 0\nr11            0x246               582\neflags         0x246               [ PF ZF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5e7f562a541a <local_add>:\tendbr64"
+            },
+            {
+              "command": "x/4bx $rip",
+              "output": "0x5e7f562a541a <local_add>:\t0xf3\t0x0f\t0x1e\t0xfa"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$11 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$12 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$13 = 0"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$14 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$15 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$16 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$17 = 0"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$18 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$19 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$20 = 0x0"
+            },
+            {
+              "command": "x/gx $rsp",
+              "output": "0x7fffcbfc6538:\t0x00005e7f562a5497"
+            }
+          ],
+          "returnAddress": "0x5E7F562A5497"
+        },
+        {
+          "index": 2,
+          "event": "function-return",
+          "pid": 1803467,
+          "registers": {
+            "rip": "0x5E7F562A5497",
+            "rsp": "0x7FFFCBFC6540",
+            "rbp": "0x7FFFCBFC6540",
+            "rax": "0x5",
+            "rdi": "0x3",
+            "rsi": "0x2",
+            "rdx": "0x3",
+            "rcx": "0x0",
+            "r11": "0x246",
+            "eflags": "0x206",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 0,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 0,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x0",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 46,
+            "function": "inspect"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 130,
+            "function": "main"
+          },
+          "instruction": {
+            "address": "0x5E7F562A5497",
+            "length": 6,
+            "asm": "mov    %eax,0x2b9b(%rip)        # 0x5e7f562a8038 <observed_sum>",
+            "bytes": [
+              137,
+              5,
+              155,
+              43,
+              0,
+              0
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x5e7f562a5497      0x5e7f562a5497 <inspect+39>\nrsp            0x7fffcbfc6540      0x7fffcbfc6540\nrbp            0x7fffcbfc6540      0x7fffcbfc6540\nrax            0x5                 5\nrdi            0x3                 3\nrsi            0x2                 2\nrdx            0x3                 3\nrcx            0x0                 0\nr11            0x246               582\neflags         0x206               [ PF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5e7f562a5497 <inspect+39>:\tmov    %eax,0x2b9b(%rip)        # 0x5e7f562a8038 <observed_sum>"
+            },
+            {
+              "command": "x/6bx $rip",
+              "output": "0x5e7f562a5497 <inspect+39>:\t0x89\t0x05\t0x9b\t0x2b\t0x00\t0x00"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$22 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$23 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$24 = 0"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$25 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$26 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$27 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$28 = 0"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$29 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$30 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$31 = 0x0"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "event": "sum-stored",
+          "pid": 1803467,
+          "registers": {
+            "rip": "0x5E7F562A5414",
+            "rsp": "0x7FFFCBFC6530",
+            "rbp": "0x7FFFCBFC6530",
+            "rax": "0x5",
+            "rdi": "0x2",
+            "rsi": "0x2",
+            "rdx": "0x3",
+            "rcx": "0x0",
+            "r11": "0x246",
+            "eflags": "0x206",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 5,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 0,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x0",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 25,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 47,
+            "function": "inspect"
+          },
+          "instruction": {
+            "address": "0x5E7F562A5414",
+            "length": 3,
+            "asm": "mov    -0x4(%rbp),%eax",
+            "bytes": [
+              139,
+              69,
+              252
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x5e7f562a5414      0x5e7f562a5414 <checkpoint+11>\nrsp            0x7fffcbfc6530      0x7fffcbfc6530\nrbp            0x7fffcbfc6530      0x7fffcbfc6530\nrax            0x5                 5\nrdi            0x2                 2\nrsi            0x2                 2\nrdx            0x3                 3\nrcx            0x0                 0\nr11            0x246               582\neflags         0x206               [ PF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5e7f562a5414 <checkpoint+11>:\tmov    -0x4(%rbp),%eax"
+            },
+            {
+              "command": "x/3bx $rip",
+              "output": "0x5e7f562a5414 <checkpoint+11>:\t0x8b\t0x45\t0xfc"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$32 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$33 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$34 = 5"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$35 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$36 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$37 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$38 = 0"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$39 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$40 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$41 = 0x0"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "event": "syscall-before",
+          "pid": 1803467,
+          "registers": {
+            "rip": "0x5E7F562A5446",
+            "rsp": "0x7FFFCBFC6530",
+            "rbp": "0x7FFFCBFC6530",
+            "rax": "0x27",
+            "rdi": "0x2",
+            "rsi": "0x2",
+            "rdx": "0x3",
+            "rcx": "0x0",
+            "r11": "0x246",
+            "eflags": "0x206",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 5,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 0,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x0",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 32,
+            "function": "raw_getpid"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 48,
+            "function": "inspect"
+          },
+          "instruction": {
+            "address": "0x5E7F562A5446",
+            "length": 2,
+            "asm": "syscall",
+            "bytes": [
+              15,
+              5
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x5e7f562a5446      0x5e7f562a5446 <raw_getpid+20>\nrsp            0x7fffcbfc6530      0x7fffcbfc6530\nrbp            0x7fffcbfc6530      0x7fffcbfc6530\nrax            0x27                39\nrdi            0x2                 2\nrsi            0x2                 2\nrdx            0x3                 3\nrcx            0x0                 0\nr11            0x246               582\neflags         0x206               [ PF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5e7f562a5446 <raw_getpid+20>:\tsyscall"
+            },
+            {
+              "command": "x/2bx $rip",
+              "output": "0x5e7f562a5446 <raw_getpid+20>:\t0x0f\t0x05"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$42 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$43 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$44 = 5"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$45 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$46 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$47 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$48 = 0"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$49 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$50 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$51 = 0x0"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "event": "syscall-after",
+          "pid": 1803467,
+          "registers": {
+            "rip": "0x5E7F562A5448",
+            "rsp": "0x7FFFCBFC6530",
+            "rbp": "0x7FFFCBFC6530",
+            "rax": "0x1B84CB",
+            "rdi": "0x2",
+            "rsi": "0x2",
+            "rdx": "0x3",
+            "rcx": "0x5E7F562A5448",
+            "r11": "0x306",
+            "eflags": "0x206",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 5,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 0,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x0",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 32,
+            "function": "raw_getpid"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 48,
+            "function": "inspect"
+          },
+          "instruction": {
+            "address": "0x5E7F562A5448",
+            "length": 4,
+            "asm": "mov    %rax,-0x8(%rbp)",
+            "bytes": [
+              72,
+              137,
+              69,
+              248
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x5e7f562a5448      0x5e7f562a5448 <raw_getpid+22>\nrsp            0x7fffcbfc6530      0x7fffcbfc6530\nrbp            0x7fffcbfc6530      0x7fffcbfc6530\nrax            0x1b84cb            1803467\nrdi            0x2                 2\nrsi            0x2                 2\nrdx            0x3                 3\nrcx            0x5e7f562a5448      103900999472200\nr11            0x306               774\neflags         0x206               [ PF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5e7f562a5448 <raw_getpid+22>:\tmov    %rax,-0x8(%rbp)"
+            },
+            {
+              "command": "x/4bx $rip",
+              "output": "0x5e7f562a5448 <raw_getpid+22>:\t0x48\t0x89\t0x45\t0xf8"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$52 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$53 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$54 = 5"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$55 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$56 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$57 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$58 = 0"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$59 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$60 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$61 = 0x0"
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "event": "pid-stored",
+          "pid": 1803467,
+          "registers": {
+            "rip": "0x5E7F562A5414",
+            "rsp": "0x7FFFCBFC6530",
+            "rbp": "0x7FFFCBFC6530",
+            "rax": "0x1B84CB",
+            "rdi": "0x3",
+            "rsi": "0x2",
+            "rdx": "0x3",
+            "rcx": "0x5E7F562A5448",
+            "r11": "0x306",
+            "eflags": "0x206",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 5,
+            "observed_pid": 1803467,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 0,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x0",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 25,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 49,
+            "function": "inspect"
+          },
+          "instruction": {
+            "address": "0x5E7F562A5414",
+            "length": 3,
+            "asm": "mov    -0x4(%rbp),%eax",
+            "bytes": [
+              139,
+              69,
+              252
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x5e7f562a5414      0x5e7f562a5414 <checkpoint+11>\nrsp            0x7fffcbfc6530      0x7fffcbfc6530\nrbp            0x7fffcbfc6530      0x7fffcbfc6530\nrax            0x1b84cb            1803467\nrdi            0x3                 3\nrsi            0x2                 2\nrdx            0x3                 3\nrcx            0x5e7f562a5448      103900999472200\nr11            0x306               774\neflags         0x206               [ PF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5e7f562a5414 <checkpoint+11>:\tmov    -0x4(%rbp),%eax"
+            },
+            {
+              "command": "x/3bx $rip",
+              "output": "0x5e7f562a5414 <checkpoint+11>:\t0x8b\t0x45\t0xfc"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$62 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$63 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$64 = 5"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$65 = 1803467"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$66 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$67 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$68 = 0"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$69 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$70 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$71 = 0x0"
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "kind": "exit",
+        "code": 0
+      },
+      "stdout": "{\"event\":\"inspect-result\",\"pid\":1803467,\"sum\":5}\n"
+    },
+    "fault": {
+      "samples": [
+        {
+          "index": 0,
+          "event": "fault-ready",
+          "pid": 1803470,
+          "registers": {
+            "rip": "0x61FC50067414",
+            "rsp": "0x7FFD46C1E3E0",
+            "rbp": "0x7FFD46C1E3E0",
+            "rax": "0x79D576664000",
+            "rdi": "0x4",
+            "rsi": "0x1000",
+            "rdx": "0x3",
+            "rcx": "0x79D5765255EC",
+            "r11": "0x246",
+            "eflags": "0x213",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 0,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 4096,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x79D576664000",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 25,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 61,
+            "function": "fault"
+          },
+          "instruction": {
+            "address": "0x61FC50067414",
+            "length": 3,
+            "asm": "mov    -0x4(%rbp),%eax",
+            "bytes": [
+              139,
+              69,
+              252
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x61fc50067414      0x61fc50067414 <checkpoint+11>\nrsp            0x7ffd46c1e3e0      0x7ffd46c1e3e0\nrbp            0x7ffd46c1e3e0      0x7ffd46c1e3e0\nrax            0x79d576664000      133957721407488\nrdi            0x4                 4\nrsi            0x1000              4096\nrdx            0x3                 3\nrcx            0x79d5765255ec      133957720102380\nr11            0x246               582\neflags         0x213               [ CF AF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61fc50067414 <checkpoint+11>:\tmov    -0x4(%rbp),%eax"
+            },
+            {
+              "command": "x/3bx $rip",
+              "output": "0x61fc50067414 <checkpoint+11>:\t0x8b\t0x45\t0xfc"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$72 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$73 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$74 = 0"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$75 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$76 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$77 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$78 = 4096"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$79 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$80 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$81 = 0x79d576664000"
+            },
+            {
+              "command": "x/1bx guard_page",
+              "output": "0x79d576664000:\t0xa5"
+            }
+          ],
+          "guardByte": 165
+        },
+        {
+          "index": 1,
+          "event": "fault-before",
+          "pid": 1803470,
+          "registers": {
+            "rip": "0x61FC50067465",
+            "rsp": "0x7FFD46C1E3E0",
+            "rbp": "0x7FFD46C1E3E0",
+            "rax": "0x79D576664000",
+            "rdi": "0x79D576664000",
+            "rsi": "0x1000",
+            "rdx": "0x0",
+            "rcx": "0x79D576525EEB",
+            "r11": "0x213",
+            "eflags": "0x246",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 0,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 4096,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x79D576664000",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 39,
+            "function": "fault_load"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 63,
+            "function": "fault"
+          },
+          "instruction": {
+            "address": "0x61FC50067465",
+            "length": 2,
+            "asm": "mov    (%rdi),%al",
+            "bytes": [
+              138,
+              7
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x61fc50067465      0x61fc50067465 <fault_load+19>\nrsp            0x7ffd46c1e3e0      0x7ffd46c1e3e0\nrbp            0x7ffd46c1e3e0      0x7ffd46c1e3e0\nrax            0x79d576664000      133957721407488\nrdi            0x79d576664000      133957721407488\nrsi            0x1000              4096\nrdx            0x0                 0\nrcx            0x79d576525eeb      133957720104683\nr11            0x213               531\neflags         0x246               [ PF ZF IF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61fc50067465 <fault_load+19>:\tmov    (%rdi),%al"
+            },
+            {
+              "command": "x/2bx $rip",
+              "output": "0x61fc50067465 <fault_load+19>:\t0x8a\t0x07"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$82 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$83 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$84 = 0"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$85 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$86 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$87 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$88 = 4096"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$89 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$90 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$91 = 0x79d576664000"
+            },
+            {
+              "command": "info proc mappings",
+              "output": "process 1803470\nMapped address spaces:\n\n          Start Addr           End Addr       Size     Offset  Perms  objfile\n      0x61fc50066000     0x61fc50067000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc50067000     0x61fc50068000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc50068000     0x61fc50069000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc50069000     0x61fc5006a000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc5006a000     0x61fc5006b000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x79d576400000     0x79d576428000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576428000     0x79d5765b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d5765b1000     0x79d576600000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576600000     0x79d576604000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576604000     0x79d576606000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576606000     0x79d576613000     0xd000        0x0  rw-p   \n      0x79d576656000     0x79d576659000     0x3000        0x0  rw-p   \n      0x79d576664000     0x79d576665000     0x1000        0x0  ---p   \n      0x79d576665000     0x79d576667000     0x2000        0x0  rw-p   \n      0x79d576667000     0x79d57666b000     0x4000        0x0  r--p   [vvar]\n      0x79d57666b000     0x79d57666d000     0x2000        0x0  r--p   [vvar_vclock]\n      0x79d57666d000     0x79d57666f000     0x2000        0x0  r-xp   [vdso]\n      0x79d57666f000     0x79d576670000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d576670000     0x79d57669b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d57669b000     0x79d5766a5000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d5766a5000     0x79d5766a7000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d5766a7000     0x79d5766a9000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x7ffd46bff000     0x7ffd46c21000    0x22000        0x0  rw-p   [stack]"
+            }
+          ],
+          "maps": {
+            "path": "/proc/1803470/maps",
+            "content": "61fc50066000-61fc50067000 r--p 00000000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc50067000-61fc50068000 r-xp 00001000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc50068000-61fc50069000 r--p 00002000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc50069000-61fc5006a000 r--p 00002000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc5006a000-61fc5006b000 rw-p 00003000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n79d576400000-79d576428000 r--p 00000000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576428000-79d5765b1000 r-xp 00028000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d5765b1000-79d576600000 r--p 001b1000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576600000-79d576604000 r--p 001ff000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576604000-79d576606000 rw-p 00203000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576606000-79d576613000 rw-p 00000000 00:00 0 \n79d576656000-79d576659000 rw-p 00000000 00:00 0 \n79d576664000-79d576665000 ---p 00000000 00:00 0 \n79d576665000-79d576667000 rw-p 00000000 00:00 0 \n79d576667000-79d57666b000 r--p 00000000 00:00 0                          [vvar]\n79d57666b000-79d57666d000 r--p 00000000 00:00 0                          [vvar_vclock]\n79d57666d000-79d57666f000 r-xp 00000000 00:00 0                          [vdso]\n79d57666f000-79d576670000 r--p 00000000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d576670000-79d57669b000 r-xp 00001000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d57669b000-79d5766a5000 r--p 0002c000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d5766a5000-79d5766a7000 r--p 00036000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d5766a7000-79d5766a9000 rw-p 00038000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n7ffd46bff000-7ffd46c21000 rw-p 00000000 00:00 0                          [stack]\n"
+          }
+        },
+        {
+          "index": 2,
+          "event": "fault-signal",
+          "pid": 1803470,
+          "registers": {
+            "rip": "0x61FC50067465",
+            "rsp": "0x7FFD46C1E3E0",
+            "rbp": "0x7FFD46C1E3E0",
+            "rax": "0x79D576664000",
+            "rdi": "0x79D576664000",
+            "rsi": "0x1000",
+            "rdx": "0x0",
+            "rcx": "0x79D576525EEB",
+            "r11": "0x213",
+            "eflags": "0x10246",
+            "cs": "0x33"
+          },
+          "fields": {
+            "input_a": 3,
+            "input_b": 2,
+            "observed_sum": 0,
+            "observed_pid": 0,
+            "syscall_number": 39,
+            "read_syscall_number": 0,
+            "page_size": 4096,
+            "fault_read_complete": 0,
+            "fault_value": 0
+          },
+          "guardAddress": "0x79D576664000",
+          "source": {
+            "file": "experiments/control-flow.c",
+            "line": 39,
+            "function": "fault_load"
+          },
+          "callsite": {
+            "file": "experiments/control-flow.c",
+            "line": 63,
+            "function": "fault"
+          },
+          "instruction": {
+            "address": "0x61FC50067465",
+            "length": 2,
+            "asm": "mov    (%rdi),%al",
+            "bytes": [
+              138,
+              7
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs",
+              "output": "rip            0x61fc50067465      0x61fc50067465 <fault_load+19>\nrsp            0x7ffd46c1e3e0      0x7ffd46c1e3e0\nrbp            0x7ffd46c1e3e0      0x7ffd46c1e3e0\nrax            0x79d576664000      133957721407488\nrdi            0x79d576664000      133957721407488\nrsi            0x1000              4096\nrdx            0x0                 0\nrcx            0x79d576525eeb      133957720104683\nr11            0x213               531\neflags         0x10246             [ PF ZF IF RF ]\ncs             0x33                51"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x61fc50067465 <fault_load+19>:\tmov    (%rdi),%al"
+            },
+            {
+              "command": "x/2bx $rip",
+              "output": "0x61fc50067465 <fault_load+19>:\t0x8a\t0x07"
+            },
+            {
+              "command": "p/d input_a",
+              "output": "$92 = 3"
+            },
+            {
+              "command": "p/d input_b",
+              "output": "$93 = 2"
+            },
+            {
+              "command": "p/d observed_sum",
+              "output": "$94 = 0"
+            },
+            {
+              "command": "p/d observed_pid",
+              "output": "$95 = 0"
+            },
+            {
+              "command": "p/d syscall_number",
+              "output": "$96 = 39"
+            },
+            {
+              "command": "p/d read_syscall_number",
+              "output": "$97 = 0"
+            },
+            {
+              "command": "p/d page_size",
+              "output": "$98 = 4096"
+            },
+            {
+              "command": "p/d fault_read_complete",
+              "output": "$99 = 0"
+            },
+            {
+              "command": "p/d fault_value",
+              "output": "$100 = 0"
+            },
+            {
+              "command": "p/x guard_page",
+              "output": "$101 = 0x79d576664000"
+            },
+            {
+              "command": "info proc mappings",
+              "output": "process 1803470\nMapped address spaces:\n\n          Start Addr           End Addr       Size     Offset  Perms  objfile\n      0x61fc50066000     0x61fc50067000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc50067000     0x61fc50068000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc50068000     0x61fc50069000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc50069000     0x61fc5006a000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x61fc5006a000     0x61fc5006b000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n      0x79d576400000     0x79d576428000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576428000     0x79d5765b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d5765b1000     0x79d576600000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576600000     0x79d576604000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576604000     0x79d576606000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6\n      0x79d576606000     0x79d576613000     0xd000        0x0  rw-p   \n      0x79d576656000     0x79d576659000     0x3000        0x0  rw-p   \n      0x79d576664000     0x79d576665000     0x1000        0x0  ---p   \n      0x79d576665000     0x79d576667000     0x2000        0x0  rw-p   \n      0x79d576667000     0x79d57666b000     0x4000        0x0  r--p   [vvar]\n      0x79d57666b000     0x79d57666d000     0x2000        0x0  r--p   [vvar_vclock]\n      0x79d57666d000     0x79d57666f000     0x2000        0x0  r-xp   [vdso]\n      0x79d57666f000     0x79d576670000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d576670000     0x79d57669b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d57669b000     0x79d5766a5000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d5766a5000     0x79d5766a7000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x79d5766a7000     0x79d5766a9000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n      0x7ffd46bff000     0x7ffd46c21000    0x22000        0x0  rw-p   [stack]"
+            },
+            {
+              "command": "p $_siginfo.si_signo",
+              "output": "$102 = 11"
+            },
+            {
+              "command": "p $_siginfo.si_code",
+              "output": "$103 = 2"
+            },
+            {
+              "command": "p/x $_siginfo.si_addr",
+              "output": "$104 = 0x79d576664000"
+            }
+          ],
+          "maps": {
+            "path": "/proc/1803470/maps",
+            "content": "61fc50066000-61fc50067000 r--p 00000000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc50067000-61fc50068000 r-xp 00001000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc50068000-61fc50069000 r--p 00002000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc50069000-61fc5006a000 r--p 00002000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n61fc5006a000-61fc5006b000 rw-p 00003000 08:30 530388                     /home/jason/study/ck_study/animation/.trace-build/control-flow/program\n79d576400000-79d576428000 r--p 00000000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576428000-79d5765b1000 r-xp 00028000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d5765b1000-79d576600000 r--p 001b1000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576600000-79d576604000 r--p 001ff000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576604000-79d576606000 rw-p 00203000 08:30 316062                     /usr/lib/x86_64-linux-gnu/libc.so.6\n79d576606000-79d576613000 rw-p 00000000 00:00 0 \n79d576656000-79d576659000 rw-p 00000000 00:00 0 \n79d576664000-79d576665000 ---p 00000000 00:00 0 \n79d576665000-79d576667000 rw-p 00000000 00:00 0 \n79d576667000-79d57666b000 r--p 00000000 00:00 0                          [vvar]\n79d57666b000-79d57666d000 r--p 00000000 00:00 0                          [vvar_vclock]\n79d57666d000-79d57666f000 r-xp 00000000 00:00 0                          [vdso]\n79d57666f000-79d576670000 r--p 00000000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d576670000-79d57669b000 r-xp 00001000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d57669b000-79d5766a5000 r--p 0002c000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d5766a5000-79d5766a7000 r--p 00036000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n79d5766a7000-79d5766a9000 rw-p 00038000 08:30 316059                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n7ffd46bff000-7ffd46c21000 rw-p 00000000 00:00 0                          [stack]\n"
+          },
+          "signal": {
+            "name": "SIGSEGV",
+            "number": 11,
+            "code": 2,
+            "address": "0x79D576664000"
+          }
+        }
+      ],
+      "outcome": {
+        "kind": "signal",
+        "signal": "SIGSEGV"
+      },
+      "stdout": ""
+    }
+  },
+  "os": {
+    "blocking": {
+      "command": ".trace-build/control-flow/program blocking",
+      "exitCode": 0,
+      "stderr": "",
+      "stdout": "{\"event\":\"blocking-ready\",\"pid\":1803473,\"child\":1803474,\"cpu\":0,\"fd\":3,\"buffer\":\"0x7ffcae09fd5f\",\"capacity\":1,\"beforeByte\":204,\"readNumber\":0}\n{\"event\":\"helper-write\",\"pid\":1803474,\"ppid\":1803473,\"cpu\":0,\"byte\":75}\n{\"event\":\"blocking-result\",\"pid\":1803473,\"cpu\":0,\"readResult\":1,\"byte\":75,\"capacity\":1,\"nvBefore\":1,\"nvAfter\":2,\"nivBefore\":0,\"nivAfter\":0,\"waited\":1803474,\"status\":0}\n",
+      "records": [
+        {
+          "event": "blocking-ready",
+          "pid": 1803473,
+          "child": 1803474,
+          "cpu": 0,
+          "fd": 3,
+          "buffer": "0x7ffcae09fd5f",
+          "capacity": 1,
+          "beforeByte": 204,
+          "readNumber": 0
+        },
+        {
+          "event": "helper-write",
+          "pid": 1803474,
+          "ppid": 1803473,
+          "cpu": 0,
+          "byte": 75
+        },
+        {
+          "event": "blocking-result",
+          "pid": 1803473,
+          "cpu": 0,
+          "readResult": 1,
+          "byte": 75,
+          "capacity": 1,
+          "nvBefore": 1,
+          "nvAfter": 2,
+          "nivBefore": 0,
+          "nivAfter": 0,
+          "waited": 1803474,
+          "status": 0
+        }
+      ],
+      "beforeRelease": {
+        "attempts": 1,
+        "files": [
+          {
+            "operation": "readFile",
+            "path": "/proc/1803473/status",
+            "content": "Name:\tprogram\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1803473\nNgid:\t0\nPid:\t1803473\nPPid:\t1803440\nTracerPid:\t0\nUid:\t1000\t1000\t1000\t1000\nGid:\t1000\t1000\t1000\t1000\nFDSize:\t64\nGroups:\t4 24 27 30 46 100 1000 \nNStgid:\t1803473\nNSpid:\t1803473\nNSpgid:\t1803439\nNSsid:\t1803439\nKthread:\t0\nVmPeak:\t    2696 kB\nVmSize:\t    2696 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t    1748 kB\nVmRSS:\t    1748 kB\nRssAnon:\t     108 kB\nRssFile:\t    1640 kB\nRssShmem:\t       0 kB\nVmData:\t     224 kB\nVmStk:\t     136 kB\nVmExe:\t       4 kB\nVmLib:\t    1752 kB\nVmPTE:\t      44 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t1/63302\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000000000\nSigCgt:\t0000000000000000\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\t000001\nCpus_allowed_list:\t0\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2\nnonvoluntary_ctxt_switches:\t0\n"
+          },
+          {
+            "operation": "readFile",
+            "path": "/proc/1803473/syscall",
+            "content": "0 0x3 0x7ffcae09fd5f 0x1 0x0 0x64 0x0 0x7ffcae09fd08 0x73d1dc91bd31\n"
+          },
+          {
+            "operation": "readFile",
+            "path": "/proc/1803473/wchan",
+            "content": "anon_pipe_read"
+          },
+          {
+            "operation": "readFile",
+            "path": "/proc/1803474/status",
+            "content": "Name:\tprogram\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1803474\nNgid:\t0\nPid:\t1803474\nPPid:\t1803473\nTracerPid:\t0\nUid:\t1000\t1000\t1000\t1000\nGid:\t1000\t1000\t1000\t1000\nFDSize:\t64\nGroups:\t4 24 27 30 46 100 1000 \nNStgid:\t1803474\nNSpid:\t1803474\nNSpgid:\t1803439\nNSsid:\t1803439\nKthread:\t0\nVmPeak:\t    2564 kB\nVmSize:\t    2564 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t     360 kB\nVmRSS:\t     360 kB\nRssAnon:\t     100 kB\nRssFile:\t     260 kB\nRssShmem:\t       0 kB\nVmData:\t      92 kB\nVmStk:\t     136 kB\nVmExe:\t       4 kB\nVmLib:\t    1752 kB\nVmPTE:\t      40 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t1/63302\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000000000\nSigCgt:\t0000000000000000\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\t000001\nCpus_allowed_list:\t0\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t1\nnonvoluntary_ctxt_switches:\t0\n"
+          }
+        ]
+      },
+      "release": "!",
+      "scope": "Independent non-GDB run. Only target processes pinned to one originally allowed CPU. /proc read before collector releases helper; rusage delta is not an exclusive schedule trace."
+    }
+  },
+  "gdbSession": "\nTemporary breakpoint 1, main (argc=..., argv=...) at experiments/control-flow.c:125\n125\tint main(int argc, char **argv) {\n\nBreakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25\n25\t    __asm__ volatile(\"\" : : \"r\"(phase) : \"memory\");\n\nTemporary breakpoint -11, local_add (a=..., b=...) at experiments/control-flow.c:27\n27\t__attribute__((noinline)) static int local_add(int a, int b) {\n0x00005e7f562a5497 in inspect () at experiments/control-flow.c:46\n46\t    observed_sum = local_add(input_a, input_b);\nValue returned is $21 = 5\n\nBreakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25\n25\t    __asm__ volatile(\"\" : : \"r\"(phase) : \"memory\");\n\nTemporary breakpoint -12, 0x00005e7f562a5446 in raw_getpid () at experiments/control-flow.c:32\n32\t    __asm__ volatile(\".globl ec_syscall\\nec_syscall:\\nsyscall\\n\"\n0x00005e7f562a5448\t32\t    __asm__ volatile(\".globl ec_syscall\\nec_syscall:\\nsyscall\\n\"\n\nBreakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25\n25\t    __asm__ volatile(\"\" : : \"r\"(phase) : \"memory\");\n[Inferior 1 (process 1803467) exited normally]\n\nTemporary breakpoint 2, main (argc=..., argv=...) at experiments/control-flow.c:125\n125\tint main(int argc, char **argv) {\n\nBreakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25\n25\t    __asm__ volatile(\"\" : : \"r\"(phase) : \"memory\");\n\nTemporary breakpoint -23, 0x000061fc50067465 in fault_load (p=...) at experiments/control-flow.c:39\n39\t    __asm__ volatile(\".globl ec_fault\\nec_fault:\\nmovb (%%rdi), %%al\\n\"\n\nProgram received signal SIGSEGV, Segmentation fault.\n0x000061fc50067465 in fault_load (p=...) at experiments/control-flow.c:39\n39\t    __asm__ volatile(\".globl ec_fault\\nec_fault:\\nmovb (%%rdi), %%al\\n\"\n\nProgram terminated with signal SIGSEGV, Segmentation fault.\nThe program no longer exists.\n"
+}

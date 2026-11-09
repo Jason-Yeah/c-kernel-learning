@@ -15,15 +15,15 @@ public:
     {
         std::exception_ptr error;
 
-        Task get_return_object()
-        {
-            return Task{Handle::from_promise(*this)};
-        }
+        Task get_return_object() { return Task{Handle::from_promise(*this)}; }
 
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
         void return_void() noexcept {}
-        void unhandled_exception() noexcept { error = std::current_exception(); }
+        void unhandled_exception() noexcept
+        {
+            error = std::current_exception();
+        }
     };
 
     explicit Task(Handle handle) noexcept : handle_(handle) {}

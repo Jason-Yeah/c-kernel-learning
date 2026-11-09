@@ -1,0 +1,1897 @@
+Captured: 2026-11-05T13:41:10.990Z
+Source SHA256: b2382b67f9db2fda5a0b1caa90e10002143e8c30e0c5fb5bbece9bf04c518e8e
+ELF SHA256: 31e0e9fefbd629464b5ab33afcf42d5b6cb43e8f2ff5542d4899db07ac759e11
+Compile: gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/stack-recursion.c -o .trace-build/stack-recursion
+Scope: Actual depth/register/fault observations. Eight drawn frames are a reading aid, not the measured maximum; normal return is a separate run.
+
+=== RUN exhaust ===
+(gdb) run exhaust > .trace-build/stack-recursion-exhaust.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965e6600      0x7ffd965e6600
+rbp            0x7ffd965e7620      0x7ffd965e7620
+rax            0x1                 1
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$1 = 1
+
+(gdb) p/x &block[0]
+$2 = 0x7ffd965e6610
+
+(gdb) p sizeof block
+$3 = 4096
+
+(gdb) p stack_limit
+$4 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965e55d0      0x7ffd965e55d0
+rbp            0x7ffd965e65f0      0x7ffd965e65f0
+rax            0x2                 2
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$5 = 2
+
+(gdb) p/x &block[0]
+$6 = 0x7ffd965e55e0
+
+(gdb) p sizeof block
+$7 = 4096
+
+(gdb) p stack_limit
+$8 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 2 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965e45a0      0x7ffd965e45a0
+rbp            0x7ffd965e55c0      0x7ffd965e55c0
+rax            0x3                 3
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$9 = 3
+
+(gdb) p/x &block[0]
+$10 = 0x7ffd965e45b0
+
+(gdb) p sizeof block
+$11 = 4096
+
+(gdb) p stack_limit
+$12 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 3 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965e3570      0x7ffd965e3570
+rbp            0x7ffd965e4590      0x7ffd965e4590
+rax            0x4                 4
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$13 = 4
+
+(gdb) p/x &block[0]
+$14 = 0x7ffd965e3580
+
+(gdb) p sizeof block
+$15 = 4096
+
+(gdb) p stack_limit
+$16 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 4 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965e2540      0x7ffd965e2540
+rbp            0x7ffd965e3560      0x7ffd965e3560
+rax            0x5                 5
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$17 = 5
+
+(gdb) p/x &block[0]
+$18 = 0x7ffd965e2550
+
+(gdb) p sizeof block
+$19 = 4096
+
+(gdb) p stack_limit
+$20 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 5 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965e1510      0x7ffd965e1510
+rbp            0x7ffd965e2530      0x7ffd965e2530
+rax            0x6                 6
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$21 = 6
+
+(gdb) p/x &block[0]
+$22 = 0x7ffd965e1520
+
+(gdb) p sizeof block
+$23 = 4096
+
+(gdb) p stack_limit
+$24 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 6 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965e04e0      0x7ffd965e04e0
+rbp            0x7ffd965e1500      0x7ffd965e1500
+rax            0x7                 7
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$25 = 7
+
+(gdb) p/x &block[0]
+$26 = 0x7ffd965e04f0
+
+(gdb) p sizeof block
+$27 = 4096
+
+(gdb) p stack_limit
+$28 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 7 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965df4b0      0x7ffd965df4b0
+rbp            0x7ffd965e04d0      0x7ffd965e04d0
+rax            0x8                 8
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$29 = 8
+
+(gdb) p/x &block[0]
+$30 = 0x7ffd965df4c0
+
+(gdb) p sizeof block
+$31 = 4096
+
+(gdb) p stack_limit
+$32 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 8 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965de480      0x7ffd965de480
+rbp            0x7ffd965df4a0      0x7ffd965df4a0
+rax            0x9                 9
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$33 = 9
+
+(gdb) p/x &block[0]
+$34 = 0x7ffd965de490
+
+(gdb) p sizeof block
+$35 = 4096
+
+(gdb) p stack_limit
+$36 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 9 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965dd450      0x7ffd965dd450
+rbp            0x7ffd965de470      0x7ffd965de470
+rax            0xa                 10
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$37 = 10
+
+(gdb) p/x &block[0]
+$38 = 0x7ffd965dd460
+
+(gdb) p sizeof block
+$39 = 4096
+
+(gdb) p stack_limit
+$40 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 10 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965dc420      0x7ffd965dc420
+rbp            0x7ffd965dd440      0x7ffd965dd440
+rax            0xb                 11
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$41 = 11
+
+(gdb) p/x &block[0]
+$42 = 0x7ffd965dc430
+
+(gdb) p sizeof block
+$43 = 4096
+
+(gdb) p stack_limit
+$44 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 11 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965db3f0      0x7ffd965db3f0
+rbp            0x7ffd965dc410      0x7ffd965dc410
+rax            0xc                 12
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$45 = 12
+
+(gdb) p/x &block[0]
+$46 = 0x7ffd965db400
+
+(gdb) p sizeof block
+$47 = 4096
+
+(gdb) p stack_limit
+$48 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 12 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965da3c0      0x7ffd965da3c0
+rbp            0x7ffd965db3e0      0x7ffd965db3e0
+rax            0xd                 13
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$49 = 13
+
+(gdb) p/x &block[0]
+$50 = 0x7ffd965da3d0
+
+(gdb) p sizeof block
+$51 = 4096
+
+(gdb) p stack_limit
+$52 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 13 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d9390      0x7ffd965d9390
+rbp            0x7ffd965da3b0      0x7ffd965da3b0
+rax            0xe                 14
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$53 = 14
+
+(gdb) p/x &block[0]
+$54 = 0x7ffd965d93a0
+
+(gdb) p sizeof block
+$55 = 4096
+
+(gdb) p stack_limit
+$56 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 14 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d8360      0x7ffd965d8360
+rbp            0x7ffd965d9380      0x7ffd965d9380
+rax            0xf                 15
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$57 = 15
+
+(gdb) p/x &block[0]
+$58 = 0x7ffd965d8370
+
+(gdb) p sizeof block
+$59 = 4096
+
+(gdb) p stack_limit
+$60 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 15 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d7330      0x7ffd965d7330
+rbp            0x7ffd965d8350      0x7ffd965d8350
+rax            0x10                16
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$61 = 16
+
+(gdb) p/x &block[0]
+$62 = 0x7ffd965d7340
+
+(gdb) p sizeof block
+$63 = 4096
+
+(gdb) p stack_limit
+$64 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 16 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d6300      0x7ffd965d6300
+rbp            0x7ffd965d7320      0x7ffd965d7320
+rax            0x11                17
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$65 = 17
+
+(gdb) p/x &block[0]
+$66 = 0x7ffd965d6310
+
+(gdb) p sizeof block
+$67 = 4096
+
+(gdb) p stack_limit
+$68 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 17 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d52d0      0x7ffd965d52d0
+rbp            0x7ffd965d62f0      0x7ffd965d62f0
+rax            0x12                18
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$69 = 18
+
+(gdb) p/x &block[0]
+$70 = 0x7ffd965d52e0
+
+(gdb) p sizeof block
+$71 = 4096
+
+(gdb) p stack_limit
+$72 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 18 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d42a0      0x7ffd965d42a0
+rbp            0x7ffd965d52c0      0x7ffd965d52c0
+rax            0x13                19
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$73 = 19
+
+(gdb) p/x &block[0]
+$74 = 0x7ffd965d42b0
+
+(gdb) p sizeof block
+$75 = 4096
+
+(gdb) p stack_limit
+$76 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 19 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d3270      0x7ffd965d3270
+rbp            0x7ffd965d4290      0x7ffd965d4290
+rax            0x14                20
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$77 = 20
+
+(gdb) p/x &block[0]
+$78 = 0x7ffd965d3280
+
+(gdb) p sizeof block
+$79 = 4096
+
+(gdb) p stack_limit
+$80 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 20 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d2240      0x7ffd965d2240
+rbp            0x7ffd965d3260      0x7ffd965d3260
+rax            0x15                21
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$81 = 21
+
+(gdb) p/x &block[0]
+$82 = 0x7ffd965d2250
+
+(gdb) p sizeof block
+$83 = 4096
+
+(gdb) p stack_limit
+$84 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 21 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d1210      0x7ffd965d1210
+rbp            0x7ffd965d2230      0x7ffd965d2230
+rax            0x16                22
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$85 = 22
+
+(gdb) p/x &block[0]
+$86 = 0x7ffd965d1220
+
+(gdb) p sizeof block
+$87 = 4096
+
+(gdb) p stack_limit
+$88 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 22 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965d01e0      0x7ffd965d01e0
+rbp            0x7ffd965d1200      0x7ffd965d1200
+rax            0x17                23
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$89 = 23
+
+(gdb) p/x &block[0]
+$90 = 0x7ffd965d01f0
+
+(gdb) p sizeof block
+$91 = 4096
+
+(gdb) p stack_limit
+$92 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 23 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965cf1b0      0x7ffd965cf1b0
+rbp            0x7ffd965d01d0      0x7ffd965d01d0
+rax            0x18                24
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$93 = 24
+
+(gdb) p/x &block[0]
+$94 = 0x7ffd965cf1c0
+
+(gdb) p sizeof block
+$95 = 4096
+
+(gdb) p stack_limit
+$96 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 24 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965ce180      0x7ffd965ce180
+rbp            0x7ffd965cf1a0      0x7ffd965cf1a0
+rax            0x19                25
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$97 = 25
+
+(gdb) p/x &block[0]
+$98 = 0x7ffd965ce190
+
+(gdb) p sizeof block
+$99 = 4096
+
+(gdb) p stack_limit
+$100 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 25 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965cd150      0x7ffd965cd150
+rbp            0x7ffd965ce170      0x7ffd965ce170
+rax            0x1a                26
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$101 = 26
+
+(gdb) p/x &block[0]
+$102 = 0x7ffd965cd160
+
+(gdb) p sizeof block
+$103 = 4096
+
+(gdb) p stack_limit
+$104 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 26 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965cc120      0x7ffd965cc120
+rbp            0x7ffd965cd140      0x7ffd965cd140
+rax            0x1b                27
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$105 = 27
+
+(gdb) p/x &block[0]
+$106 = 0x7ffd965cc130
+
+(gdb) p sizeof block
+$107 = 4096
+
+(gdb) p stack_limit
+$108 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 27 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965cb0f0      0x7ffd965cb0f0
+rbp            0x7ffd965cc110      0x7ffd965cc110
+rax            0x1c                28
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$109 = 28
+
+(gdb) p/x &block[0]
+$110 = 0x7ffd965cb100
+
+(gdb) p sizeof block
+$111 = 4096
+
+(gdb) p stack_limit
+$112 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 28 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965ca0c0      0x7ffd965ca0c0
+rbp            0x7ffd965cb0e0      0x7ffd965cb0e0
+rax            0x1d                29
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$113 = 29
+
+(gdb) p/x &block[0]
+$114 = 0x7ffd965ca0d0
+
+(gdb) p sizeof block
+$115 = 4096
+
+(gdb) p stack_limit
+$116 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 29 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c9090      0x7ffd965c9090
+rbp            0x7ffd965ca0b0      0x7ffd965ca0b0
+rax            0x1e                30
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$117 = 30
+
+(gdb) p/x &block[0]
+$118 = 0x7ffd965c90a0
+
+(gdb) p sizeof block
+$119 = 4096
+
+(gdb) p stack_limit
+$120 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 30 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c8060      0x7ffd965c8060
+rbp            0x7ffd965c9080      0x7ffd965c9080
+rax            0x1f                31
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$121 = 31
+
+(gdb) p/x &block[0]
+$122 = 0x7ffd965c8070
+
+(gdb) p sizeof block
+$123 = 4096
+
+(gdb) p stack_limit
+$124 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 31 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c7030      0x7ffd965c7030
+rbp            0x7ffd965c8050      0x7ffd965c8050
+rax            0x20                32
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$125 = 32
+
+(gdb) p/x &block[0]
+$126 = 0x7ffd965c7040
+
+(gdb) p sizeof block
+$127 = 4096
+
+(gdb) p stack_limit
+$128 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 32 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c6000      0x7ffd965c6000
+rbp            0x7ffd965c7020      0x7ffd965c7020
+rax            0x21                33
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$129 = 33
+
+(gdb) p/x &block[0]
+$130 = 0x7ffd965c6010
+
+(gdb) p sizeof block
+$131 = 4096
+
+(gdb) p stack_limit
+$132 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 33 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c4fd0      0x7ffd965c4fd0
+rbp            0x7ffd965c5ff0      0x7ffd965c5ff0
+rax            0x22                34
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$133 = 34
+
+(gdb) p/x &block[0]
+$134 = 0x7ffd965c4fe0
+
+(gdb) p sizeof block
+$135 = 4096
+
+(gdb) p stack_limit
+$136 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 34 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c3fa0      0x7ffd965c3fa0
+rbp            0x7ffd965c4fc0      0x7ffd965c4fc0
+rax            0x23                35
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$137 = 35
+
+(gdb) p/x &block[0]
+$138 = 0x7ffd965c3fb0
+
+(gdb) p sizeof block
+$139 = 4096
+
+(gdb) p stack_limit
+$140 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 35 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c2f70      0x7ffd965c2f70
+rbp            0x7ffd965c3f90      0x7ffd965c3f90
+rax            0x24                36
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$141 = 36
+
+(gdb) p/x &block[0]
+$142 = 0x7ffd965c2f80
+
+(gdb) p sizeof block
+$143 = 4096
+
+(gdb) p stack_limit
+$144 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 36 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c1f40      0x7ffd965c1f40
+rbp            0x7ffd965c2f60      0x7ffd965c2f60
+rax            0x25                37
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$145 = 37
+
+(gdb) p/x &block[0]
+$146 = 0x7ffd965c1f50
+
+(gdb) p sizeof block
+$147 = 4096
+
+(gdb) p stack_limit
+$148 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 37 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965c0f10      0x7ffd965c0f10
+rbp            0x7ffd965c1f30      0x7ffd965c1f30
+rax            0x26                38
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$149 = 38
+
+(gdb) p/x &block[0]
+$150 = 0x7ffd965c0f20
+
+(gdb) p sizeof block
+$151 = 4096
+
+(gdb) p stack_limit
+$152 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 38 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965bfee0      0x7ffd965bfee0
+rbp            0x7ffd965c0f00      0x7ffd965c0f00
+rax            0x27                39
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$153 = 39
+
+(gdb) p/x &block[0]
+$154 = 0x7ffd965bfef0
+
+(gdb) p sizeof block
+$155 = 4096
+
+(gdb) p stack_limit
+$156 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 39 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965beeb0      0x7ffd965beeb0
+rbp            0x7ffd965bfed0      0x7ffd965bfed0
+rax            0x28                40
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$157 = 40
+
+(gdb) p/x &block[0]
+$158 = 0x7ffd965beec0
+
+(gdb) p sizeof block
+$159 = 4096
+
+(gdb) p stack_limit
+$160 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 40 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965bde80      0x7ffd965bde80
+rbp            0x7ffd965beea0      0x7ffd965beea0
+rax            0x29                41
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$161 = 41
+
+(gdb) p/x &block[0]
+$162 = 0x7ffd965bde90
+
+(gdb) p sizeof block
+$163 = 4096
+
+(gdb) p stack_limit
+$164 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 41 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965bce50      0x7ffd965bce50
+rbp            0x7ffd965bde70      0x7ffd965bde70
+rax            0x2a                42
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$165 = 42
+
+(gdb) p/x &block[0]
+$166 = 0x7ffd965bce60
+
+(gdb) p sizeof block
+$167 = 4096
+
+(gdb) p stack_limit
+$168 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 42 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965bbe20      0x7ffd965bbe20
+rbp            0x7ffd965bce40      0x7ffd965bce40
+rax            0x2b                43
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$169 = 43
+
+(gdb) p/x &block[0]
+$170 = 0x7ffd965bbe30
+
+(gdb) p sizeof block
+$171 = 4096
+
+(gdb) p stack_limit
+$172 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 43 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965badf0      0x7ffd965badf0
+rbp            0x7ffd965bbe10      0x7ffd965bbe10
+rax            0x2c                44
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$173 = 44
+
+(gdb) p/x &block[0]
+$174 = 0x7ffd965bae00
+
+(gdb) p sizeof block
+$175 = 4096
+
+(gdb) p stack_limit
+$176 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 44 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b9dc0      0x7ffd965b9dc0
+rbp            0x7ffd965bade0      0x7ffd965bade0
+rax            0x2d                45
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$177 = 45
+
+(gdb) p/x &block[0]
+$178 = 0x7ffd965b9dd0
+
+(gdb) p sizeof block
+$179 = 4096
+
+(gdb) p stack_limit
+$180 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 45 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b8d90      0x7ffd965b8d90
+rbp            0x7ffd965b9db0      0x7ffd965b9db0
+rax            0x2e                46
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$181 = 46
+
+(gdb) p/x &block[0]
+$182 = 0x7ffd965b8da0
+
+(gdb) p sizeof block
+$183 = 4096
+
+(gdb) p stack_limit
+$184 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 46 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b7d60      0x7ffd965b7d60
+rbp            0x7ffd965b8d80      0x7ffd965b8d80
+rax            0x2f                47
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$185 = 47
+
+(gdb) p/x &block[0]
+$186 = 0x7ffd965b7d70
+
+(gdb) p sizeof block
+$187 = 4096
+
+(gdb) p stack_limit
+$188 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 47 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b6d30      0x7ffd965b6d30
+rbp            0x7ffd965b7d50      0x7ffd965b7d50
+rax            0x30                48
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$189 = 48
+
+(gdb) p/x &block[0]
+$190 = 0x7ffd965b6d40
+
+(gdb) p sizeof block
+$191 = 4096
+
+(gdb) p stack_limit
+$192 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 48 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b5d00      0x7ffd965b5d00
+rbp            0x7ffd965b6d20      0x7ffd965b6d20
+rax            0x31                49
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$193 = 49
+
+(gdb) p/x &block[0]
+$194 = 0x7ffd965b5d10
+
+(gdb) p sizeof block
+$195 = 4096
+
+(gdb) p stack_limit
+$196 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 49 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b4cd0      0x7ffd965b4cd0
+rbp            0x7ffd965b5cf0      0x7ffd965b5cf0
+rax            0x32                50
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$197 = 50
+
+(gdb) p/x &block[0]
+$198 = 0x7ffd965b4ce0
+
+(gdb) p sizeof block
+$199 = 4096
+
+(gdb) p stack_limit
+$200 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 50 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b3ca0      0x7ffd965b3ca0
+rbp            0x7ffd965b4cc0      0x7ffd965b4cc0
+rax            0x33                51
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$201 = 51
+
+(gdb) p/x &block[0]
+$202 = 0x7ffd965b3cb0
+
+(gdb) p sizeof block
+$203 = 4096
+
+(gdb) p stack_limit
+$204 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 51 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b2c70      0x7ffd965b2c70
+rbp            0x7ffd965b3c90      0x7ffd965b3c90
+rax            0x34                52
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$205 = 52
+
+(gdb) p/x &block[0]
+$206 = 0x7ffd965b2c80
+
+(gdb) p sizeof block
+$207 = 4096
+
+(gdb) p stack_limit
+$208 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 52 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b1c40      0x7ffd965b1c40
+rbp            0x7ffd965b2c60      0x7ffd965b2c60
+rax            0x35                53
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$209 = 53
+
+(gdb) p/x &block[0]
+$210 = 0x7ffd965b1c50
+
+(gdb) p sizeof block
+$211 = 4096
+
+(gdb) p stack_limit
+$212 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 53 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965b0c10      0x7ffd965b0c10
+rbp            0x7ffd965b1c30      0x7ffd965b1c30
+rax            0x36                54
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$213 = 54
+
+(gdb) p/x &block[0]
+$214 = 0x7ffd965b0c20
+
+(gdb) p sizeof block
+$215 = 4096
+
+(gdb) p stack_limit
+$216 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 54 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965afbe0      0x7ffd965afbe0
+rbp            0x7ffd965b0c00      0x7ffd965b0c00
+rax            0x37                55
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$217 = 55
+
+(gdb) p/x &block[0]
+$218 = 0x7ffd965afbf0
+
+(gdb) p sizeof block
+$219 = 4096
+
+(gdb) p stack_limit
+$220 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 55 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965aebb0      0x7ffd965aebb0
+rbp            0x7ffd965afbd0      0x7ffd965afbd0
+rax            0x38                56
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$221 = 56
+
+(gdb) p/x &block[0]
+$222 = 0x7ffd965aebc0
+
+(gdb) p sizeof block
+$223 = 4096
+
+(gdb) p stack_limit
+$224 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 56 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965adb80      0x7ffd965adb80
+rbp            0x7ffd965aeba0      0x7ffd965aeba0
+rax            0x39                57
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$225 = 57
+
+(gdb) p/x &block[0]
+$226 = 0x7ffd965adb90
+
+(gdb) p sizeof block
+$227 = 4096
+
+(gdb) p stack_limit
+$228 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 57 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965acb50      0x7ffd965acb50
+rbp            0x7ffd965adb70      0x7ffd965adb70
+rax            0x3a                58
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$229 = 58
+
+(gdb) p/x &block[0]
+$230 = 0x7ffd965acb60
+
+(gdb) p sizeof block
+$231 = 4096
+
+(gdb) p stack_limit
+$232 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 58 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965abb20      0x7ffd965abb20
+rbp            0x7ffd965acb40      0x7ffd965acb40
+rax            0x3b                59
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$233 = 59
+
+(gdb) p/x &block[0]
+$234 = 0x7ffd965abb30
+
+(gdb) p sizeof block
+$235 = 4096
+
+(gdb) p stack_limit
+$236 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / phase-1 / PID 1065564 / sample 59 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91e6      0x61142e8c91e6 <f+61>
+rsp            0x7ffd965aaaf0      0x7ffd965aaaf0
+rbp            0x7ffd965abb10      0x7ffd965abb10
+rax            0x3c                60
+
+(gdb) x/i $rip
+=> 0x61142e8c91e6 <f+61>:	nop
+
+(gdb) p depth
+$237 = 60
+
+(gdb) p/x &block[0]
+$238 = 0x7ffd965aab00
+
+(gdb) p sizeof block
+$239 = 4096
+
+(gdb) p stack_limit
+$240 = 262144
+
+(gdb) continue
+
+
+
+=== exhaust / signal / PID 1065564 / sample 60 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x61142e8c91b8      0x61142e8c91b8 <f+15>
+rsp            0x7ffd965a9ae0      0x7ffd965a9ae0
+rbp            0x7ffd965aaae0      0x7ffd965aaae0
+rax            0x3d                61
+
+(gdb) x/i $rip
+=> 0x61142e8c91b8 <f+15>:	orq    $0x0,(%rsp)
+
+(gdb) p $_siginfo
+$241 = {si_signo = 11, si_errno = 0, si_code = 1, _sifields = {_pad = {-1772447008, 32765, 0 <repeats 26 times>}, _kill = {si_pid = -1772447008, si_uid = 32765}, _timer = {si_tid = -1772447008, si_overrun = 32765, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _rt = {si_pid = -1772447008, si_uid = 32765, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _sigchld = {si_pid = -1772447008, si_uid = 32765, si_status = 0, si_utime = 0, si_stime = 0}, _sigfault = {si_addr = 0x7ffd965a9ae0, _addr_lsb = 0, _addr_bnd = {_lower = 0x0, _upper = 0x0}}, _sigpoll = {si_band = 140727125973728, si_fd = 0}, _sigsys = {_call_addr = 0x7ffd965a9ae0, _syscall = 0, _arch = 0}}}
+
+(gdb) bt 8
+#0  0x000061142e8c91b8 in f (depth=0) at experiments/stack-recursion.c:12
+#1  0x000061142e8c9216 in f (depth=60) at experiments/stack-recursion.c:20
+#2  0x000061142e8c9216 in f (depth=59) at experiments/stack-recursion.c:20
+#3  0x000061142e8c9216 in f (depth=58) at experiments/stack-recursion.c:20
+#4  0x000061142e8c9216 in f (depth=57) at experiments/stack-recursion.c:20
+#5  0x000061142e8c9216 in f (depth=56) at experiments/stack-recursion.c:20
+#6  0x000061142e8c9216 in f (depth=55) at experiments/stack-recursion.c:20
+#7  0x000061142e8c9216 in f (depth=54) at experiments/stack-recursion.c:20
+
+(gdb) kill
+[Inferior 1 (process 1065564) killed]
+
+=== RUN bounded ===
+(gdb) run bounded > .trace-build/stack-recursion-bounded.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+
+=== bounded / phase-1 / PID 1065577 / sample 0 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>
+rsp            0x7ffe5a6537c0      0x7ffe5a6537c0
+rbp            0x7ffe5a6547e0      0x7ffe5a6547e0
+rax            0x1                 1
+
+(gdb) x/i $rip
+=> 0x5d46952c61e6 <f+61>:	nop
+
+(gdb) p depth
+$1 = 1
+
+(gdb) p/x &block[0]
+$2 = 0x7ffe5a6537d0
+
+(gdb) p sizeof block
+$3 = 4096
+
+(gdb) p stack_limit
+$4 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-1 / PID 1065577 / sample 1 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>
+rsp            0x7ffe5a652790      0x7ffe5a652790
+rbp            0x7ffe5a6537b0      0x7ffe5a6537b0
+rax            0x2                 2
+
+(gdb) x/i $rip
+=> 0x5d46952c61e6 <f+61>:	nop
+
+(gdb) p depth
+$5 = 2
+
+(gdb) p/x &block[0]
+$6 = 0x7ffe5a6527a0
+
+(gdb) p sizeof block
+$7 = 4096
+
+(gdb) p stack_limit
+$8 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-1 / PID 1065577 / sample 2 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>
+rsp            0x7ffe5a651760      0x7ffe5a651760
+rbp            0x7ffe5a652780      0x7ffe5a652780
+rax            0x3                 3
+
+(gdb) x/i $rip
+=> 0x5d46952c61e6 <f+61>:	nop
+
+(gdb) p depth
+$9 = 3
+
+(gdb) p/x &block[0]
+$10 = 0x7ffe5a651770
+
+(gdb) p sizeof block
+$11 = 4096
+
+(gdb) p stack_limit
+$12 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-1 / PID 1065577 / sample 3 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c61e6      0x5d46952c61e6 <f+61>
+rsp            0x7ffe5a650730      0x7ffe5a650730
+rbp            0x7ffe5a651750      0x7ffe5a651750
+rax            0x4                 4
+
+(gdb) x/i $rip
+=> 0x5d46952c61e6 <f+61>:	nop
+
+(gdb) p depth
+$13 = 4
+
+(gdb) p/x &block[0]
+$14 = 0x7ffe5a650740
+
+(gdb) p sizeof block
+$15 = 4096
+
+(gdb) p stack_limit
+$16 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-2 / PID 1065577 / sample 4 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c6223      0x5d46952c6223 <f+122>
+rsp            0x7ffe5a650730      0x7ffe5a650730
+rbp            0x7ffe5a651750      0x7ffe5a651750
+rax            0x4                 4
+
+(gdb) x/i $rip
+=> 0x5d46952c6223 <f+122>:	nop
+
+(gdb) p depth
+$17 = 4
+
+(gdb) p/x &block[0]
+$18 = 0x7ffe5a650740
+
+(gdb) p sizeof block
+$19 = 4096
+
+(gdb) p stack_limit
+$20 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-2 / PID 1065577 / sample 5 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c6223      0x5d46952c6223 <f+122>
+rsp            0x7ffe5a651760      0x7ffe5a651760
+rbp            0x7ffe5a652780      0x7ffe5a652780
+rax            0x4                 4
+
+(gdb) x/i $rip
+=> 0x5d46952c6223 <f+122>:	nop
+
+(gdb) p depth
+$21 = 3
+
+(gdb) p/x &block[0]
+$22 = 0x7ffe5a651770
+
+(gdb) p sizeof block
+$23 = 4096
+
+(gdb) p stack_limit
+$24 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-2 / PID 1065577 / sample 6 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c6223      0x5d46952c6223 <f+122>
+rsp            0x7ffe5a652790      0x7ffe5a652790
+rbp            0x7ffe5a6537b0      0x7ffe5a6537b0
+rax            0x7                 7
+
+(gdb) x/i $rip
+=> 0x5d46952c6223 <f+122>:	nop
+
+(gdb) p depth
+$25 = 2
+
+(gdb) p/x &block[0]
+$26 = 0x7ffe5a6527a0
+
+(gdb) p sizeof block
+$27 = 4096
+
+(gdb) p stack_limit
+$28 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-2 / PID 1065577 / sample 7 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c6223      0x5d46952c6223 <f+122>
+rsp            0x7ffe5a6537c0      0x7ffe5a6537c0
+rbp            0x7ffe5a6547e0      0x7ffe5a6547e0
+rax            0x9                 9
+
+(gdb) x/i $rip
+=> 0x5d46952c6223 <f+122>:	nop
+
+(gdb) p depth
+$29 = 1
+
+(gdb) p/x &block[0]
+$30 = 0x7ffe5a6537d0
+
+(gdb) p sizeof block
+$31 = 4096
+
+(gdb) p stack_limit
+$32 = 262144
+
+(gdb) continue
+
+
+
+=== bounded / phase-3 / PID 1065577 / sample 8 ===
+
+(gdb) info registers rip rsp rbp rax
+rip            0x5d46952c6353      0x5d46952c6353 <main+286>
+rsp            0x7ffe5a6547f0      0x7ffe5a6547f0
+rbp            0x7ffe5a654820      0x7ffe5a654820
+rax            0xa                 10
+
+(gdb) x/i $rip
+=> 0x5d46952c6353 <main+286>:	nop
+
+(gdb) p observed_sum
+$33 = 10
+
+(gdb) continue
+

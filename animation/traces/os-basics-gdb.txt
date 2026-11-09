@@ -1,0 +1,2827 @@
+Captured 2026-11-06T06:30:16.347Z
+ELF SHA256 6d0718ddbceff284cb23c8f444a56f936b21943f84937786a122b53ba4710b87
+gcc -std=c11 -O0 -g3 -fPIE -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic -E experiments/os-main.c -o .trace-build/os-basics/os-main.i
+gcc -std=c11 -O0 -g3 -fPIE -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic -S experiments/os-main.c -o .trace-build/os-basics/os-main.s
+gcc -std=c11 -O0 -g3 -fPIE -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic -c experiments/os-main.c -o .trace-build/os-basics/os-main.o
+gcc -std=c11 -O0 -g3 -fPIE -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic -E experiments/os-math.c -o .trace-build/os-basics/os-math.i
+gcc -std=c11 -O0 -g3 -fPIE -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic -S experiments/os-math.c -o .trace-build/os-basics/os-math.s
+gcc -std=c11 -O0 -g3 -fPIE -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -Wall -Wextra -Wpedantic -c experiments/os-math.c -o .trace-build/os-basics/os-math.o
+gcc -pie .trace-build/os-basics/os-main.o .trace-build/os-basics/os-math.o -o .trace-build/os-basics/os-demo
+
+=== first ===
+(gdb) set pagination off
+
+
+(gdb) set confirm off
+
+
+(gdb) set print elements 32
+
+
+(gdb) set disassembly-flavor att
+
+
+(gdb) set disable-randomization off
+
+
+(gdb) file /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+
+
+(gdb) set args inspect
+
+
+(gdb) starti inspect > /home/jason/study/ck_study/animation/.trace-build/os-basics/first.stdout
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x0                 0
+rbx            0x0                 0
+rcx            0x0                 0
+rdx            0x0                 0
+rsi            0x0                 0
+rdi            0x0                 0
+rbp            0x0                 0x0
+rsp            0x7ffcbe4b5150      0x7ffcbe4b5150
+r8             0x0                 0
+r9             0x0                 0
+r10            0x0                 0
+r11            0x0                 0
+r12            0x0                 0
+r13            0x0                 0
+r14            0x0                 0
+r15            0x0                 0
+rip            0x7d6d68e80540      0x7d6d68e80540 <_start>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x7d6d68e80540 <_start>:	mov    %rsp,%rdi
+
+(gdb) info proc mappings
+process 1248369
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x587737804000     0x587737805000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737805000     0x587737806000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737806000     0x587737807000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737807000     0x587737809000     0x2000     0x2000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x7d6d68e59000     0x7d6d68e5d000     0x4000        0x0  r--p   [vvar]
+      0x7d6d68e5d000     0x7d6d68e5f000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7d6d68e5f000     0x7d6d68e61000     0x2000        0x0  r-xp   [vdso]
+      0x7d6d68e61000     0x7d6d68e62000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e62000     0x7d6d68e8d000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e8d000     0x7d6d68e97000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e97000     0x7d6d68e9b000     0x4000    0x36000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffcbe495000     0x7ffcbe4b7000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7d6d68e5f000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x587737804040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7d6d68e61000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x587737805280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffcbe4b54a9
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffcbe4b6fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffcbe4b54b9 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+
+=== first / interpreter-entry / PID 1248369 ===
+
+(gdb) continue
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x38                56
+rbx            0x0                 0
+rcx            0x7ffcbe4b5170      140723501093232
+rdx            0x7d6d68e66380      137908864836480
+rsi            0x7d6d68e9a8b8      137908865050808
+rdi            0x7d6d68e9a2e0      137908865049312
+rbp            0x0                 0x0
+rsp            0x7ffcbe4b5150      0x7ffcbe4b5150
+r8             0x7ffcbe4b5cc3      140723501096131
+r9             0x7d6d68e97440      137908865037376
+r10            0x7ffcbe4b4d50      140723501092176
+r11            0x203               515
+r12            0x587737805280      97269055509120
+r13            0x7ffcbe4b5150      140723501093200
+r14            0x0                 0
+r15            0x0                 0
+rip            0x587737805280      0x587737805280 <_start>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805280 <_start>:	endbr64
+
+(gdb) info proc mappings
+process 1248369
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x587737804000     0x587737805000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737805000     0x587737806000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737806000     0x587737807000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737807000     0x587737808000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737808000     0x587737809000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x7d6d68c00000     0x7d6d68c28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68c28000     0x7d6d68db1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68db1000     0x7d6d68e00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e00000     0x7d6d68e04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e04000     0x7d6d68e06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e06000     0x7d6d68e13000     0xd000        0x0  rw-p   
+      0x7d6d68e48000     0x7d6d68e4b000     0x3000        0x0  rw-p   
+      0x7d6d68e57000     0x7d6d68e59000     0x2000        0x0  rw-p   
+      0x7d6d68e59000     0x7d6d68e5d000     0x4000        0x0  r--p   [vvar]
+      0x7d6d68e5d000     0x7d6d68e5f000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7d6d68e5f000     0x7d6d68e61000     0x2000        0x0  r-xp   [vdso]
+      0x7d6d68e61000     0x7d6d68e62000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e62000     0x7d6d68e8d000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e8d000     0x7d6d68e97000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e97000     0x7d6d68e99000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e99000     0x7d6d68e9b000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffcbe495000     0x7ffcbe4b7000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7d6d68e5f000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x587737804040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7d6d68e61000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x587737805280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffcbe4b54a9
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffcbe4b6fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffcbe4b54b9 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) x/5gx $rsp
+0x7ffcbe4b5150:	0x0000000000000002	0x00007ffcbe4b5cc3
+0x7ffcbe4b5160:	0x00007ffcbe4b5d07	0x0000000000000000
+0x7ffcbe4b5170:	0x00007ffcbe4b5d0f
+
+
+=== first / app-entry / PID 1248369 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x58773780541d      97269055509533
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x587737807d38      97269055520056
+rdx            0x7ffcbe4b5170      140723501093232
+rsi            0x7ffcbe4b5158      140723501093208
+rdi            0x2                 2
+rbp            0x7ffcbe4b50d0      0x7ffcbe4b50d0
+rsp            0x7ffcbe4b5038      0x7ffcbe4b5038
+r8             0x0                 0
+r9             0x7d6d68e66380      137908864836480
+r10            0x7ffcbe4b4d50      140723501092176
+r11            0x203               515
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x58773780541d      0x58773780541d <main>
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x58773780541d <main>:	endbr64
+
+(gdb) info proc mappings
+process 1248369
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x587737804000     0x587737805000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737805000     0x587737806000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737806000     0x587737807000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737807000     0x587737808000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737808000     0x587737809000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x7d6d68c00000     0x7d6d68c28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68c28000     0x7d6d68db1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68db1000     0x7d6d68e00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e00000     0x7d6d68e04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e04000     0x7d6d68e06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e06000     0x7d6d68e13000     0xd000        0x0  rw-p   
+      0x7d6d68e48000     0x7d6d68e4b000     0x3000        0x0  rw-p   
+      0x7d6d68e57000     0x7d6d68e59000     0x2000        0x0  rw-p   
+      0x7d6d68e59000     0x7d6d68e5d000     0x4000        0x0  r--p   [vvar]
+      0x7d6d68e5d000     0x7d6d68e5f000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7d6d68e5f000     0x7d6d68e61000     0x2000        0x0  r-xp   [vdso]
+      0x7d6d68e61000     0x7d6d68e62000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e62000     0x7d6d68e8d000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e8d000     0x7d6d68e97000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e97000     0x7d6d68e99000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e99000     0x7d6d68e9b000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffcbe495000     0x7ffcbe4b7000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7d6d68e5f000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x587737804040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7d6d68e61000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x587737805280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffcbe4b54a9
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffcbe4b6fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffcbe4b54b9 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+
+=== first / main-entry / PID 1248369 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x1000              4096
+rdi            0x1                 1
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805381      0x587737805381 <os_checkpoint+24>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248369
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x587737804000     0x587737805000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737805000     0x587737806000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737806000     0x587737807000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737807000     0x587737808000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737808000     0x587737809000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5877491ff000     0x587749220000    0x21000        0x0  rw-p   [heap]
+      0x7d6d68c00000     0x7d6d68c28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68c28000     0x7d6d68db1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68db1000     0x7d6d68e00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e00000     0x7d6d68e04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e04000     0x7d6d68e06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e06000     0x7d6d68e13000     0xd000        0x0  rw-p   
+      0x7d6d68e48000     0x7d6d68e4b000     0x3000        0x0  rw-p   
+      0x7d6d68e55000     0x7d6d68e56000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x7d6d68e56000     0x7d6d68e59000     0x3000        0x0  rw-p   
+      0x7d6d68e59000     0x7d6d68e5d000     0x4000        0x0  r--p   [vvar]
+      0x7d6d68e5d000     0x7d6d68e5f000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7d6d68e5f000     0x7d6d68e61000     0x2000        0x0  r-xp   [vdso]
+      0x7d6d68e61000     0x7d6d68e62000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e62000     0x7d6d68e8d000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e8d000     0x7d6d68e97000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e97000     0x7d6d68e99000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e99000     0x7d6d68e9b000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffcbe495000     0x7ffcbe4b7000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7d6d68e5f000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x587737804040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7d6d68e61000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x587737805280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffcbe4b54a9
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffcbe4b6fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffcbe4b54b9 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$1 = 1
+
+(gdb) p os_fork_result
+$2 = -1
+
+(gdb) p os_child
+$3 = -1
+
+(gdb) p/x &os_data
+$4 = 0x587737808018
+
+(gdb) p os_data
+$5 = 10
+
+(gdb) p os_bss
+$6 = 0
+
+(gdb) p/x os_stack
+$7 = 0x7ffcbe4b4fc8
+
+(gdb) p *os_stack
+$8 = 20
+
+(gdb) p/x os_heap
+$9 = 0x5877491ff2a0
+
+(gdb) p *os_heap
+$10 = 30
+
+(gdb) p/x os_private
+$11 = 0x7d6d68e56000
+
+(gdb) p *os_private
+$12 = 40
+
+(gdb) p/x os_shared
+$13 = 0x7d6d68e55000
+
+(gdb) p *os_shared
+$14 = 50
+
+(gdb) p os_result
+$15 = 0
+
+
+=== first / layout-ready / PID 1248369 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058b5      0x5877378058b5 <os_add>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058b5 <os_add>:	endbr64
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f98:	0x000058773780559f
+
+
+=== first / os_add-entry / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058b9      0x5877378058b9 <os_add+4>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058b9 <os_add+4>:	push   %rbp
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f98:	0x000058773780559f
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058ba      0x5877378058ba <os_add+5>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058ba <os_add+5>:	mov    %rsp,%rbp
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f90:	0x00007ffcbe4b5030
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058bd      0x5877378058bd <os_add+8>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058bd <os_add+8>:	sub    $0x8,%rsp
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f90:	0x00007ffcbe4b5030
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058c1      0x5877378058c1 <os_add+12>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058c1 <os_add+12>:	mov    %edi,-0x4(%rbp)
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f88:	0x0000000100000002
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058c4      0x5877378058c4 <os_add+15>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058c4 <os_add+15>:	mov    %esi,-0x8(%rbp)
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f88:	0x0000000300000002
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058c7      0x5877378058c7 <os_add+18>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058c7 <os_add+18>:	mov    -0x4(%rbp),%edx
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f88:	0x0000000300000002
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058ca      0x5877378058ca <os_add+21>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058ca <os_add+21>:	mov    -0x8(%rbp),%eax
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f88:	0x0000000300000002
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x2                 2
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058cd      0x5877378058cd <os_add+24>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058cd <os_add+24>:	add    %edx,%eax
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f88:	0x0000000300000002
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058cf      0x5877378058cf <os_add+26>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058cf <os_add+26>:	leave
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f88:	0x0000000300000002
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058d0      0x5877378058d0 <os_add+27>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058d0 <os_add+27>:	ret
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4f98:	0x000058773780559f
+
+
+=== first / os_add-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4fa0      0x7ffcbe4b4fa0
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x58773780559f      0x58773780559f <main+386>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x58773780559f <main+386>:	mov    %eax,0x2a8b(%rip)        # 0x587737808030 <os_result>
+
+(gdb) x/gx $rsp
+0x7ffcbe4b4fa0:	0x000000000000c000
+
+
+=== first / os_add-returned / PID 1248369 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058d1      0x5877378058d1 <os_width>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058d1 <os_width>:	endbr64
+
+
+=== first / os_width-entry / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058d5      0x5877378058d5 <os_width+4>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058d5 <os_width+4>:	push   %rbp
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058d6      0x5877378058d6 <os_width+5>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058d6 <os_width+5>:	mov    %rsp,%rbp
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058d9      0x5877378058d9 <os_width+8>
+eflags         0x206               [ PF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058d9 <os_width+8>:	sub    $0x10,%rsp
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f80      0x7ffcbe4b4f80
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058dd      0x5877378058dd <os_width+12>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058dd <os_width+12>:	movabs $0xffffffffffffffff,%rax
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0xffffffffffffffff  -1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f80      0x7ffcbe4b4f80
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058e7      0x5877378058e7 <os_width+22>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058e7 <os_width+22>:	mov    $0x5,%eax
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f80      0x7ffcbe4b4f80
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058ec      0x5877378058ec <os_width+27>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058ec <os_width+27>:	mov    %rax,-0x8(%rbp)
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f80      0x7ffcbe4b4f80
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058f0      0x5877378058f0 <os_width+31>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058f0 <os_width+31>:	mov    -0x8(%rbp),%rax
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f80      0x7ffcbe4b4f80
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058f4      0x5877378058f4 <os_width+35>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058f4 <os_width+35>:	leave
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058f5      0x5877378058f5 <os_width+36>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058f5 <os_width+36>:	ret
+
+
+=== first / os_width-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x2                 2
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4fa0      0x7ffcbe4b4fa0
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378055aa      0x5877378055aa <main+397>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378055aa <main+397>:	mov    %rax,0x2a87(%rip)        # 0x587737808038 <os_width_result>
+
+
+=== first / os_width-returned / PID 1248369 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058f6      0x5877378058f6 <os_equal>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058f6 <os_equal>:	endbr64
+
+
+=== first / os_equal-entry / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058fa      0x5877378058fa <os_equal+4>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058fa <os_equal+4>:	push   %rbp
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058fb      0x5877378058fb <os_equal+5>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058fb <os_equal+5>:	mov    %rsp,%rbp
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378058fe      0x5877378058fe <os_equal+8>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5877378058fe <os_equal+8>:	sub    $0x8,%rsp
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805902      0x587737805902 <os_equal+12>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805902 <os_equal+12>:	mov    %edi,-0x4(%rbp)
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805905      0x587737805905 <os_equal+15>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805905 <os_equal+15>:	mov    %esi,-0x8(%rbp)
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805908      0x587737805908 <os_equal+18>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805908 <os_equal+18>:	mov    -0x4(%rbp),%eax
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x3                 3
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x58773780590b      0x58773780590b <os_equal+21>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x58773780590b <os_equal+21>:	cmp    -0x8(%rbp),%eax
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x3                 3
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x58773780590e      0x58773780590e <os_equal+24>
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x58773780590e <os_equal+24>:	sete   %al
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805911      0x587737805911 <os_equal+27>
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805911 <os_equal+27>:	movzbl %al,%eax
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805914      0x587737805914 <os_equal+30>
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805914 <os_equal+30>:	leave
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4f98      0x7ffcbe4b4f98
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805915      0x587737805915 <os_equal+31>
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805915 <os_equal+31>:	ret
+
+
+=== first / os_equal-step / PID 1248369 ===
+
+(gdb) si
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x3                 3
+rbp            0x7ffcbe4b5030      0x7ffcbe4b5030
+rsp            0x7ffcbe4b4fa0      0x7ffcbe4b4fa0
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x5877378055c0      0x5877378055c0 <main+419>
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x5877378055c0 <main+419>:	mov    %eax,0x2a6e(%rip)        # 0x587737808034 <os_equal_result>
+
+
+=== first / os_equal-returned / PID 1248369 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x2                 2
+rbx            0x7ffcbe4b5158      140723501093208
+rcx            0x7d6d68d255ec      137908863522284
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x2                 2
+rbp            0x7ffcbe4b4f90      0x7ffcbe4b4f90
+rsp            0x7ffcbe4b4f88      0x7ffcbe4b4f88
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x587737807d38      97269055520056
+r15            0x7d6d68e99000      137908865044480
+rip            0x587737805381      0x587737805381 <os_checkpoint+24>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x587737805381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248369
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x587737804000     0x587737805000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737805000     0x587737806000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737806000     0x587737807000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737807000     0x587737808000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x587737808000     0x587737809000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5877491ff000     0x587749220000    0x21000        0x0  rw-p   [heap]
+      0x7d6d68c00000     0x7d6d68c28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68c28000     0x7d6d68db1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68db1000     0x7d6d68e00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e00000     0x7d6d68e04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e04000     0x7d6d68e06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7d6d68e06000     0x7d6d68e13000     0xd000        0x0  rw-p   
+      0x7d6d68e48000     0x7d6d68e4b000     0x3000        0x0  rw-p   
+      0x7d6d68e55000     0x7d6d68e56000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x7d6d68e56000     0x7d6d68e59000     0x3000        0x0  rw-p   
+      0x7d6d68e59000     0x7d6d68e5d000     0x4000        0x0  r--p   [vvar]
+      0x7d6d68e5d000     0x7d6d68e5f000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7d6d68e5f000     0x7d6d68e61000     0x2000        0x0  r-xp   [vdso]
+      0x7d6d68e61000     0x7d6d68e62000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e62000     0x7d6d68e8d000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e8d000     0x7d6d68e97000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e97000     0x7d6d68e99000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7d6d68e99000     0x7d6d68e9b000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffcbe495000     0x7ffcbe4b7000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7d6d68e5f000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x587737804040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7d6d68e61000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x587737805280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffcbe4b54a9
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffcbe4b6fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffcbe4b54b9 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$16 = 2
+
+(gdb) p os_fork_result
+$17 = -1
+
+(gdb) p os_child
+$18 = -1
+
+(gdb) p/x &os_data
+$19 = 0x587737808018
+
+(gdb) p os_data
+$20 = 10
+
+(gdb) p os_bss
+$21 = 0
+
+(gdb) p/x os_stack
+$22 = 0x7ffcbe4b4fc8
+
+(gdb) p *os_stack
+$23 = 20
+
+(gdb) p/x os_heap
+$24 = 0x5877491ff2a0
+
+(gdb) p *os_heap
+$25 = 30
+
+(gdb) p/x os_private
+$26 = 0x7d6d68e56000
+
+(gdb) p *os_private
+$27 = 40
+
+(gdb) p/x os_shared
+$28 = 0x7d6d68e55000
+
+(gdb) p *os_shared
+$29 = 50
+
+(gdb) p os_result
+$30 = 5
+
+
+=== first / compute-done / PID 1248369 ===
+
+(gdb) continue
+
+
+=== second ===
+(gdb) set pagination off
+
+
+(gdb) set confirm off
+
+
+(gdb) set print elements 32
+
+
+(gdb) set disassembly-flavor att
+
+
+(gdb) set disable-randomization off
+
+
+(gdb) file /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+
+
+(gdb) set args inspect
+
+
+(gdb) starti inspect > /home/jason/study/ck_study/animation/.trace-build/os-basics/second.stdout
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x0                 0
+rbx            0x0                 0
+rcx            0x0                 0
+rdx            0x0                 0
+rsi            0x0                 0
+rdi            0x0                 0
+rbp            0x0                 0x0
+rsp            0x7fff98ba75e0      0x7fff98ba75e0
+r8             0x0                 0
+r9             0x0                 0
+r10            0x0                 0
+r11            0x0                 0
+r12            0x0                 0
+r13            0x0                 0
+r14            0x0                 0
+r15            0x0                 0
+rip            0x7e9e015fe540      0x7e9e015fe540 <_start>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x7e9e015fe540 <_start>:	mov    %rsp,%rdi
+
+(gdb) info proc mappings
+process 1248382
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ac9d39e6000     0x5ac9d39e7000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e7000     0x5ac9d39e8000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e8000     0x5ac9d39e9000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e9000     0x5ac9d39eb000     0x2000     0x2000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x7e9e015d7000     0x7e9e015db000     0x4000        0x0  r--p   [vvar]
+      0x7e9e015db000     0x7e9e015dd000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7e9e015dd000     0x7e9e015df000     0x2000        0x0  r-xp   [vdso]
+      0x7e9e015df000     0x7e9e015e0000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e015e0000     0x7e9e0160b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e0160b000     0x7e9e01615000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01615000     0x7e9e01619000     0x4000    0x36000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fff98b87000     0x7fff98ba9000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7e9e015dd000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ac9d39e6040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7e9e015df000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ac9d39e7280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7fff98ba7939
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7fff98ba8fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7fff98ba7949 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+
+=== second / interpreter-entry / PID 1248382 ===
+
+(gdb) continue
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x38                56
+rbx            0x0                 0
+rcx            0x7fff98ba7600      140735755744768
+rdx            0x7e9e015e4380      139217092887424
+rsi            0x7e9e016188b8      139217093101752
+rdi            0x7e9e016182e0      139217093100256
+rbp            0x0                 0x0
+rsp            0x7fff98ba75e0      0x7fff98ba75e0
+r8             0x7fff98ba7cc2      140735755746498
+r9             0x7e9e01615440      139217093088320
+r10            0x7fff98ba71e0      140735755743712
+r11            0x203               515
+r12            0x5ac9d39e7280      99822885302912
+r13            0x7fff98ba75e0      140735755744736
+r14            0x0                 0
+r15            0x0                 0
+rip            0x5ac9d39e7280      0x5ac9d39e7280 <_start>
+eflags         0x202               [ IF ]
+
+(gdb) x/i $rip
+=> 0x5ac9d39e7280 <_start>:	endbr64
+
+(gdb) info proc mappings
+process 1248382
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ac9d39e6000     0x5ac9d39e7000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e7000     0x5ac9d39e8000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e8000     0x5ac9d39e9000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e9000     0x5ac9d39ea000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39ea000     0x5ac9d39eb000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x7e9e01200000     0x7e9e01228000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01228000     0x7e9e013b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e013b1000     0x7e9e01400000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01400000     0x7e9e01404000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01404000     0x7e9e01406000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01406000     0x7e9e01413000     0xd000        0x0  rw-p   
+      0x7e9e015c6000     0x7e9e015c9000     0x3000        0x0  rw-p   
+      0x7e9e015d5000     0x7e9e015d7000     0x2000        0x0  rw-p   
+      0x7e9e015d7000     0x7e9e015db000     0x4000        0x0  r--p   [vvar]
+      0x7e9e015db000     0x7e9e015dd000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7e9e015dd000     0x7e9e015df000     0x2000        0x0  r-xp   [vdso]
+      0x7e9e015df000     0x7e9e015e0000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e015e0000     0x7e9e0160b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e0160b000     0x7e9e01615000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01615000     0x7e9e01617000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01617000     0x7e9e01619000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fff98b87000     0x7fff98ba9000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7e9e015dd000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ac9d39e6040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7e9e015df000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ac9d39e7280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7fff98ba7939
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7fff98ba8fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7fff98ba7949 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) x/5gx $rsp
+0x7fff98ba75e0:	0x0000000000000002	0x00007fff98ba7cc2
+0x7fff98ba75f0:	0x00007fff98ba7d06	0x0000000000000000
+0x7fff98ba7600:	0x00007fff98ba7d0e
+
+
+=== second / app-entry / PID 1248382 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5ac9d39e741d      99822885303325
+rbx            0x7fff98ba75e8      140735755744744
+rcx            0x5ac9d39e9d38      99822885313848
+rdx            0x7fff98ba7600      140735755744768
+rsi            0x7fff98ba75e8      140735755744744
+rdi            0x2                 2
+rbp            0x7fff98ba7560      0x7fff98ba7560
+rsp            0x7fff98ba74c8      0x7fff98ba74c8
+r8             0x0                 0
+r9             0x7e9e015e4380      139217092887424
+r10            0x7fff98ba71e0      140735755743712
+r11            0x203               515
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ac9d39e9d38      99822885313848
+r15            0x7e9e01617000      139217093095424
+rip            0x5ac9d39e741d      0x5ac9d39e741d <main>
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) x/i $rip
+=> 0x5ac9d39e741d <main>:	endbr64
+
+(gdb) info proc mappings
+process 1248382
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ac9d39e6000     0x5ac9d39e7000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e7000     0x5ac9d39e8000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e8000     0x5ac9d39e9000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e9000     0x5ac9d39ea000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39ea000     0x5ac9d39eb000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x7e9e01200000     0x7e9e01228000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01228000     0x7e9e013b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e013b1000     0x7e9e01400000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01400000     0x7e9e01404000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01404000     0x7e9e01406000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01406000     0x7e9e01413000     0xd000        0x0  rw-p   
+      0x7e9e015c6000     0x7e9e015c9000     0x3000        0x0  rw-p   
+      0x7e9e015d5000     0x7e9e015d7000     0x2000        0x0  rw-p   
+      0x7e9e015d7000     0x7e9e015db000     0x4000        0x0  r--p   [vvar]
+      0x7e9e015db000     0x7e9e015dd000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7e9e015dd000     0x7e9e015df000     0x2000        0x0  r-xp   [vdso]
+      0x7e9e015df000     0x7e9e015e0000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e015e0000     0x7e9e0160b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e0160b000     0x7e9e01615000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01615000     0x7e9e01617000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01617000     0x7e9e01619000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fff98b87000     0x7fff98ba9000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7e9e015dd000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ac9d39e6040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7e9e015df000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ac9d39e7280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7fff98ba7939
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7fff98ba8fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7fff98ba7949 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+
+=== second / main-entry / PID 1248382 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7fff98ba75e8      140735755744744
+rcx            0x7e9e013255ec      139217090008556
+rdx            0x3                 3
+rsi            0x1000              4096
+rdi            0x1                 1
+rbp            0x7fff98ba7420      0x7fff98ba7420
+rsp            0x7fff98ba7418      0x7fff98ba7418
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ac9d39e9d38      99822885313848
+r15            0x7e9e01617000      139217093095424
+rip            0x5ac9d39e7381      0x5ac9d39e7381 <os_checkpoint+24>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5ac9d39e7381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248382
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ac9d39e6000     0x5ac9d39e7000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e7000     0x5ac9d39e8000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e8000     0x5ac9d39e9000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e9000     0x5ac9d39ea000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39ea000     0x5ac9d39eb000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9ee06a000     0x5ac9ee08b000    0x21000        0x0  rw-p   [heap]
+      0x7e9e01200000     0x7e9e01228000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01228000     0x7e9e013b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e013b1000     0x7e9e01400000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01400000     0x7e9e01404000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01404000     0x7e9e01406000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01406000     0x7e9e01413000     0xd000        0x0  rw-p   
+      0x7e9e015c6000     0x7e9e015c9000     0x3000        0x0  rw-p   
+      0x7e9e015d3000     0x7e9e015d4000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x7e9e015d4000     0x7e9e015d7000     0x3000        0x0  rw-p   
+      0x7e9e015d7000     0x7e9e015db000     0x4000        0x0  r--p   [vvar]
+      0x7e9e015db000     0x7e9e015dd000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7e9e015dd000     0x7e9e015df000     0x2000        0x0  r-xp   [vdso]
+      0x7e9e015df000     0x7e9e015e0000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e015e0000     0x7e9e0160b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e0160b000     0x7e9e01615000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01615000     0x7e9e01617000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01617000     0x7e9e01619000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fff98b87000     0x7fff98ba9000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7e9e015dd000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ac9d39e6040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7e9e015df000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ac9d39e7280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7fff98ba7939
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7fff98ba8fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7fff98ba7949 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$1 = 1
+
+(gdb) p os_fork_result
+$2 = -1
+
+(gdb) p os_child
+$3 = -1
+
+(gdb) p/x &os_data
+$4 = 0x5ac9d39ea018
+
+(gdb) p os_data
+$5 = 10
+
+(gdb) p os_bss
+$6 = 0
+
+(gdb) p/x os_stack
+$7 = 0x7fff98ba7458
+
+(gdb) p *os_stack
+$8 = 20
+
+(gdb) p/x os_heap
+$9 = 0x5ac9ee06a2a0
+
+(gdb) p *os_heap
+$10 = 30
+
+(gdb) p/x os_private
+$11 = 0x7e9e015d4000
+
+(gdb) p *os_private
+$12 = 40
+
+(gdb) p/x os_shared
+$13 = 0x7e9e015d3000
+
+(gdb) p *os_shared
+$14 = 50
+
+(gdb) p os_result
+$15 = 0
+
+
+=== second / layout-ready / PID 1248382 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x2                 2
+rbx            0x7fff98ba75e8      140735755744744
+rcx            0x7e9e013255ec      139217090008556
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x2                 2
+rbp            0x7fff98ba7420      0x7fff98ba7420
+rsp            0x7fff98ba7418      0x7fff98ba7418
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ac9d39e9d38      99822885313848
+r15            0x7e9e01617000      139217093095424
+rip            0x5ac9d39e7381      0x5ac9d39e7381 <os_checkpoint+24>
+eflags         0x216               [ PF AF IF ]
+
+(gdb) x/i $rip
+=> 0x5ac9d39e7381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248382
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ac9d39e6000     0x5ac9d39e7000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e7000     0x5ac9d39e8000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e8000     0x5ac9d39e9000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39e9000     0x5ac9d39ea000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9d39ea000     0x5ac9d39eb000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ac9ee06a000     0x5ac9ee08b000    0x21000        0x0  rw-p   [heap]
+      0x7e9e01200000     0x7e9e01228000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01228000     0x7e9e013b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e013b1000     0x7e9e01400000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01400000     0x7e9e01404000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01404000     0x7e9e01406000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x7e9e01406000     0x7e9e01413000     0xd000        0x0  rw-p   
+      0x7e9e015c6000     0x7e9e015c9000     0x3000        0x0  rw-p   
+      0x7e9e015d3000     0x7e9e015d4000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x7e9e015d4000     0x7e9e015d7000     0x3000        0x0  rw-p   
+      0x7e9e015d7000     0x7e9e015db000     0x4000        0x0  r--p   [vvar]
+      0x7e9e015db000     0x7e9e015dd000     0x2000        0x0  r--p   [vvar_vclock]
+      0x7e9e015dd000     0x7e9e015df000     0x2000        0x0  r-xp   [vdso]
+      0x7e9e015df000     0x7e9e015e0000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e015e0000     0x7e9e0160b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e0160b000     0x7e9e01615000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01615000     0x7e9e01617000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7e9e01617000     0x7e9e01619000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7fff98b87000     0x7fff98ba9000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7e9e015dd000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ac9d39e6040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x7e9e015df000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ac9d39e7280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7fff98ba7939
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7fff98ba8fb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7fff98ba7949 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$16 = 2
+
+(gdb) p os_fork_result
+$17 = -1
+
+(gdb) p os_child
+$18 = -1
+
+(gdb) p/x &os_data
+$19 = 0x5ac9d39ea018
+
+(gdb) p os_data
+$20 = 10
+
+(gdb) p os_bss
+$21 = 0
+
+(gdb) p/x os_stack
+$22 = 0x7fff98ba7458
+
+(gdb) p *os_stack
+$23 = 20
+
+(gdb) p/x os_heap
+$24 = 0x5ac9ee06a2a0
+
+(gdb) p *os_heap
+$25 = 30
+
+(gdb) p/x os_private
+$26 = 0x7e9e015d4000
+
+(gdb) p *os_private
+$27 = 40
+
+(gdb) p/x os_shared
+$28 = 0x7e9e015d3000
+
+(gdb) p *os_shared
+$29 = 50
+
+(gdb) p os_result
+$30 = 5
+
+
+=== second / compute-done / PID 1248382 ===
+
+(gdb) continue
+
+
+=== fork ===
+(gdb) set pagination off
+
+
+(gdb) set confirm off
+
+
+(gdb) set print elements 32
+
+
+(gdb) set disassembly-flavor att
+
+
+(gdb) set disable-randomization off
+
+
+(gdb) file /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+
+
+(gdb) set args fork
+
+
+(gdb) set detach-on-fork off
+
+
+(gdb) set follow-fork-mode parent
+
+
+(gdb) set schedule-multiple on
+
+
+(gdb) run fork > /home/jason/study/ck_study/animation/.trace-build/os-basics/fork.stdout
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x1                 1
+rbx            0x7ffc7ac99a28      140722368518696
+rcx            0x745bdcd255ec      127937895618028
+rdx            0x3                 3
+rsi            0x1000              4096
+rdi            0x1                 1
+rbp            0x7ffc7ac99860      0x7ffc7ac99860
+rsp            0x7ffc7ac99858      0x7ffc7ac99858
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ca251eb1d38      101852228820280
+r15            0x745bdd034000      127937898823680
+rip            0x5ca251eaf381      0x5ca251eaf381 <os_checkpoint+24>
+eflags         0x212               [ AF IF ]
+
+(gdb) x/i $rip
+=> 0x5ca251eaf381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248401
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ca251eae000     0x5ca251eaf000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eaf000     0x5ca251eb0000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb0000     0x5ca251eb1000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb1000     0x5ca251eb2000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb2000     0x5ca251eb3000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca29182f000     0x5ca291850000    0x21000        0x0  rw-p   [heap]
+      0x745bdcc00000     0x745bdcc28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcc28000     0x745bdcdb1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcdb1000     0x745bdce00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce00000     0x745bdce04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce04000     0x745bdce06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce06000     0x745bdce13000     0xd000        0x0  rw-p   
+      0x745bdcfe3000     0x745bdcfe6000     0x3000        0x0  rw-p   
+      0x745bdcff0000     0x745bdcff1000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x745bdcff1000     0x745bdcff4000     0x3000        0x0  rw-p   
+      0x745bdcff4000     0x745bdcff8000     0x4000        0x0  r--p   [vvar]
+      0x745bdcff8000     0x745bdcffa000     0x2000        0x0  r--p   [vvar_vclock]
+      0x745bdcffa000     0x745bdcffc000     0x2000        0x0  r-xp   [vdso]
+      0x745bdcffc000     0x745bdcffd000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdcffd000     0x745bdd028000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd028000     0x745bdd032000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd032000     0x745bdd034000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd034000     0x745bdd036000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffc7ac7a000     0x7ffc7ac9c000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x745bdcffa000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ca251eae040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x745bdcffc000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ca251eaf280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffc7ac99d79
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffc7ac9bfb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffc7ac99d89 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$1 = 1
+
+(gdb) p os_fork_result
+$2 = -1
+
+(gdb) p os_child
+$3 = -1
+
+(gdb) p/x &os_data
+$4 = 0x5ca251eb2018
+
+(gdb) p os_data
+$5 = 10
+
+(gdb) p os_bss
+$6 = 0
+
+(gdb) p/x os_stack
+$7 = 0x7ffc7ac99898
+
+(gdb) p *os_stack
+$8 = 20
+
+(gdb) p/x os_heap
+$9 = 0x5ca29182f2a0
+
+(gdb) p *os_heap
+$10 = 30
+
+(gdb) p/x os_private
+$11 = 0x745bdcff1000
+
+(gdb) p *os_private
+$12 = 40
+
+(gdb) p/x os_shared
+$13 = 0x745bdcff0000
+
+(gdb) p *os_shared
+$14 = 50
+
+(gdb) p os_result
+$15 = 0
+
+
+=== fork / phase-1 / PID 1248401 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x2                 2
+rbx            0x7ffc7ac99a28      140722368518696
+rcx            0x745bdcd255ec      127937895618028
+rdx            0x3                 3
+rsi            0x3                 3
+rdi            0x2                 2
+rbp            0x7ffc7ac99860      0x7ffc7ac99860
+rsp            0x7ffc7ac99858      0x7ffc7ac99858
+r8             0xffffffff          4294967295
+r9             0x0                 0
+r10            0x21                33
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ca251eb1d38      101852228820280
+r15            0x745bdd034000      127937898823680
+rip            0x5ca251eaf381      0x5ca251eaf381 <os_checkpoint+24>
+eflags         0x212               [ AF IF ]
+
+(gdb) x/i $rip
+=> 0x5ca251eaf381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248401
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ca251eae000     0x5ca251eaf000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eaf000     0x5ca251eb0000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb0000     0x5ca251eb1000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb1000     0x5ca251eb2000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb2000     0x5ca251eb3000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca29182f000     0x5ca291850000    0x21000        0x0  rw-p   [heap]
+      0x745bdcc00000     0x745bdcc28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcc28000     0x745bdcdb1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcdb1000     0x745bdce00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce00000     0x745bdce04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce04000     0x745bdce06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce06000     0x745bdce13000     0xd000        0x0  rw-p   
+      0x745bdcfe3000     0x745bdcfe6000     0x3000        0x0  rw-p   
+      0x745bdcff0000     0x745bdcff1000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x745bdcff1000     0x745bdcff4000     0x3000        0x0  rw-p   
+      0x745bdcff4000     0x745bdcff8000     0x4000        0x0  r--p   [vvar]
+      0x745bdcff8000     0x745bdcffa000     0x2000        0x0  r--p   [vvar_vclock]
+      0x745bdcffa000     0x745bdcffc000     0x2000        0x0  r-xp   [vdso]
+      0x745bdcffc000     0x745bdcffd000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdcffd000     0x745bdd028000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd028000     0x745bdd032000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd032000     0x745bdd034000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd034000     0x745bdd036000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffc7ac7a000     0x7ffc7ac9c000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x745bdcffa000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ca251eae040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x745bdcffc000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ca251eaf280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffc7ac99d79
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffc7ac9bfb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffc7ac99d89 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$16 = 2
+
+(gdb) p os_fork_result
+$17 = -1
+
+(gdb) p os_child
+$18 = -1
+
+(gdb) p/x &os_data
+$19 = 0x5ca251eb2018
+
+(gdb) p os_data
+$20 = 10
+
+(gdb) p os_bss
+$21 = 0
+
+(gdb) p/x os_stack
+$22 = 0x7ffc7ac99898
+
+(gdb) p *os_stack
+$23 = 20
+
+(gdb) p/x os_heap
+$24 = 0x5ca29182f2a0
+
+(gdb) p *os_heap
+$25 = 30
+
+(gdb) p/x os_private
+$26 = 0x745bdcff1000
+
+(gdb) p *os_private
+$27 = 40
+
+(gdb) p/x os_shared
+$28 = 0x745bdcff0000
+
+(gdb) p *os_shared
+$29 = 50
+
+(gdb) p os_result
+$30 = 5
+
+
+=== fork / phase-2 / PID 1248401 ===
+
+(gdb) continue
+[New inferior 2 (process 1248404)]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Switching to Thread 0x745bdcfe3740 (LWP 1248404)]
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x3                 3
+rbx            0x7ffc7ac99a28      140722368518696
+rcx            0x745bdcd169c4      127937895557572
+rdx            0x0                 0
+rsi            0x0                 0
+rdi            0x3                 3
+rbp            0x7ffc7ac99860      0x7ffc7ac99860
+rsp            0x7ffc7ac99858      0x7ffc7ac99858
+r8             0x1                 1
+r9             0x745bdcfe3740      127937898493760
+r10            0x745bdd0350b8      127937898827960
+r11            0x202               514
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ca251eb1d38      101852228820280
+r15            0x745bdd034000      127937898823680
+rip            0x5ca251eaf381      0x5ca251eaf381 <os_checkpoint+24>
+eflags         0x212               [ AF IF ]
+
+(gdb) x/i $rip
+=> 0x5ca251eaf381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248404
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ca251eae000     0x5ca251eaf000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eaf000     0x5ca251eb0000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb0000     0x5ca251eb1000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb1000     0x5ca251eb2000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb2000     0x5ca251eb3000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca29182f000     0x5ca291850000    0x21000        0x0  rw-p   [heap]
+      0x745bdcc00000     0x745bdcc28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcc28000     0x745bdcdb1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcdb1000     0x745bdce00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce00000     0x745bdce04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce04000     0x745bdce06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce06000     0x745bdce13000     0xd000        0x0  rw-p   
+      0x745bdcfe3000     0x745bdcfe6000     0x3000        0x0  rw-p   
+      0x745bdcff0000     0x745bdcff1000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x745bdcff1000     0x745bdcff4000     0x3000        0x0  rw-p   
+      0x745bdcff4000     0x745bdcff8000     0x4000        0x0  r--p   [vvar]
+      0x745bdcff8000     0x745bdcffa000     0x2000        0x0  r--p   [vvar_vclock]
+      0x745bdcffa000     0x745bdcffc000     0x2000        0x0  r-xp   [vdso]
+      0x745bdcffc000     0x745bdcffd000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdcffd000     0x745bdd028000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd028000     0x745bdd032000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd032000     0x745bdd034000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd034000     0x745bdd036000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffc7ac7a000     0x7ffc7ac9c000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x745bdcffa000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ca251eae040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x745bdcffc000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ca251eaf280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffc7ac99d79
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffc7ac9bfb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffc7ac99d89 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$31 = 3
+
+(gdb) p os_fork_result
+$32 = 0
+
+(gdb) p os_child
+$33 = 1248404
+
+(gdb) p/x &os_data
+$34 = 0x5ca251eb2018
+
+(gdb) p os_data
+$35 = 10
+
+(gdb) p os_bss
+$36 = 0
+
+(gdb) p/x os_stack
+$37 = 0x7ffc7ac99898
+
+(gdb) p *os_stack
+$38 = 20
+
+(gdb) p/x os_heap
+$39 = 0x5ca29182f2a0
+
+(gdb) p *os_heap
+$40 = 30
+
+(gdb) p/x os_private
+$41 = 0x745bdcff1000
+
+(gdb) p *os_private
+$42 = 40
+
+(gdb) p/x os_shared
+$43 = 0x745bdcff0000
+
+(gdb) p *os_shared
+$44 = 50
+
+(gdb) p os_result
+$45 = 5
+
+
+=== fork / phase-3 / PID 1248404 ===
+
+(gdb) continue
+
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x4                 4
+rbx            0x7ffc7ac99a28      140722368518696
+rcx            0x745bdcd169c4      127937895557572
+rdx            0x0                 0
+rsi            0x0                 0
+rdi            0x4                 4
+rbp            0x7ffc7ac99860      0x7ffc7ac99860
+rsp            0x7ffc7ac99858      0x7ffc7ac99858
+r8             0x1                 1
+r9             0x745bdcfe3740      127937898493760
+r10            0x745bdd0350b8      127937898827960
+r11            0x202               514
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ca251eb1d38      101852228820280
+r15            0x745bdd034000      127937898823680
+rip            0x5ca251eaf381      0x5ca251eaf381 <os_checkpoint+24>
+eflags         0x212               [ AF IF ]
+
+(gdb) x/i $rip
+=> 0x5ca251eaf381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248404
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ca251eae000     0x5ca251eaf000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eaf000     0x5ca251eb0000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb0000     0x5ca251eb1000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb1000     0x5ca251eb2000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb2000     0x5ca251eb3000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca29182f000     0x5ca291850000    0x21000        0x0  rw-p   [heap]
+      0x745bdcc00000     0x745bdcc28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcc28000     0x745bdcdb1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcdb1000     0x745bdce00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce00000     0x745bdce04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce04000     0x745bdce06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce06000     0x745bdce13000     0xd000        0x0  rw-p   
+      0x745bdcfe3000     0x745bdcfe6000     0x3000        0x0  rw-p   
+      0x745bdcff0000     0x745bdcff1000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x745bdcff1000     0x745bdcff4000     0x3000        0x0  rw-p   
+      0x745bdcff4000     0x745bdcff8000     0x4000        0x0  r--p   [vvar]
+      0x745bdcff8000     0x745bdcffa000     0x2000        0x0  r--p   [vvar_vclock]
+      0x745bdcffa000     0x745bdcffc000     0x2000        0x0  r-xp   [vdso]
+      0x745bdcffc000     0x745bdcffd000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdcffd000     0x745bdd028000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd028000     0x745bdd032000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd032000     0x745bdd034000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd034000     0x745bdd036000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffc7ac7a000     0x7ffc7ac9c000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x745bdcffa000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ca251eae040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x745bdcffc000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ca251eaf280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffc7ac99d79
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffc7ac9bfb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffc7ac99d89 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$46 = 4
+
+(gdb) p os_fork_result
+$47 = 0
+
+(gdb) p os_child
+$48 = 1248404
+
+(gdb) p/x &os_data
+$49 = 0x5ca251eb2018
+
+(gdb) p os_data
+$50 = 100
+
+(gdb) p os_bss
+$51 = 200
+
+(gdb) p/x os_stack
+$52 = 0x7ffc7ac99898
+
+(gdb) p *os_stack
+$53 = 200
+
+(gdb) p/x os_heap
+$54 = 0x5ca29182f2a0
+
+(gdb) p *os_heap
+$55 = 300
+
+(gdb) p/x os_private
+$56 = 0x745bdcff1000
+
+(gdb) p *os_private
+$57 = 400
+
+(gdb) p/x os_shared
+$58 = 0x745bdcff0000
+
+(gdb) p *os_shared
+$59 = 500
+
+(gdb) p os_result
+$60 = 5
+
+
+=== fork / phase-4 / PID 1248404 ===
+
+(gdb) continue
+[Switching to Thread 0x745bdcfe3740 (LWP 1248401)]
+
+(gdb) info registers rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags
+rax            0x5                 5
+rbx            0x7ffc7ac99a28      140722368518696
+rcx            0x745bdcd1bd31      127937895578929
+rdx            0x1                 1
+rsi            0x7ffc7ac9984f      140722368518223
+rdi            0x5                 5
+rbp            0x7ffc7ac99860      0x7ffc7ac99860
+rsp            0x7ffc7ac99858      0x7ffc7ac99858
+r8             0x2                 2
+r9             0x0                 0
+r10            0x745bdcfe3a10      127937898494480
+r11            0x246               582
+r12            0x2                 2
+r13            0x0                 0
+r14            0x5ca251eb1d38      101852228820280
+r15            0x745bdd034000      127937898823680
+rip            0x5ca251eaf381      0x5ca251eaf381 <os_checkpoint+24>
+eflags         0x212               [ AF IF ]
+
+(gdb) x/i $rip
+=> 0x5ca251eaf381 <os_checkpoint+24>:	nop
+
+(gdb) info proc mappings
+process 1248401
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x5ca251eae000     0x5ca251eaf000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eaf000     0x5ca251eb0000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb0000     0x5ca251eb1000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb1000     0x5ca251eb2000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca251eb2000     0x5ca251eb3000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/os-basics/os-demo
+      0x5ca29182f000     0x5ca291850000    0x21000        0x0  rw-p   [heap]
+      0x745bdcc00000     0x745bdcc28000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcc28000     0x745bdcdb1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdcdb1000     0x745bdce00000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce00000     0x745bdce04000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce04000     0x745bdce06000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x745bdce06000     0x745bdce13000     0xd000        0x0  rw-p   
+      0x745bdcfe3000     0x745bdcfe6000     0x3000        0x0  rw-p   
+      0x745bdcff0000     0x745bdcff1000     0x1000        0x0  rw-s   /dev/zero (deleted)
+      0x745bdcff1000     0x745bdcff4000     0x3000        0x0  rw-p   
+      0x745bdcff4000     0x745bdcff8000     0x4000        0x0  r--p   [vvar]
+      0x745bdcff8000     0x745bdcffa000     0x2000        0x0  r--p   [vvar_vclock]
+      0x745bdcffa000     0x745bdcffc000     0x2000        0x0  r-xp   [vdso]
+      0x745bdcffc000     0x745bdcffd000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdcffd000     0x745bdd028000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd028000     0x745bdd032000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd032000     0x745bdd034000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x745bdd034000     0x745bdd036000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffc7ac7a000     0x7ffc7ac9c000    0x22000        0x0  rw-p   [stack]
+
+(gdb) info auxv
+33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x745bdcffa000
+51   AT_MINSIGSTKSZ       Minimum stack size for signal delivery 0x6f0
+16   AT_HWCAP             Machine-dependent CPU capability hints 0x1f8bfbff
+6    AT_PAGESZ            System page size               4096
+17   AT_CLKTCK            Frequency of times()           100
+3    AT_PHDR              Program headers for program    0x5ca251eae040
+4    AT_PHENT             Size of program header entry   56
+5    AT_PHNUM             Number of program headers      13
+7    AT_BASE              Base address of interpreter    0x745bdcffc000
+8    AT_FLAGS             Flags                          0x0
+9    AT_ENTRY             Entry point of program         0x5ca251eaf280
+11   AT_UID               Real user ID                   1000
+12   AT_EUID              Effective user ID              1000
+13   AT_GID               Real group ID                  1000
+14   AT_EGID              Effective group ID             1000
+23   AT_SECURE            Boolean, was exec setuid-like? 0
+25   AT_RANDOM            Address of 16 random bytes     0x7ffc7ac99d79
+26   AT_HWCAP2            Extension of AT_HWCAP          0x2
+31   AT_EXECFN            File name of executable        0x7ffc7ac9bfb4 "/home/jason/study/ck_study/anima"...
+15   AT_PLATFORM          String identifying platform    0x7ffc7ac99d89 "x86_64"
+27   AT_RSEQ_FEATURE_SIZE rseq supported feature size    28
+28   AT_RSEQ_ALIGN        rseq allocation alignment      32
+0    AT_NULL              End of vector                  0x0
+
+(gdb) p os_phase
+$61 = 5
+
+(gdb) p os_fork_result
+$62 = 1248404
+
+(gdb) p os_child
+$63 = 1248404
+
+(gdb) p/x &os_data
+$64 = 0x5ca251eb2018
+
+(gdb) p os_data
+$65 = 10
+
+(gdb) p os_bss
+$66 = 0
+
+(gdb) p/x os_stack
+$67 = 0x7ffc7ac99898
+
+(gdb) p *os_stack
+$68 = 20
+
+(gdb) p/x os_heap
+$69 = 0x5ca29182f2a0
+
+(gdb) p *os_heap
+$70 = 30
+
+(gdb) p/x os_private
+$71 = 0x745bdcff1000
+
+(gdb) p *os_private
+$72 = 40
+
+(gdb) p/x os_shared
+$73 = 0x745bdcff0000
+
+(gdb) p *os_shared
+$74 = 500
+
+(gdb) p os_result
+$75 = 5
+
+
+=== fork / phase-5 / PID 1248401 ===
+
+(gdb) continue
+
+
+(gdb) inferior 1
+warning: 30	../sysdeps/unix/sysv/linux/wait4.c: No such file or directory
+
+(gdb) continue

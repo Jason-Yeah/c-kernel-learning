@@ -1,0 +1,909 @@
+{
+  "schemaVersion": 1,
+  "id": "process-lifecycle",
+  "provenance": {
+    "kind": "gdb-measured",
+    "capturedAt": "2026-11-05T13:41:11.689Z",
+    "source": {
+      "path": "experiments/process-lifecycle.c",
+      "content": "#define _GNU_SOURCE\n/* Two pipe-constrained executions. Only the two letters go to stdout. */\n#include <errno.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\nvolatile int trace_phase;\nvolatile int role;\npid_t child_id, fork_result, wait_result = -1;\nint wait_status = -1;\n\n__attribute__((noinline)) static void checkpoint(int phase)\n{\n    trace_phase = phase;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_PROCESS_EVENT */\n}\nstatic void send_byte(int fd, char byte)\n{\n    if (write(fd, &byte, 1) != 1)\n        _exit(90);\n}\nstatic void wait_byte_or_eof(int fd)\n{\n    char byte;\n    ssize_t n;\n    do {\n        n = read(fd, &byte, 1);\n    } while (n < 0 && errno == EINTR);\n    if (n < 0)\n        _exit(91);\n}\nint main(int argc, char **argv)\n{\n    if (argc == 5 && strcmp(argv[1], \"--worker\") == 0) {\n        role = 1;\n        child_id = getpid();\n        checkpoint(3); /* exec completed in the same child PID */\n        if (strcmp(argv[2], \"early\") == 0)\n            wait_byte_or_eof(atoi(argv[3]));\n        send_byte(STDOUT_FILENO, 'C');\n        close(atoi(argv[4]));\n        _exit(7);\n    }\n    if (argc != 2 || (strcmp(argv[1], \"early\") != 0 && strcmp(argv[1], \"late\") != 0))\n        return 2;\n    int go[2], done[2];\n    if (pipe(go) != 0 || pipe(done) != 0)\n        return 3;\n    fork_result = fork();\n    if (fork_result < 0)\n        return 4;\n    if (fork_result == 0) {\n        role = 1;\n        child_id = getpid();\n        close(go[1]);\n        close(done[0]);\n        checkpoint(2); /* child: fork returned zero, before exec */\n        char read_fd[24], write_fd[24];\n        snprintf(read_fd, sizeof read_fd, \"%d\", go[0]);\n        snprintf(write_fd, sizeof write_fd, \"%d\", done[1]);\n        execl(\"/proc/self/exe\", \"process-lifecycle\", \"--worker\", argv[1], read_fd, write_fd, (char *)NULL);\n        _exit(92);\n    }\n    child_id = fork_result;\n    close(go[0]);\n    close(done[1]);\n    checkpoint(1); /* parent: fork returned actual child PID */\n    if (strcmp(argv[1], \"early\") == 0) {\n        send_byte(STDOUT_FILENO, 'P');\n        send_byte(go[1], 'x');\n    } else {\n        wait_byte_or_eof(done[0]);\n        siginfo_t info;\n        if (waitid(P_PID, (id_t)child_id, &info, WEXITED | WNOWAIT) != 0)\n            return 5;\n        checkpoint(5); /* child is exited, deliberately not reaped */\n        send_byte(STDOUT_FILENO, 'P');\n    }\n    checkpoint(4); /* about to call waitpid; not a claim of observed CPU sleep */\n    wait_result = waitpid(child_id, &wait_status, 0);\n    checkpoint(6); /* actual wait result and raw status */\n    close(go[1]);\n    close(done[0]);\n    return wait_result == child_id && WIFEXITED(wait_status) && WEXITSTATUS(wait_status) == 7 ? 0 : 6;\n}\n",
+      "sha256": "82ad98c327afbb3c5c16f0bdfb6c88105931874485d1fed9dbe10a1372202e88"
+    },
+    "binary": {
+      "path": ".trace-build/process-lifecycle",
+      "sha256": "7ace01ed1b84a169422cf9a2f261a3b47f219349e389e66555f59dbe4d979ac4"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/process-lifecycle.c -o .trace-build/process-lifecycle",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-fno-ipa-stack-alignment",
+      "-mno-red-zone",
+      "-fno-stack-protector",
+      "-U_FORTIFY_SOURCE",
+      "-D_FORTIFY_SOURCE=0",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "limits": "Two pipe-constrained executions. A before-wait breakpoint is not evidence that CPU sleep or every scheduling interleaving was observed.",
+    "replay": "Offline replay of actual local GDB stops; the website does not execute programs or control GDB."
+  },
+  "runs": {
+    "early": {
+      "case": "early",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 2,
+          "code": 7
+        },
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065615,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 71,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5BF74426D301",
+            "rsp": "0x7FFFC38DDC08",
+            "rbp": "0x7FFFC38DDC10",
+            "rax": "0x1",
+            "rdi": "0x1",
+            "rsi": "0x0"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065618,
+            "childPid": 1065618,
+            "waitResult": -1,
+            "waitStatus": -1,
+            "childState": {
+              "state": "t",
+              "ppid": 1065615
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5bf74426d301      0x5bf74426d301 <checkpoint+24>\nrsp            0x7fffc38ddc08      0x7fffc38ddc08\nrbp            0x7fffc38ddc10      0x7fffc38ddc10\nrax            0x1                 1"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5bf74426d301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065615   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n  2    process 1065618   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$1 = 1065618"
+            },
+            {
+              "command": "p child_id",
+              "output": "$2 = 1065618"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$3 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$4 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065618,
+          "inferior": 2,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 61,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5BF74426D301",
+            "rsp": "0x7FFFC38DDC08",
+            "rbp": "0x7FFFC38DDC10",
+            "rax": "0x2",
+            "rdi": "0x2",
+            "rsi": "0x0"
+          },
+          "fields": {
+            "role": 1,
+            "forkResult": 0,
+            "childPid": 1065618,
+            "waitResult": -1,
+            "waitStatus": -1
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5bf74426d301      0x5bf74426d301 <checkpoint+24>\nrsp            0x7fffc38ddc08      0x7fffc38ddc08\nrbp            0x7fffc38ddc10      0x7fffc38ddc10\nrax            0x2                 2"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5bf74426d301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065615   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n* 2    process 1065618   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$5 = 0"
+            },
+            {
+              "command": "p child_id",
+              "output": "$6 = 1065618"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$7 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$8 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "event": "phase-4",
+          "phase": 4,
+          "pid": 1065615,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 83,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5BF74426D301",
+            "rsp": "0x7FFFC38DDC08",
+            "rbp": "0x7FFFC38DDC10",
+            "rax": "0x4",
+            "rdi": "0x4",
+            "rsi": "0x7FFFC38DDC08"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065618,
+            "childPid": 1065618,
+            "waitResult": -1,
+            "waitStatus": -1,
+            "childState": {
+              "state": "t",
+              "ppid": 1065615
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5bf74426d301      0x5bf74426d301 <checkpoint+24>\nrsp            0x7fffc38ddc08      0x7fffc38ddc08\nrbp            0x7fffc38ddc10      0x7fffc38ddc10\nrax            0x4                 4"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5bf74426d301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065615   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n  2    process 1065618   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$9 = 1065618"
+            },
+            {
+              "command": "p child_id",
+              "output": "$10 = 1065618"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$11 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$12 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "event": "exec",
+          "phase": 0,
+          "pid": 1065618,
+          "inferior": 2,
+          "source": {
+            "file": null,
+            "line": 0,
+            "function": "_start"
+          },
+          "callsite": {
+            "file": null,
+            "line": 0,
+            "function": "_start"
+          },
+          "registers": {
+            "rip": "0x75E02F550540",
+            "rsp": "0x7FFCD35382F0",
+            "rbp": "0x0",
+            "rax": "0xFFFFFFFFFFFFFFDA",
+            "rdi": "0x0",
+            "rsi": "0x0"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 0,
+            "childPid": 0,
+            "waitResult": -1,
+            "waitStatus": -1
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x75e02f550540      0x75e02f550540 <_start>\nrsp            0x7ffcd35382f0      0x7ffcd35382f0\nrbp            0x0                 0x0\nrax            0xffffffffffffffda  -38"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x75e02f550540 <_start>:\tmov    %rsp,%rdi"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065615   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n* 2    process 1065618   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$13 = 0"
+            },
+            {
+              "command": "p child_id",
+              "output": "$14 = 0"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$15 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$16 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "event": "phase-3",
+          "phase": 3,
+          "pid": 1065618,
+          "inferior": 2,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 41,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5838C7B84301",
+            "rsp": "0x7FFCD35380D8",
+            "rbp": "0x7FFCD35380E0",
+            "rax": "0x3",
+            "rdi": "0x3",
+            "rsi": "0x5838C7B85004"
+          },
+          "fields": {
+            "role": 1,
+            "forkResult": 0,
+            "childPid": 1065618,
+            "waitResult": -1,
+            "waitStatus": -1
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5838c7b84301      0x5838c7b84301 <checkpoint+24>\nrsp            0x7ffcd35380d8      0x7ffcd35380d8\nrbp            0x7ffcd35380e0      0x7ffcd35380e0\nrax            0x3                 3"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5838c7b84301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065615   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n* 2    process 1065618   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$17 = 0"
+            },
+            {
+              "command": "p child_id",
+              "output": "$18 = 1065618"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$19 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$20 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "event": "phase-6",
+          "phase": 6,
+          "pid": 1065615,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 85,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x5BF74426D301",
+            "rsp": "0x7FFFC38DDC08",
+            "rbp": "0x7FFFC38DDC10",
+            "rax": "0x6",
+            "rdi": "0x6",
+            "rsi": "0x5BF744270014"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065618,
+            "childPid": 1065618,
+            "waitResult": 1065618,
+            "waitStatus": 1792,
+            "childState": null
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x5bf74426d301      0x5bf74426d301 <checkpoint+24>\nrsp            0x7fffc38ddc08      0x7fffc38ddc08\nrbp            0x7fffc38ddc10      0x7fffc38ddc10\nrax            0x6                 6"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x5bf74426d301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065615   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$21 = 1065618"
+            },
+            {
+              "command": "p child_id",
+              "output": "$22 = 1065618"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$23 = 1065618"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$24 = 0x700"
+            }
+          ]
+        }
+      ],
+      "stdout": "PC"
+    },
+    "late": {
+      "case": "late",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 2,
+          "code": 7
+        },
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065629,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 71,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x573E2E27B301",
+            "rsp": "0x7FFD4F261138",
+            "rbp": "0x7FFD4F261140",
+            "rax": "0x1",
+            "rdi": "0x1",
+            "rsi": "0x0"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065632,
+            "childPid": 1065632,
+            "waitResult": -1,
+            "waitStatus": -1,
+            "childState": {
+              "state": "t",
+              "ppid": 1065629
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x573e2e27b301      0x573e2e27b301 <checkpoint+24>\nrsp            0x7ffd4f261138      0x7ffd4f261138\nrbp            0x7ffd4f261140      0x7ffd4f261140\nrax            0x1                 1"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x573e2e27b301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065629   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n  2    process 1065632   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$1 = 1065632"
+            },
+            {
+              "command": "p child_id",
+              "output": "$2 = 1065632"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$3 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$4 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065632,
+          "inferior": 2,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 61,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x573E2E27B301",
+            "rsp": "0x7FFD4F261138",
+            "rbp": "0x7FFD4F261140",
+            "rax": "0x2",
+            "rdi": "0x2",
+            "rsi": "0x0"
+          },
+          "fields": {
+            "role": 1,
+            "forkResult": 0,
+            "childPid": 1065632,
+            "waitResult": -1,
+            "waitStatus": -1
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x573e2e27b301      0x573e2e27b301 <checkpoint+24>\nrsp            0x7ffd4f261138      0x7ffd4f261138\nrbp            0x7ffd4f261140      0x7ffd4f261140\nrax            0x2                 2"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x573e2e27b301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065629   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n* 2    process 1065632   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$5 = 0"
+            },
+            {
+              "command": "p child_id",
+              "output": "$6 = 1065632"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$7 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$8 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "event": "exec",
+          "phase": 0,
+          "pid": 1065632,
+          "inferior": 2,
+          "source": {
+            "file": null,
+            "line": 0,
+            "function": "_start"
+          },
+          "callsite": {
+            "file": null,
+            "line": 0,
+            "function": "_start"
+          },
+          "registers": {
+            "rip": "0x7E0779F83540",
+            "rsp": "0x7FFEA2D30020",
+            "rbp": "0x0",
+            "rax": "0xFFFFFFFFFFFFFFDA",
+            "rdi": "0x0",
+            "rsi": "0x0"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 0,
+            "childPid": 0,
+            "waitResult": -1,
+            "waitStatus": -1
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x7e0779f83540      0x7e0779f83540 <_start>\nrsp            0x7ffea2d30020      0x7ffea2d30020\nrbp            0x0                 0x0\nrax            0xffffffffffffffda  -38"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x7e0779f83540 <_start>:\tmov    %rsp,%rdi"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065629   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n* 2    process 1065632   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$9 = 0"
+            },
+            {
+              "command": "p child_id",
+              "output": "$10 = 0"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$11 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$12 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "event": "phase-3",
+          "phase": 3,
+          "pid": 1065632,
+          "inferior": 2,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 41,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x612DD2A12301",
+            "rsp": "0x7FFEA2D2FE08",
+            "rbp": "0x7FFEA2D2FE10",
+            "rax": "0x3",
+            "rdi": "0x3",
+            "rsi": "0x612DD2A13004"
+          },
+          "fields": {
+            "role": 1,
+            "forkResult": 0,
+            "childPid": 1065632,
+            "waitResult": -1,
+            "waitStatus": -1
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x612dd2a12301      0x612dd2a12301 <checkpoint+24>\nrsp            0x7ffea2d2fe08      0x7ffea2d2fe08\nrbp            0x7ffea2d2fe10      0x7ffea2d2fe10\nrax            0x3                 3"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x612dd2a12301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n  1    process 1065629   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle \n* 2    process 1065632   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$13 = 0"
+            },
+            {
+              "command": "p child_id",
+              "output": "$14 = 1065632"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$15 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$16 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "event": "phase-5",
+          "phase": 5,
+          "pid": 1065629,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 80,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x573E2E27B301",
+            "rsp": "0x7FFD4F261138",
+            "rbp": "0x7FFD4F261140",
+            "rax": "0x5",
+            "rdi": "0x5",
+            "rsi": "0x1042A0"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065632,
+            "childPid": 1065632,
+            "waitResult": -1,
+            "waitStatus": -1,
+            "childState": {
+              "state": "Z",
+              "ppid": 1065629
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x573e2e27b301      0x573e2e27b301 <checkpoint+24>\nrsp            0x7ffd4f261138      0x7ffd4f261138\nrbp            0x7ffd4f261140      0x7ffd4f261140\nrax            0x5                 5"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x573e2e27b301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065629   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$17 = 1065632"
+            },
+            {
+              "command": "p child_id",
+              "output": "$18 = 1065632"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$19 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$20 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "event": "phase-4",
+          "phase": 4,
+          "pid": 1065629,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 83,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x573E2E27B301",
+            "rsp": "0x7FFD4F261138",
+            "rbp": "0x7FFD4F261140",
+            "rax": "0x4",
+            "rdi": "0x4",
+            "rsi": "0x7FFD4F261138"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065632,
+            "childPid": 1065632,
+            "waitResult": -1,
+            "waitStatus": -1,
+            "childState": {
+              "state": "Z",
+              "ppid": 1065629
+            }
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x573e2e27b301      0x573e2e27b301 <checkpoint+24>\nrsp            0x7ffd4f261138      0x7ffd4f261138\nrbp            0x7ffd4f261140      0x7ffd4f261140\nrax            0x4                 4"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x573e2e27b301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065629   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$21 = 1065632"
+            },
+            {
+              "command": "p child_id",
+              "output": "$22 = 1065632"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$23 = -1"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$24 = 0xffffffff"
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "event": "phase-6",
+          "phase": 6,
+          "pid": 1065629,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 19,
+            "function": "checkpoint"
+          },
+          "callsite": {
+            "file": "experiments/process-lifecycle.c",
+            "line": 85,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x573E2E27B301",
+            "rsp": "0x7FFD4F261138",
+            "rbp": "0x7FFD4F261140",
+            "rax": "0x6",
+            "rdi": "0x6",
+            "rsi": "0x573E2E27E014"
+          },
+          "fields": {
+            "role": 0,
+            "forkResult": 1065632,
+            "childPid": 1065632,
+            "waitResult": 1065632,
+            "waitStatus": 1792,
+            "childState": null
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x573e2e27b301      0x573e2e27b301 <checkpoint+24>\nrsp            0x7ffd4f261138      0x7ffd4f261138\nrbp            0x7ffd4f261140      0x7ffd4f261140\nrax            0x6                 6"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x573e2e27b301 <checkpoint+24>:\tnop"
+            },
+            {
+              "command": "info inferiors",
+              "output": "Num  Description       Connection           Executable        \n* 1    process 1065629   1 (native)           /home/jason/study/ck_study/animation/.trace-build/process-lifecycle"
+            },
+            {
+              "command": "p fork_result",
+              "output": "$25 = 1065632"
+            },
+            {
+              "command": "p child_id",
+              "output": "$26 = 1065632"
+            },
+            {
+              "command": "p wait_result",
+              "output": "$27 = 1065632"
+            },
+            {
+              "command": "p/x wait_status",
+              "output": "$28 = 0x700"
+            }
+          ]
+        }
+      ],
+      "stdout": "CP"
+    }
+  }
+}

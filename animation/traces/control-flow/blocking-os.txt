@@ -1,0 +1,138 @@
+.trace-build/control-flow/program blocking
+Independent non-GDB run. Only target processes pinned to one originally allowed CPU. /proc read before collector releases helper; rusage delta is not an exclusive schedule trace.
+
+stdout:
+{"event":"blocking-ready","pid":1803473,"child":1803474,"cpu":0,"fd":3,"buffer":"0x7ffcae09fd5f","capacity":1,"beforeByte":204,"readNumber":0}
+{"event":"helper-write","pid":1803474,"ppid":1803473,"cpu":0,"byte":75}
+{"event":"blocking-result","pid":1803473,"cpu":0,"readResult":1,"byte":75,"capacity":1,"nvBefore":1,"nvAfter":2,"nivBefore":0,"nivAfter":0,"waited":1803474,"status":0}
+
+Observed before release="!":
+readFile /proc/1803473/status
+Name:	program
+Umask:	0022
+State:	S (sleeping)
+Tgid:	1803473
+Ngid:	0
+Pid:	1803473
+PPid:	1803440
+TracerPid:	0
+Uid:	1000	1000	1000	1000
+Gid:	1000	1000	1000	1000
+FDSize:	64
+Groups:	4 24 27 30 46 100 1000 
+NStgid:	1803473
+NSpid:	1803473
+NSpgid:	1803439
+NSsid:	1803439
+Kthread:	0
+VmPeak:	    2696 kB
+VmSize:	    2696 kB
+VmLck:	       0 kB
+VmPin:	       0 kB
+VmHWM:	    1748 kB
+VmRSS:	    1748 kB
+RssAnon:	     108 kB
+RssFile:	    1640 kB
+RssShmem:	       0 kB
+VmData:	     224 kB
+VmStk:	     136 kB
+VmExe:	       4 kB
+VmLib:	    1752 kB
+VmPTE:	      44 kB
+VmSwap:	       0 kB
+HugetlbPages:	       0 kB
+CoreDumping:	0
+THP_enabled:	1
+untag_mask:	0xffffffffffffffff
+Threads:	1
+SigQ:	1/63302
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000000000
+SigCgt:	0000000000000000
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	000001ffffffffff
+CapAmb:	0000000000000000
+NoNewPrivs:	0
+Seccomp:	2
+Seccomp_filters:	1
+Speculation_Store_Bypass:	thread vulnerable
+SpeculationIndirectBranch:	conditional enabled
+Cpus_allowed:	000001
+Cpus_allowed_list:	0
+Mems_allowed:	00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001
+Mems_allowed_list:	0
+voluntary_ctxt_switches:	2
+nonvoluntary_ctxt_switches:	0
+
+
+readFile /proc/1803473/syscall
+0 0x3 0x7ffcae09fd5f 0x1 0x0 0x64 0x0 0x7ffcae09fd08 0x73d1dc91bd31
+
+
+readFile /proc/1803473/wchan
+anon_pipe_read
+
+readFile /proc/1803474/status
+Name:	program
+Umask:	0022
+State:	S (sleeping)
+Tgid:	1803474
+Ngid:	0
+Pid:	1803474
+PPid:	1803473
+TracerPid:	0
+Uid:	1000	1000	1000	1000
+Gid:	1000	1000	1000	1000
+FDSize:	64
+Groups:	4 24 27 30 46 100 1000 
+NStgid:	1803474
+NSpid:	1803474
+NSpgid:	1803439
+NSsid:	1803439
+Kthread:	0
+VmPeak:	    2564 kB
+VmSize:	    2564 kB
+VmLck:	       0 kB
+VmPin:	       0 kB
+VmHWM:	     360 kB
+VmRSS:	     360 kB
+RssAnon:	     100 kB
+RssFile:	     260 kB
+RssShmem:	       0 kB
+VmData:	      92 kB
+VmStk:	     136 kB
+VmExe:	       4 kB
+VmLib:	    1752 kB
+VmPTE:	      40 kB
+VmSwap:	       0 kB
+HugetlbPages:	       0 kB
+CoreDumping:	0
+THP_enabled:	1
+untag_mask:	0xffffffffffffffff
+Threads:	1
+SigQ:	1/63302
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000000000
+SigCgt:	0000000000000000
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	000001ffffffffff
+CapAmb:	0000000000000000
+NoNewPrivs:	0
+Seccomp:	2
+Seccomp_filters:	1
+Speculation_Store_Bypass:	thread vulnerable
+SpeculationIndirectBranch:	conditional enabled
+Cpus_allowed:	000001
+Cpus_allowed_list:	0
+Mems_allowed:	00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001
+Mems_allowed_list:	0
+voluntary_ctxt_switches:	1
+nonvoluntary_ctxt_switches:	0

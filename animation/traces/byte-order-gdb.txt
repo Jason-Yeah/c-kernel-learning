@@ -1,0 +1,621 @@
+Captured: 2026-11-06T10:21:20.923Z
+Source SHA256: 7dbb711fca8eac5acc7bc4d67c05d986a7076461218fe10ce66d6e7f586b508d
+ELF SHA256: 609027c5a17dd5f04bf88ee3e6143a7c2b373b122e8660d5d9b3cef843f7cd9f
+gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -Wall -Wextra -Wpedantic experiments/byte-order.c -o .trace-build/byte-order/program
+
+(gdb) set pagination off
+
+
+(gdb) set confirm off
+
+
+(gdb) set style enabled off
+
+
+(gdb) set disable-randomization off
+
+
+(gdb) file .trace-build/byte-order/program
+
+
+(gdb) start > .trace-build/byte-order/stdout.txt
+Temporary breakpoint 1 at 0x11ac: file experiments/byte-order.c, line 27.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x57aca5456010      96399018778640
+rdi            0x1                 1
+rsi            0x4                 4
+rdx            0x7ffc200cc4d0      140720846193872
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) p/u phase
+$1 = 1
+
+(gdb) p/x &word
+$2 = 0x57aca5456010
+
+(gdb) p/x word
+$3 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$4 = 0
+
+(gdb) p/x probe_byte
+$5 = 0x0
+
+(gdb) p/u encode_index
+$6 = 0
+
+(gdb) p/x &be_encoded
+$7 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0xcc	0xcc	0xcc	0xcc
+
+(gdb) p/x native_read
+$8 = 0x0
+
+(gdb) p/x raw_read
+$9 = 0x0
+
+(gdb) p/x decoded_be
+$10 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x78                120
+rdi            0x2                 2
+rsi            0x4                 4
+rdx            0x0                 0
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$11 = 2
+
+(gdb) p/x &word
+$12 = 0x57aca5456010
+
+(gdb) p/x word
+$13 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$14 = 0
+
+(gdb) p/x probe_byte
+$15 = 0x78
+
+(gdb) p/u encode_index
+$16 = 0
+
+(gdb) p/x &be_encoded
+$17 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0xcc	0xcc	0xcc	0xcc
+
+(gdb) p/x native_read
+$18 = 0x0
+
+(gdb) p/x raw_read
+$19 = 0x0
+
+(gdb) p/x decoded_be
+$20 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x56                86
+rdi            0x2                 2
+rsi            0x4                 4
+rdx            0x1                 1
+eflags         0x206               [ PF IF ]
+
+(gdb) p/u phase
+$21 = 2
+
+(gdb) p/x &word
+$22 = 0x57aca5456010
+
+(gdb) p/x word
+$23 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$24 = 1
+
+(gdb) p/x probe_byte
+$25 = 0x56
+
+(gdb) p/u encode_index
+$26 = 0
+
+(gdb) p/x &be_encoded
+$27 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0xcc	0xcc	0xcc	0xcc
+
+(gdb) p/x native_read
+$28 = 0x0
+
+(gdb) p/x raw_read
+$29 = 0x0
+
+(gdb) p/x decoded_be
+$30 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x34                52
+rdi            0x2                 2
+rsi            0x4                 4
+rdx            0x2                 2
+eflags         0x206               [ PF IF ]
+
+(gdb) p/u phase
+$31 = 2
+
+(gdb) p/x &word
+$32 = 0x57aca5456010
+
+(gdb) p/x word
+$33 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$34 = 2
+
+(gdb) p/x probe_byte
+$35 = 0x34
+
+(gdb) p/u encode_index
+$36 = 0
+
+(gdb) p/x &be_encoded
+$37 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0xcc	0xcc	0xcc	0xcc
+
+(gdb) p/x native_read
+$38 = 0x0
+
+(gdb) p/x raw_read
+$39 = 0x0
+
+(gdb) p/x decoded_be
+$40 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x12                18
+rdi            0x2                 2
+rsi            0x4                 4
+rdx            0x3                 3
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$41 = 2
+
+(gdb) p/x &word
+$42 = 0x57aca5456010
+
+(gdb) p/x word
+$43 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$44 = 3
+
+(gdb) p/x probe_byte
+$45 = 0x12
+
+(gdb) p/u encode_index
+$46 = 0
+
+(gdb) p/x &be_encoded
+$47 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0xcc	0xcc	0xcc	0xcc
+
+(gdb) p/x native_read
+$48 = 0x0
+
+(gdb) p/x raw_read
+$49 = 0x0
+
+(gdb) p/x decoded_be
+$50 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x57aca5456014      96399018778644
+rdi            0x3                 3
+rsi            0x4                 4
+rdx            0x0                 0
+eflags         0x206               [ PF IF ]
+
+(gdb) p/u phase
+$51 = 3
+
+(gdb) p/x &word
+$52 = 0x57aca5456010
+
+(gdb) p/x word
+$53 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$54 = 4
+
+(gdb) p/x probe_byte
+$55 = 0x12
+
+(gdb) p/u encode_index
+$56 = 0
+
+(gdb) p/x &be_encoded
+$57 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0x12	0xcc	0xcc	0xcc
+
+(gdb) p/x native_read
+$58 = 0x0
+
+(gdb) p/x raw_read
+$59 = 0x0
+
+(gdb) p/x decoded_be
+$60 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x57aca5456014      96399018778644
+rdi            0x3                 3
+rsi            0x4                 4
+rdx            0x1                 1
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$61 = 3
+
+(gdb) p/x &word
+$62 = 0x57aca5456010
+
+(gdb) p/x word
+$63 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$64 = 4
+
+(gdb) p/x probe_byte
+$65 = 0x12
+
+(gdb) p/u encode_index
+$66 = 1
+
+(gdb) p/x &be_encoded
+$67 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0x12	0x34	0xcc	0xcc
+
+(gdb) p/x native_read
+$68 = 0x0
+
+(gdb) p/x raw_read
+$69 = 0x0
+
+(gdb) p/x decoded_be
+$70 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x57aca5456014      96399018778644
+rdi            0x3                 3
+rsi            0x4                 4
+rdx            0x2                 2
+eflags         0x206               [ PF IF ]
+
+(gdb) p/u phase
+$71 = 3
+
+(gdb) p/x &word
+$72 = 0x57aca5456010
+
+(gdb) p/x word
+$73 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$74 = 4
+
+(gdb) p/x probe_byte
+$75 = 0x12
+
+(gdb) p/u encode_index
+$76 = 2
+
+(gdb) p/x &be_encoded
+$77 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0x12	0x34	0x56	0xcc
+
+(gdb) p/x native_read
+$78 = 0x0
+
+(gdb) p/x raw_read
+$79 = 0x0
+
+(gdb) p/x decoded_be
+$80 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x57aca5456014      96399018778644
+rdi            0x3                 3
+rsi            0x4                 4
+rdx            0x3                 3
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) p/u phase
+$81 = 3
+
+(gdb) p/x &word
+$82 = 0x57aca5456010
+
+(gdb) p/x word
+$83 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$84 = 4
+
+(gdb) p/x probe_byte
+$85 = 0x12
+
+(gdb) p/u encode_index
+$86 = 3
+
+(gdb) p/x &be_encoded
+$87 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0x12	0x34	0x56	0x78
+
+(gdb) p/x native_read
+$88 = 0x0
+
+(gdb) p/x raw_read
+$89 = 0x0
+
+(gdb) p/x decoded_be
+$90 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x12345678          305419896
+rdi            0x4                 4
+rsi            0x4                 4
+rdx            0x3                 3
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$91 = 4
+
+(gdb) p/x &word
+$92 = 0x57aca5456010
+
+(gdb) p/x word
+$93 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$94 = 4
+
+(gdb) p/x probe_byte
+$95 = 0x12
+
+(gdb) p/u encode_index
+$96 = 4
+
+(gdb) p/x &be_encoded
+$97 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0x12	0x34	0x56	0x78
+
+(gdb) p/x native_read
+$98 = 0x12345678
+
+(gdb) p/x raw_read
+$99 = 0x0
+
+(gdb) p/x decoded_be
+$100 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x78563412          2018915346
+rdi            0x5                 5
+rsi            0x4                 4
+rdx            0x3                 3
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$101 = 5
+
+(gdb) p/x &word
+$102 = 0x57aca5456010
+
+(gdb) p/x word
+$103 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$104 = 4
+
+(gdb) p/x probe_byte
+$105 = 0x12
+
+(gdb) p/u encode_index
+$106 = 4
+
+(gdb) p/x &be_encoded
+$107 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0x12	0x34	0x56	0x78
+
+(gdb) p/x native_read
+$108 = 0x12345678
+
+(gdb) p/x raw_read
+$109 = 0x78563412
+
+(gdb) p/x decoded_be
+$110 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x57aca5453194      0x57aca5453194 <checkpoint+11>
+rsp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rbp            0x7ffc200cc4b0      0x7ffc200cc4b0
+rax            0x12345678          305419896
+rdi            0x6                 6
+rsi            0x4                 4
+rdx            0x12345600          305419776
+eflags         0x206               [ PF IF ]
+
+(gdb) p/u phase
+$111 = 6
+
+(gdb) p/x &word
+$112 = 0x57aca5456010
+
+(gdb) p/x word
+$113 = 0x12345678
+
+(gdb) x/4bx &word
+0x57aca5456010 <word>:	0x78	0x56	0x34	0x12
+
+(gdb) p/u read_index
+$114 = 4
+
+(gdb) p/x probe_byte
+$115 = 0x12
+
+(gdb) p/u encode_index
+$116 = 4
+
+(gdb) p/x &be_encoded
+$117 = 0x57aca5456014
+
+(gdb) x/4bx be_encoded
+0x57aca5456014 <be_encoded>:	0x12	0x34	0x56	0x78
+
+(gdb) p/x native_read
+$118 = 0x12345678
+
+(gdb) p/x raw_read
+$119 = 0x78563412
+
+(gdb) p/x decoded_be
+$120 = 0x12345678
+
+(gdb) delete breakpoints
+
+
+(gdb) continue
+
+
+(gdb) show disable-randomization
+Disabling randomization of debuggee's virtual address space is off.

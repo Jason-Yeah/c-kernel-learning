@@ -1,0 +1,256 @@
+.measured-address .reg-value {
+  font-size: 28px;
+  letter-spacing: -0.6px;
+  white-space: nowrap;
+}
+.provenance {
+  margin-top: 24px;
+  border-top: 1px solid #2d4357;
+  padding-top: 17px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.9;
+}
+.provenance summary {
+  cursor: pointer;
+  color: var(--ink);
+}
+.provenance-body {
+  padding: 14px 0 0 20px;
+  max-width: 1000px;
+}
+.provenance-body p {
+  margin: 8px 0 15px;
+}
+.evidence-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.evidence-links a {
+  color: #69e2f4;
+  text-decoration: none;
+}
+.provenance dl {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 10px 20px;
+}
+.provenance dt {
+  color: var(--ink);
+}
+.provenance dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.provenance code {
+  color: var(--ink);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#late-token .big-result {
+  font-size: 52px;
+  letter-spacing: -1px;
+}
+.buffer-base-address {
+  display: block;
+  font: 16px/22px var(--mono);
+  margin-top: 6px;
+  color: #fff;
+}
+.measured-page .page-value {
+  font-size: 26px;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  right: 12px;
+}
+.experiment-step {
+  width: 1440px;
+  height: 810px;
+}
+.experiment-scene .scene-heading {
+  font-size: 36px;
+}
+.experiment-reading {
+  padding: 0 0 8px;
+  gap: 8px;
+  background: #000;
+}
+.experiment-reading .reg-value {
+  font-size: 28px;
+  letter-spacing: -0.6px;
+}
+.experiment-reading.source .reg-value {
+  color: #9bbfff;
+}
+.experiment-reading.target .reg-value {
+  color: #9ce6ef;
+}
+.experiment-case {
+  color: #fff;
+  font-size: 16px;
+}
+.gdb-excerpt {
+  margin: 0;
+  font: 17px/1.4 var(--mono);
+  color: #fff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+.experiment-gdb .code-heading {
+  padding: 0;
+  margin-bottom: 12px;
+}
+.experiment-workbench {
+  margin-top: 28px;
+  border-top: 1px solid #738396;
+  padding-top: 20px;
+  color: #fff;
+}
+.experiment-workbench > summary {
+  cursor: pointer;
+  font-size: 19px;
+  font-weight: 650;
+}
+.experiment-workbench > p {
+  font-size: 15px;
+  line-height: 1.7;
+}
+.experiment-links {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.experiment-links a {
+  color: var(--cyan);
+  font-size: 15px;
+}
+.experiment-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-end;
+  margin: 22px 0 12px;
+}
+.experiment-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 14px;
+  min-width: 0;
+  max-width: 100%;
+}
+.experiment-toolbar select {
+  border: 1px solid #8190a0;
+  background: #000;
+  color: #fff;
+  font: 14px var(--mono);
+  padding: 9px;
+  max-width: 100%;
+}
+.experiment-toolbar button {
+  border: 1px solid var(--cyan);
+  padding: 10px 15px;
+  color: #fff;
+  font-size: 14px;
+  max-width: 100%;
+}
+.experiment-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 26px;
+}
+.experiment-columns > div {
+  min-width: 0;
+}
+.experiment-columns h3 {
+  font-size: 16px;
+  margin: 18px 0 12px;
+}
+.experiment-source-scroll {
+  max-height: 500px;
+  overflow: auto;
+  border: 1px solid #596a7d;
+  position: relative;
+}
+#experiment-source {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  font: 15px/1.7 var(--mono);
+}
+#experiment-source > span {
+  display: block;
+  min-height: 26px;
+  padding: 1px 14px 1px 0;
+}
+#experiment-source i {
+  display: inline-block;
+  width: 42px;
+  margin-right: 12px;
+  padding-right: 8px;
+  text-align: right;
+  font: 12px var(--mono);
+  color: #fff;
+  border-right: 1px solid #596a7d;
+}
+#experiment-source code {
+  font: inherit;
+}
+#experiment-source .current-source-line {
+  background: #12323a;
+  color: var(--cyan);
+}
+.experiment-command-output {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 15px/1.65 var(--mono);
+  max-height: 500px;
+  overflow: auto;
+  border: 1px solid #596a7d;
+  padding: 14px;
+  margin: 0;
+  color: #fff;
+}
+#experiment-observation,
+.experiment-current {
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.embedded-program {
+  margin: 20px 0;
+}
+.embedded-program pre {
+  font: 15px/1.7 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #fff;
+}
+@media (max-width: 760px) {
+  .experiment-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .experiment-toolbar {
+    gap: 12px;
+  }
+  .experiment-workbench > p {
+    font-size: 13px;
+  }
+  .experiment-workbench > summary {
+    font-size: 16px;
+  }
+}
+@media (max-width: 760px) {
+  .provenance {
+    font-size: 12px;
+  }
+  .provenance dl {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 9px;
+  }
+  .provenance-body {
+    padding-left: 6px;
+  }
+}

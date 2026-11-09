@@ -1,0 +1,9 @@
+gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -fsanitize=undefined -fno-sanitize-recover=undefined experiments/integer-bits.c -o .trace-build/integer-bits/sanitized
+./.trace-build/integer-bits/sanitized
+exitCode=0
+stdout:
+AND=00000006 OR=000000BF XOR=000000B9 NOT=FFFFFF49 LEFT=000002D8 RIGHT=0000002D
+logical=1 promoted_not=-183 narrow_not=73 small_shift=46592 rejected_shift=1
+u8=214 s8=-42 zero=00D6 sign=FFD6 truncated=34 wrap=0 wide=2147483648 rejected_signed=1 promoted_add=128 negmin=128
+
+stderr:

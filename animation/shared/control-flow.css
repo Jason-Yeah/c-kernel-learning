@@ -1,0 +1,35 @@
+.control-flow-scene .scene-heading {font-size:42px;letter-spacing:-1px}
+.control-flow-actors .reg-value {font:650 28px/34px var(--mono);letter-spacing:0}
+.control-flow-actors .reg-label {font-size:20px;line-height:26px}
+.control-flow-actors .reg-detail {font-size:20px}
+.control-flow-actors .chip-subtitle {font-size:20px}
+.ec-mode {height:200px;border:1px solid #fff;background:#000;color:#fff}
+.ec-mode > strong {position:absolute;left:20px;top:14px;font:650 22px/30px var(--sans)}
+.ec-mode.ec-kernel {height:170px;border-color:#69e2f4}
+.ec-node {padding:14px 16px;background:#000;border-left:2px solid #64a4ff;font:650 24px/32px var(--mono)}
+.ec-node span {display:block;font:20px/30px var(--sans);margin-top:6px}
+.ec-short {font:20px/30px var(--sans);color:#fff}
+.ec-strong {font:650 26px/36px var(--sans);color:#fff}
+.ec-formula {font:650 30px/42px var(--sans);color:#fff}
+.ec-source {font:20px/30px var(--mono);color:#fff}
+.ec-source > div {display:flex;gap:14px;white-space:pre}
+.ec-source i {width:28px;flex-shrink:0;font:18px/30px var(--mono);font-style:normal;text-align:right}
+.ec-source code {font:inherit}
+.ec-case {font:650 23px/32px var(--mono);color:#fff}
+.ec-copy {height:118px;padding:10px 14px;border:1px solid #69e2f4;background:#000;font-family:var(--mono)}
+.ec-copy strong {display:block;font:650 22px/28px var(--mono)}
+.ec-copy small {display:block;font:20px/26px var(--mono);margin-top:4px}
+.ec-copy b {display:block;font:650 30px/36px var(--mono);margin-top:4px}
+.ec-source-copy {border-color:#64a4ff}
+.ec-process {padding:12px 18px;border:1px solid #fff;background:#000;font:20px/30px var(--sans)}
+.ec-process b {display:block;font:650 28px/36px var(--mono)}
+.ec-process span {display:block;font:20px/30px var(--sans);margin-top:5px}
+.ec-irq {border:1px solid #fff;padding:14px 16px;background:#000}
+.ec-irq strong {display:block;font:650 24px/32px var(--sans)}
+.ec-irq span {display:block;font:20px/30px var(--sans);margin-top:5px}
+#ec-os-result {white-space:pre-line}
+.control-os-lab {max-width:1300px;margin:24px auto;line-height:1.7;color:#fff;background:#000}
+.control-os-lab summary {cursor:pointer;font-size:21px;font-weight:600}
+.control-os-lab pre {padding:16px;border:1px solid #65717d;background:#000;max-height:420px;max-width:100%;overflow:auto;font:16px/1.7 var(--mono)}
+.control-os-lab button {border:1px solid #69e2f4;background:#000;color:#fff;padding:10px 16px}
+@media(max-width:700px){.control-os-lab {margin:20px 16px;min-width:0}.control-os-lab pre {white-space:pre-wrap;overflow-wrap:anywhere}}

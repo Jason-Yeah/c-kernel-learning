@@ -1,0 +1,893 @@
+{
+  "schemaVersion": 1,
+  "id": "cache-access",
+  "provenance": {
+    "kind": "gdb-plus-model",
+    "capturedAt": "2026-11-05T13:41:11.164Z",
+    "source": {
+      "path": "experiments/cache-access.c",
+      "content": "/* GDB observes loads and bytes, NOT hardware Cache tags, LRU or hit/miss. */\n#include <stdio.h>\n\n_Alignas(64) unsigned char memory[256];\nconst unsigned offsets[8] = {0x00, 0x03, 0x20, 0x00, 0x40, 0x20, 0x08, 0x0C};\nvolatile unsigned step;\nvolatile unsigned offset;\nvolatile unsigned char value;\nvolatile unsigned char sink;\nconst volatile unsigned char *target;\nvolatile int trace_phase;\n\nint main(void)\n{\n    for (unsigned i = 0; i < sizeof memory; ++i)\n        memory[i] = (unsigned char)(7 * i + 0x11);\n    trace_phase = 1;\n    __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_CACHE_READY */\n    for (step = 0; step < 8; ++step) {\n        offset = offsets[step];\n        target = &memory[offset];\n        value = *target;\n        sink = value;\n        trace_phase = 2;\n        __asm__ volatile (\"nop\" ::: \"memory\"); /* TRACE_CACHE_READ */\n    }\n    printf(\"8 loads; last byte = %02X\\n\", (unsigned)sink);\n    return sink == 0x65 ? 0 : 1;\n}\n",
+      "sha256": "71809a95828dc7a1d6ab5d3841cab670bd715a11b6fb5ff347e092c2e9e37805"
+    },
+    "binary": {
+      "path": ".trace-build/cache-access",
+      "sha256": "44f70143c0e7fc94904fdb349da86a4b9ea1116e61ca64546e5d13196c24f466"
+    },
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "compilerCommand": "gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-ipa-stack-alignment -mno-red-zone -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -Wall -Wextra -Wpedantic experiments/cache-access.c -o .trace-build/cache-access",
+    "flags": [
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-fPIE",
+      "-pie",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-fno-ipa-stack-alignment",
+      "-mno-red-zone",
+      "-fno-stack-protector",
+      "-U_FORTIFY_SOURCE",
+      "-D_FORTIFY_SOURCE=0",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic"
+    ],
+    "gdb": "GNU gdb 15.1",
+    "architecture": "i386:x86-64",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "kernelASLR": "2",
+    "debuggerASLR": "Disabling randomization of debuggee's virtual address space is off.",
+    "limits": "Actual C addresses, bytes and loads. GDB perturbs Cache and cannot observe hardware tags/LRU/HIT; the four-set two-way eight-byte Cache is an explicit mechanism model.",
+    "replay": "Offline replay of actual local GDB stops; the website does not execute programs or control GDB."
+  },
+  "runs": {
+    "default": {
+      "case": "default",
+      "architecture": "i386:x86-64",
+      "outcome": "exit",
+      "exits": [
+        {
+          "inferior": 1,
+          "code": 0
+        }
+      ],
+      "samples": [
+        {
+          "index": 0,
+          "event": "phase-1",
+          "phase": 1,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 18,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 18,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA36191",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0xFF",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "memory": [
+              17,
+              24,
+              31,
+              38,
+              45,
+              52,
+              59,
+              66,
+              73,
+              80,
+              87,
+              94,
+              101,
+              108,
+              115,
+              122,
+              129,
+              136,
+              143,
+              150,
+              157,
+              164,
+              171,
+              178,
+              185,
+              192,
+              199,
+              206,
+              213,
+              220,
+              227,
+              234,
+              241,
+              248,
+              255,
+              6,
+              13,
+              20,
+              27,
+              34,
+              41,
+              48,
+              55,
+              62,
+              69,
+              76,
+              83,
+              90,
+              97,
+              104,
+              111,
+              118,
+              125,
+              132,
+              139,
+              146,
+              153,
+              160,
+              167,
+              174,
+              181,
+              188,
+              195,
+              202,
+              209,
+              216,
+              223,
+              230,
+              237,
+              244,
+              251,
+              2,
+              9,
+              16,
+              23,
+              30,
+              37,
+              44,
+              51,
+              58,
+              65,
+              72,
+              79,
+              86,
+              93,
+              100,
+              107,
+              114,
+              121,
+              128,
+              135,
+              142,
+              149,
+              156,
+              163,
+              170,
+              177,
+              184,
+              191,
+              198,
+              205,
+              212,
+              219,
+              226,
+              233,
+              240,
+              247,
+              254,
+              5,
+              12,
+              19,
+              26,
+              33,
+              40,
+              47,
+              54,
+              61,
+              68,
+              75,
+              82,
+              89,
+              96,
+              103,
+              110,
+              117,
+              124,
+              131,
+              138,
+              145,
+              152,
+              159,
+              166,
+              173,
+              180,
+              187,
+              194,
+              201,
+              208,
+              215,
+              222,
+              229,
+              236,
+              243,
+              250,
+              1,
+              8,
+              15,
+              22,
+              29,
+              36,
+              43,
+              50,
+              57,
+              64,
+              71,
+              78,
+              85,
+              92,
+              99,
+              106,
+              113,
+              120,
+              127,
+              134,
+              141,
+              148,
+              155,
+              162,
+              169,
+              176,
+              183,
+              190,
+              197,
+              204,
+              211,
+              218,
+              225,
+              232,
+              239,
+              246,
+              253,
+              4,
+              11,
+              18,
+              25,
+              32,
+              39,
+              46,
+              53,
+              60,
+              67,
+              74,
+              81,
+              88,
+              95,
+              102,
+              109,
+              116,
+              123,
+              130,
+              137,
+              144,
+              151,
+              158,
+              165,
+              172,
+              179,
+              186,
+              193,
+              200,
+              207,
+              214,
+              221,
+              228,
+              235,
+              242,
+              249,
+              0,
+              7,
+              14,
+              21,
+              28,
+              35,
+              42,
+              49,
+              56,
+              63,
+              70,
+              77,
+              84,
+              91,
+              98,
+              105,
+              112,
+              119,
+              126,
+              133,
+              140,
+              147,
+              154,
+              161,
+              168,
+              175,
+              182,
+              189,
+              196,
+              203,
+              210,
+              217,
+              224,
+              231,
+              238,
+              245,
+              252,
+              3,
+              10
+            ],
+            "offsets": [
+              0,
+              3,
+              32,
+              0,
+              64,
+              32,
+              8,
+              12
+            ]
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea36191      0x62490ea36191 <main+72>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0xff                255"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea36191 <main+72>:\tnop"
+            },
+            {
+              "command": "p/x &memory[0]",
+              "output": "$1 = 0x62490ea39080"
+            },
+            {
+              "command": "x/16bx &memory[0]",
+              "output": "0x62490ea39080 <memory>:\t0x11\t0x18\t0x1f\t0x26\t0x2d\t0x34\t0x3b\t0x42\n0x62490ea39088 <memory+8>:\t0x49\t0x50\t0x57\t0x5e\t0x65\t0x6c\t0x73\t0x7a"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0x11",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 0,
+            "offset": 0,
+            "target": "0x62490EA39080",
+            "value": 17,
+            "sink": 17,
+            "byte": 17,
+            "al": 17
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0x11                17"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$2 = 0"
+            },
+            {
+              "command": "p/x target",
+              "output": "$3 = 0x62490ea39080"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea39080 <memory>:\t0x11"
+            },
+            {
+              "command": "p/x value",
+              "output": "$4 = 0x11"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$5 = 0x11"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0x26",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 1,
+            "offset": 3,
+            "target": "0x62490EA39083",
+            "value": 38,
+            "sink": 38,
+            "byte": 38,
+            "al": 38
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0x26                38"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$6 = 1"
+            },
+            {
+              "command": "p/x target",
+              "output": "$7 = 0x62490ea39083"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea39083 <memory+3>:\t0x26"
+            },
+            {
+              "command": "p/x value",
+              "output": "$8 = 0x26"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$9 = 0x26"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0xF1",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 2,
+            "offset": 32,
+            "target": "0x62490EA390A0",
+            "value": 241,
+            "sink": 241,
+            "byte": 241,
+            "al": 241
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0xf1                241"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$10 = 2"
+            },
+            {
+              "command": "p/x target",
+              "output": "$11 = 0x62490ea390a0"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea390a0 <memory+32>:\t0xf1"
+            },
+            {
+              "command": "p/x value",
+              "output": "$12 = 0xf1"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$13 = 0xf1"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0x11",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 3,
+            "offset": 0,
+            "target": "0x62490EA39080",
+            "value": 17,
+            "sink": 17,
+            "byte": 17,
+            "al": 17
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0x11                17"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$14 = 3"
+            },
+            {
+              "command": "p/x target",
+              "output": "$15 = 0x62490ea39080"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea39080 <memory>:\t0x11"
+            },
+            {
+              "command": "p/x value",
+              "output": "$16 = 0x11"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$17 = 0x11"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0xD1",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 4,
+            "offset": 64,
+            "target": "0x62490EA390C0",
+            "value": 209,
+            "sink": 209,
+            "byte": 209,
+            "al": 209
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0xd1                209"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$18 = 4"
+            },
+            {
+              "command": "p/x target",
+              "output": "$19 = 0x62490ea390c0"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea390c0 <memory+64>:\t0xd1"
+            },
+            {
+              "command": "p/x value",
+              "output": "$20 = 0xd1"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$21 = 0xd1"
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0xF1",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 5,
+            "offset": 32,
+            "target": "0x62490EA390A0",
+            "value": 241,
+            "sink": 241,
+            "byte": 241,
+            "al": 241
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0xf1                241"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$22 = 5"
+            },
+            {
+              "command": "p/x target",
+              "output": "$23 = 0x62490ea390a0"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea390a0 <memory+32>:\t0xf1"
+            },
+            {
+              "command": "p/x value",
+              "output": "$24 = 0xf1"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$25 = 0xf1"
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0x49",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 6,
+            "offset": 8,
+            "target": "0x62490EA39088",
+            "value": 73,
+            "sink": 73,
+            "byte": 73,
+            "al": 73
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0x49                73"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$26 = 6"
+            },
+            {
+              "command": "p/x target",
+              "output": "$27 = 0x62490ea39088"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea39088 <memory+8>:\t0x49"
+            },
+            {
+              "command": "p/x value",
+              "output": "$28 = 0x49"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$29 = 0x49"
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "event": "phase-2",
+          "phase": 2,
+          "pid": 1065596,
+          "inferior": 1,
+          "source": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "callsite": {
+            "file": "experiments/cache-access.c",
+            "line": 25,
+            "function": "main"
+          },
+          "registers": {
+            "rip": "0x62490EA361FE",
+            "rsp": "0x7FFDD655A650",
+            "rbp": "0x7FFDD655A660",
+            "rax": "0x65",
+            "rdi": "0x1",
+            "rsi": "0x7FFDD655A788"
+          },
+          "fields": {
+            "base": "0x62490EA39080",
+            "step": 7,
+            "offset": 12,
+            "target": "0x62490EA3908C",
+            "value": 101,
+            "sink": 101,
+            "byte": 101,
+            "al": 101
+          },
+          "commands": [
+            {
+              "command": "info registers rip rsp rbp rax",
+              "output": "rip            0x62490ea361fe      0x62490ea361fe <main+181>\nrsp            0x7ffdd655a650      0x7ffdd655a650\nrbp            0x7ffdd655a660      0x7ffdd655a660\nrax            0x65                101"
+            },
+            {
+              "command": "x/i $rip",
+              "output": "=> 0x62490ea361fe <main+181>:\tnop"
+            },
+            {
+              "command": "p step",
+              "output": "$30 = 7"
+            },
+            {
+              "command": "p/x target",
+              "output": "$31 = 0x62490ea3908c"
+            },
+            {
+              "command": "x/1bx target",
+              "output": "0x62490ea3908c <memory+12>:\t0x65"
+            },
+            {
+              "command": "p/x value",
+              "output": "$32 = 0x65"
+            },
+            {
+              "command": "p/x $al",
+              "output": "$33 = 0x65"
+            }
+          ]
+        }
+      ],
+      "stdout": "8 loads; last byte = 65\n"
+    }
+  }
+}

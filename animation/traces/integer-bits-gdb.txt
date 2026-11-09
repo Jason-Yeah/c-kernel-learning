@@ -1,0 +1,6455 @@
+Captured: 2026-11-07T09:56:51.637Z
+Source SHA256: b271fae05250ba4117e8ceecdfc1b39c29eec1692687eee68b32011e3e0c7457
+ELF SHA256: 1673bd1ad38e1d3e6b9e8d098385257f473eb95c5ee80994f1def3bc38bdc33f
+gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -Wall -Wextra -Wpedantic experiments/integer-bits.c -o .trace-build/integer-bits/program
+
+(gdb) set pagination off
+
+
+(gdb) set confirm off
+
+
+(gdb) set style enabled off
+
+
+(gdb) set disable-randomization off
+
+
+(gdb) file .trace-build/integer-bits/program
+
+
+(gdb) start > .trace-build/integer-bits/stdout.txt
+Temporary breakpoint 1 at 0x11a7: file experiments/integer-bits.c, line 39.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) whatis bits & mask
+type = unsigned int
+
+(gdb) whatis bits && mask
+type = int
+
+(gdb) whatis ~bits
+type = unsigned int
+
+(gdb) whatis ~small
+type = int
+
+(gdb) whatis small << 8
+type = int
+
+(gdb) whatis +small
+type = int
+
+(gdb) whatis small_max + 1
+type = int
+
+(gdb) whatis -small_min
+type = int
+
+(gdb) whatis wrap_lhs + 1u
+type = unsigned int
+
+(gdb) whatis (int64_t)signed_lhs + 1
+type = long
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x0                 0
+rdi            0x1                 1
+rsi            0x4                 4
+rdx            0x7ffd57be3f40      140726075539264
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) p/u phase
+$1 = 1
+
+(gdb) p/u bits
+$2 = 182
+
+(gdb) p/x &bits
+$3 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$4 = 15
+
+(gdb) p/x &mask
+$5 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$6 = 182
+
+(gdb) p/x &small
+$7 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$8 = 0
+
+(gdb) p/x &r_and
+$9 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$10 = 0
+
+(gdb) p/x &r_or
+$11 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$12 = 0
+
+(gdb) p/x &r_xor
+$13 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$14 = 0
+
+(gdb) p/x &r_not
+$15 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_left
+$16 = 0
+
+(gdb) p/x &r_left
+$17 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_right
+$18 = 0
+
+(gdb) p/x &r_right
+$19 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$20 = 0
+
+(gdb) p/x &guarded_shift
+$21 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$22 = 0
+
+(gdb) p/x &r_logical
+$23 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$24 = 0
+
+(gdb) p/x &r_logical_not
+$25 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$26 = 0
+
+(gdb) p/x &promoted_not
+$27 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d small_shift
+$28 = 0
+
+(gdb) p/x &small_shift
+$29 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u narrow_not
+$30 = 0
+
+(gdb) p/x &narrow_not
+$31 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x00
+
+(gdb) p/u shift_count
+$32 = 32
+
+(gdb) p/x &shift_count
+$33 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$34 = 0
+
+(gdb) p/x &shift_rejected
+$35 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$36 = 214
+
+(gdb) p/x &u8
+$37 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$38 = -42
+
+(gdb) p/x &s8
+$39 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$40 = 42
+
+(gdb) p/x &magnitude
+$41 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$42 = 0
+
+(gdb) p/x &inverted8
+$43 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$44 = 0
+
+(gdb) p/x &negated8
+$45 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$46 = 127
+
+(gdb) p/x &small_max
+$47 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$48 = -128
+
+(gdb) p/x &small_min
+$49 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$50 = 0
+
+(gdb) p/x &same_encoding
+$51 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$52 = 0
+
+(gdb) p/x &zero_extended
+$53 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$54 = 0
+
+(gdb) p/x &sign_extended
+$55 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$56 = 4660
+
+(gdb) p/x &wide_unsigned
+$57 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$58 = 0
+
+(gdb) p/x &truncated
+$59 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$60 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$61 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$62 = 0
+
+(gdb) p/x &wrapped
+$63 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$64 = 255
+
+(gdb) p/x &u8_max
+$65 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$66 = 0
+
+(gdb) p/x &promoted_256
+$67 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$68 = 0
+
+(gdb) p/x &wrapped8
+$69 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$70 = 2147483647
+
+(gdb) p/x &signed_lhs
+$71 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$72 = 0
+
+(gdb) p/x &signed_result
+$73 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$74 = 0
+
+(gdb) p/x &wide_sum
+$75 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$76 = 0
+
+(gdb) p/x &signed_rejected
+$77 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$78 = 0
+
+(gdb) p/x &promoted_add
+$79 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$80 = 0
+
+(gdb) p/x &promoted_negmin
+$81 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x0                 0
+rdi            0x2                 2
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$82 = 2
+
+(gdb) p/u bits
+$83 = 182
+
+(gdb) p/x &bits
+$84 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$85 = 15
+
+(gdb) p/x &mask
+$86 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$87 = 182
+
+(gdb) p/x &small
+$88 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$89 = 6
+
+(gdb) p/x &r_and
+$90 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$91 = 0
+
+(gdb) p/x &r_or
+$92 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$93 = 0
+
+(gdb) p/x &r_xor
+$94 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$95 = 0
+
+(gdb) p/x &r_not
+$96 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_left
+$97 = 0
+
+(gdb) p/x &r_left
+$98 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_right
+$99 = 0
+
+(gdb) p/x &r_right
+$100 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$101 = 0
+
+(gdb) p/x &guarded_shift
+$102 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$103 = 1
+
+(gdb) p/x &r_logical
+$104 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$105 = 0
+
+(gdb) p/x &r_logical_not
+$106 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$107 = 0
+
+(gdb) p/x &promoted_not
+$108 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d small_shift
+$109 = 0
+
+(gdb) p/x &small_shift
+$110 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u narrow_not
+$111 = 0
+
+(gdb) p/x &narrow_not
+$112 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x00
+
+(gdb) p/u shift_count
+$113 = 32
+
+(gdb) p/x &shift_count
+$114 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$115 = 0
+
+(gdb) p/x &shift_rejected
+$116 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$117 = 214
+
+(gdb) p/x &u8
+$118 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$119 = -42
+
+(gdb) p/x &s8
+$120 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$121 = 42
+
+(gdb) p/x &magnitude
+$122 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$123 = 0
+
+(gdb) p/x &inverted8
+$124 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$125 = 0
+
+(gdb) p/x &negated8
+$126 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$127 = 127
+
+(gdb) p/x &small_max
+$128 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$129 = -128
+
+(gdb) p/x &small_min
+$130 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$131 = 0
+
+(gdb) p/x &same_encoding
+$132 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$133 = 0
+
+(gdb) p/x &zero_extended
+$134 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$135 = 0
+
+(gdb) p/x &sign_extended
+$136 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$137 = 4660
+
+(gdb) p/x &wide_unsigned
+$138 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$139 = 0
+
+(gdb) p/x &truncated
+$140 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$141 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$142 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$143 = 0
+
+(gdb) p/x &wrapped
+$144 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$145 = 255
+
+(gdb) p/x &u8_max
+$146 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$147 = 0
+
+(gdb) p/x &promoted_256
+$148 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$149 = 0
+
+(gdb) p/x &wrapped8
+$150 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$151 = 2147483647
+
+(gdb) p/x &signed_lhs
+$152 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$153 = 0
+
+(gdb) p/x &signed_result
+$154 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$155 = 0
+
+(gdb) p/x &wide_sum
+$156 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$157 = 0
+
+(gdb) p/x &signed_rejected
+$158 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$159 = 0
+
+(gdb) p/x &promoted_add
+$160 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$161 = 0
+
+(gdb) p/x &promoted_negmin
+$162 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0xbf                191
+rdi            0x3                 3
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$163 = 3
+
+(gdb) p/u bits
+$164 = 182
+
+(gdb) p/x &bits
+$165 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$166 = 15
+
+(gdb) p/x &mask
+$167 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$168 = 182
+
+(gdb) p/x &small
+$169 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$170 = 6
+
+(gdb) p/x &r_and
+$171 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$172 = 191
+
+(gdb) p/x &r_or
+$173 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$174 = 0
+
+(gdb) p/x &r_xor
+$175 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$176 = 0
+
+(gdb) p/x &r_not
+$177 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_left
+$178 = 0
+
+(gdb) p/x &r_left
+$179 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_right
+$180 = 0
+
+(gdb) p/x &r_right
+$181 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$182 = 0
+
+(gdb) p/x &guarded_shift
+$183 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$184 = 1
+
+(gdb) p/x &r_logical
+$185 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$186 = 0
+
+(gdb) p/x &r_logical_not
+$187 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$188 = 0
+
+(gdb) p/x &promoted_not
+$189 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d small_shift
+$190 = 0
+
+(gdb) p/x &small_shift
+$191 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u narrow_not
+$192 = 0
+
+(gdb) p/x &narrow_not
+$193 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x00
+
+(gdb) p/u shift_count
+$194 = 32
+
+(gdb) p/x &shift_count
+$195 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$196 = 0
+
+(gdb) p/x &shift_rejected
+$197 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$198 = 214
+
+(gdb) p/x &u8
+$199 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$200 = -42
+
+(gdb) p/x &s8
+$201 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$202 = 42
+
+(gdb) p/x &magnitude
+$203 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$204 = 0
+
+(gdb) p/x &inverted8
+$205 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$206 = 0
+
+(gdb) p/x &negated8
+$207 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$208 = 127
+
+(gdb) p/x &small_max
+$209 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$210 = -128
+
+(gdb) p/x &small_min
+$211 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$212 = 0
+
+(gdb) p/x &same_encoding
+$213 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$214 = 0
+
+(gdb) p/x &zero_extended
+$215 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$216 = 0
+
+(gdb) p/x &sign_extended
+$217 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$218 = 4660
+
+(gdb) p/x &wide_unsigned
+$219 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$220 = 0
+
+(gdb) p/x &truncated
+$221 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$222 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$223 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$224 = 0
+
+(gdb) p/x &wrapped
+$225 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$226 = 255
+
+(gdb) p/x &u8_max
+$227 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$228 = 0
+
+(gdb) p/x &promoted_256
+$229 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$230 = 0
+
+(gdb) p/x &wrapped8
+$231 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$232 = 2147483647
+
+(gdb) p/x &signed_lhs
+$233 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$234 = 0
+
+(gdb) p/x &signed_result
+$235 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$236 = 0
+
+(gdb) p/x &wide_sum
+$237 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$238 = 0
+
+(gdb) p/x &signed_rejected
+$239 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$240 = 0
+
+(gdb) p/x &promoted_add
+$241 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$242 = 0
+
+(gdb) p/x &promoted_negmin
+$243 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0xb9                185
+rdi            0x4                 4
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$244 = 4
+
+(gdb) p/u bits
+$245 = 182
+
+(gdb) p/x &bits
+$246 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$247 = 15
+
+(gdb) p/x &mask
+$248 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$249 = 182
+
+(gdb) p/x &small
+$250 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$251 = 6
+
+(gdb) p/x &r_and
+$252 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$253 = 191
+
+(gdb) p/x &r_or
+$254 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$255 = 185
+
+(gdb) p/x &r_xor
+$256 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$257 = 0
+
+(gdb) p/x &r_not
+$258 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_left
+$259 = 0
+
+(gdb) p/x &r_left
+$260 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_right
+$261 = 0
+
+(gdb) p/x &r_right
+$262 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$263 = 0
+
+(gdb) p/x &guarded_shift
+$264 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$265 = 1
+
+(gdb) p/x &r_logical
+$266 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$267 = 0
+
+(gdb) p/x &r_logical_not
+$268 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$269 = 0
+
+(gdb) p/x &promoted_not
+$270 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d small_shift
+$271 = 0
+
+(gdb) p/x &small_shift
+$272 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u narrow_not
+$273 = 0
+
+(gdb) p/x &narrow_not
+$274 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x00
+
+(gdb) p/u shift_count
+$275 = 32
+
+(gdb) p/x &shift_count
+$276 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$277 = 0
+
+(gdb) p/x &shift_rejected
+$278 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$279 = 214
+
+(gdb) p/x &u8
+$280 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$281 = -42
+
+(gdb) p/x &s8
+$282 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$283 = 42
+
+(gdb) p/x &magnitude
+$284 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$285 = 0
+
+(gdb) p/x &inverted8
+$286 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$287 = 0
+
+(gdb) p/x &negated8
+$288 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$289 = 127
+
+(gdb) p/x &small_max
+$290 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$291 = -128
+
+(gdb) p/x &small_min
+$292 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$293 = 0
+
+(gdb) p/x &same_encoding
+$294 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$295 = 0
+
+(gdb) p/x &zero_extended
+$296 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$297 = 0
+
+(gdb) p/x &sign_extended
+$298 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$299 = 4660
+
+(gdb) p/x &wide_unsigned
+$300 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$301 = 0
+
+(gdb) p/x &truncated
+$302 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$303 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$304 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$305 = 0
+
+(gdb) p/x &wrapped
+$306 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$307 = 255
+
+(gdb) p/x &u8_max
+$308 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$309 = 0
+
+(gdb) p/x &promoted_256
+$310 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$311 = 0
+
+(gdb) p/x &wrapped8
+$312 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$313 = 2147483647
+
+(gdb) p/x &signed_lhs
+$314 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$315 = 0
+
+(gdb) p/x &signed_result
+$316 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$317 = 0
+
+(gdb) p/x &wide_sum
+$318 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$319 = 0
+
+(gdb) p/x &signed_rejected
+$320 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$321 = 0
+
+(gdb) p/x &promoted_add
+$322 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$323 = 0
+
+(gdb) p/x &promoted_negmin
+$324 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0xffffff49          4294967113
+rdi            0x5                 5
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$325 = 5
+
+(gdb) p/u bits
+$326 = 182
+
+(gdb) p/x &bits
+$327 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$328 = 15
+
+(gdb) p/x &mask
+$329 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$330 = 182
+
+(gdb) p/x &small
+$331 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$332 = 6
+
+(gdb) p/x &r_and
+$333 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$334 = 191
+
+(gdb) p/x &r_or
+$335 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$336 = 185
+
+(gdb) p/x &r_xor
+$337 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$338 = 4294967113
+
+(gdb) p/x &r_not
+$339 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$340 = 0
+
+(gdb) p/x &r_left
+$341 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_right
+$342 = 0
+
+(gdb) p/x &r_right
+$343 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$344 = 0
+
+(gdb) p/x &guarded_shift
+$345 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$346 = 1
+
+(gdb) p/x &r_logical
+$347 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$348 = 0
+
+(gdb) p/x &r_logical_not
+$349 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$350 = 0
+
+(gdb) p/x &promoted_not
+$351 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d small_shift
+$352 = 0
+
+(gdb) p/x &small_shift
+$353 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u narrow_not
+$354 = 0
+
+(gdb) p/x &narrow_not
+$355 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x00
+
+(gdb) p/u shift_count
+$356 = 32
+
+(gdb) p/x &shift_count
+$357 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$358 = 0
+
+(gdb) p/x &shift_rejected
+$359 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$360 = 214
+
+(gdb) p/x &u8
+$361 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$362 = -42
+
+(gdb) p/x &s8
+$363 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$364 = 42
+
+(gdb) p/x &magnitude
+$365 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$366 = 0
+
+(gdb) p/x &inverted8
+$367 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$368 = 0
+
+(gdb) p/x &negated8
+$369 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$370 = 127
+
+(gdb) p/x &small_max
+$371 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$372 = -128
+
+(gdb) p/x &small_min
+$373 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$374 = 0
+
+(gdb) p/x &same_encoding
+$375 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$376 = 0
+
+(gdb) p/x &zero_extended
+$377 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$378 = 0
+
+(gdb) p/x &sign_extended
+$379 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$380 = 4660
+
+(gdb) p/x &wide_unsigned
+$381 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$382 = 0
+
+(gdb) p/x &truncated
+$383 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$384 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$385 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$386 = 0
+
+(gdb) p/x &wrapped
+$387 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$388 = 255
+
+(gdb) p/x &u8_max
+$389 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$390 = 0
+
+(gdb) p/x &promoted_256
+$391 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$392 = 0
+
+(gdb) p/x &wrapped8
+$393 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$394 = 2147483647
+
+(gdb) p/x &signed_lhs
+$395 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$396 = 0
+
+(gdb) p/x &signed_result
+$397 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$398 = 0
+
+(gdb) p/x &wide_sum
+$399 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$400 = 0
+
+(gdb) p/x &signed_rejected
+$401 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$402 = 0
+
+(gdb) p/x &promoted_add
+$403 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$404 = 0
+
+(gdb) p/x &promoted_negmin
+$405 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0xb600              46592
+rdi            0x6                 6
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x206               [ PF IF ]
+
+(gdb) p/u phase
+$406 = 6
+
+(gdb) p/u bits
+$407 = 182
+
+(gdb) p/x &bits
+$408 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$409 = 15
+
+(gdb) p/x &mask
+$410 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$411 = 182
+
+(gdb) p/x &small
+$412 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$413 = 6
+
+(gdb) p/x &r_and
+$414 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$415 = 191
+
+(gdb) p/x &r_or
+$416 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$417 = 185
+
+(gdb) p/x &r_xor
+$418 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$419 = 4294967113
+
+(gdb) p/x &r_not
+$420 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$421 = 0
+
+(gdb) p/x &r_left
+$422 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u r_right
+$423 = 0
+
+(gdb) p/x &r_right
+$424 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$425 = 0
+
+(gdb) p/x &guarded_shift
+$426 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$427 = 1
+
+(gdb) p/x &r_logical
+$428 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$429 = 0
+
+(gdb) p/x &r_logical_not
+$430 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$431 = -183
+
+(gdb) p/x &promoted_not
+$432 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$433 = 46592
+
+(gdb) p/x &small_shift
+$434 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$435 = 73
+
+(gdb) p/x &narrow_not
+$436 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$437 = 32
+
+(gdb) p/x &shift_count
+$438 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$439 = 0
+
+(gdb) p/x &shift_rejected
+$440 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$441 = 214
+
+(gdb) p/x &u8
+$442 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$443 = -42
+
+(gdb) p/x &s8
+$444 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$445 = 42
+
+(gdb) p/x &magnitude
+$446 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$447 = 0
+
+(gdb) p/x &inverted8
+$448 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$449 = 0
+
+(gdb) p/x &negated8
+$450 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$451 = 127
+
+(gdb) p/x &small_max
+$452 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$453 = -128
+
+(gdb) p/x &small_min
+$454 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$455 = 0
+
+(gdb) p/x &same_encoding
+$456 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$457 = 0
+
+(gdb) p/x &zero_extended
+$458 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$459 = 0
+
+(gdb) p/x &sign_extended
+$460 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$461 = 4660
+
+(gdb) p/x &wide_unsigned
+$462 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$463 = 0
+
+(gdb) p/x &truncated
+$464 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$465 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$466 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$467 = 0
+
+(gdb) p/x &wrapped
+$468 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$469 = 255
+
+(gdb) p/x &u8_max
+$470 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$471 = 0
+
+(gdb) p/x &promoted_256
+$472 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$473 = 0
+
+(gdb) p/x &wrapped8
+$474 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$475 = 2147483647
+
+(gdb) p/x &signed_lhs
+$476 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$477 = 0
+
+(gdb) p/x &signed_result
+$478 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$479 = 0
+
+(gdb) p/x &wide_sum
+$480 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$481 = 0
+
+(gdb) p/x &signed_rejected
+$482 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$483 = 0
+
+(gdb) p/x &promoted_add
+$484 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$485 = 0
+
+(gdb) p/x &promoted_negmin
+$486 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x2d8               728
+rdi            0x7                 7
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x206               [ PF IF ]
+
+(gdb) p/u phase
+$487 = 7
+
+(gdb) p/u bits
+$488 = 182
+
+(gdb) p/x &bits
+$489 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$490 = 15
+
+(gdb) p/x &mask
+$491 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$492 = 182
+
+(gdb) p/x &small
+$493 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$494 = 6
+
+(gdb) p/x &r_and
+$495 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$496 = 191
+
+(gdb) p/x &r_or
+$497 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$498 = 185
+
+(gdb) p/x &r_xor
+$499 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$500 = 4294967113
+
+(gdb) p/x &r_not
+$501 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$502 = 728
+
+(gdb) p/x &r_left
+$503 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$504 = 0
+
+(gdb) p/x &r_right
+$505 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$506 = 0
+
+(gdb) p/x &guarded_shift
+$507 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$508 = 1
+
+(gdb) p/x &r_logical
+$509 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$510 = 0
+
+(gdb) p/x &r_logical_not
+$511 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$512 = -183
+
+(gdb) p/x &promoted_not
+$513 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$514 = 46592
+
+(gdb) p/x &small_shift
+$515 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$516 = 73
+
+(gdb) p/x &narrow_not
+$517 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$518 = 32
+
+(gdb) p/x &shift_count
+$519 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$520 = 0
+
+(gdb) p/x &shift_rejected
+$521 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$522 = 214
+
+(gdb) p/x &u8
+$523 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$524 = -42
+
+(gdb) p/x &s8
+$525 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$526 = 42
+
+(gdb) p/x &magnitude
+$527 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$528 = 0
+
+(gdb) p/x &inverted8
+$529 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$530 = 0
+
+(gdb) p/x &negated8
+$531 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$532 = 127
+
+(gdb) p/x &small_max
+$533 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$534 = -128
+
+(gdb) p/x &small_min
+$535 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$536 = 0
+
+(gdb) p/x &same_encoding
+$537 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$538 = 0
+
+(gdb) p/x &zero_extended
+$539 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$540 = 0
+
+(gdb) p/x &sign_extended
+$541 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$542 = 4660
+
+(gdb) p/x &wide_unsigned
+$543 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$544 = 0
+
+(gdb) p/x &truncated
+$545 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$546 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$547 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$548 = 0
+
+(gdb) p/x &wrapped
+$549 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$550 = 255
+
+(gdb) p/x &u8_max
+$551 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$552 = 0
+
+(gdb) p/x &promoted_256
+$553 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$554 = 0
+
+(gdb) p/x &wrapped8
+$555 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$556 = 2147483647
+
+(gdb) p/x &signed_lhs
+$557 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$558 = 0
+
+(gdb) p/x &signed_result
+$559 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$560 = 0
+
+(gdb) p/x &wide_sum
+$561 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$562 = 0
+
+(gdb) p/x &signed_rejected
+$563 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$564 = 0
+
+(gdb) p/x &promoted_add
+$565 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$566 = 0
+
+(gdb) p/x &promoted_negmin
+$567 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x2d                45
+rdi            0x8                 8
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x207               [ CF PF IF ]
+
+(gdb) p/u phase
+$568 = 8
+
+(gdb) p/u bits
+$569 = 182
+
+(gdb) p/x &bits
+$570 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$571 = 15
+
+(gdb) p/x &mask
+$572 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$573 = 182
+
+(gdb) p/x &small
+$574 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$575 = 6
+
+(gdb) p/x &r_and
+$576 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$577 = 191
+
+(gdb) p/x &r_or
+$578 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$579 = 185
+
+(gdb) p/x &r_xor
+$580 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$581 = 4294967113
+
+(gdb) p/x &r_not
+$582 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$583 = 728
+
+(gdb) p/x &r_left
+$584 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$585 = 45
+
+(gdb) p/x &r_right
+$586 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$587 = 0
+
+(gdb) p/x &guarded_shift
+$588 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$589 = 1
+
+(gdb) p/x &r_logical
+$590 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$591 = 0
+
+(gdb) p/x &r_logical_not
+$592 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$593 = -183
+
+(gdb) p/x &promoted_not
+$594 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$595 = 46592
+
+(gdb) p/x &small_shift
+$596 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$597 = 73
+
+(gdb) p/x &narrow_not
+$598 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$599 = 32
+
+(gdb) p/x &shift_count
+$600 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$601 = 0
+
+(gdb) p/x &shift_rejected
+$602 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8
+$603 = 214
+
+(gdb) p/x &u8
+$604 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$605 = -42
+
+(gdb) p/x &s8
+$606 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$607 = 42
+
+(gdb) p/x &magnitude
+$608 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$609 = 0
+
+(gdb) p/x &inverted8
+$610 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$611 = 0
+
+(gdb) p/x &negated8
+$612 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$613 = 127
+
+(gdb) p/x &small_max
+$614 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$615 = -128
+
+(gdb) p/x &small_min
+$616 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$617 = 0
+
+(gdb) p/x &same_encoding
+$618 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$619 = 0
+
+(gdb) p/x &zero_extended
+$620 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$621 = 0
+
+(gdb) p/x &sign_extended
+$622 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$623 = 4660
+
+(gdb) p/x &wide_unsigned
+$624 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$625 = 0
+
+(gdb) p/x &truncated
+$626 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$627 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$628 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$629 = 0
+
+(gdb) p/x &wrapped
+$630 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$631 = 255
+
+(gdb) p/x &u8_max
+$632 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$633 = 0
+
+(gdb) p/x &promoted_256
+$634 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$635 = 0
+
+(gdb) p/x &wrapped8
+$636 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$637 = 2147483647
+
+(gdb) p/x &signed_lhs
+$638 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$639 = 0
+
+(gdb) p/x &signed_result
+$640 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$641 = 0
+
+(gdb) p/x &wide_sum
+$642 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$643 = 0
+
+(gdb) p/x &signed_rejected
+$644 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$645 = 0
+
+(gdb) p/x &promoted_add
+$646 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$647 = 0
+
+(gdb) p/x &promoted_negmin
+$648 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x1                 1
+rdi            0x9                 9
+rsi            0x4                 4
+rdx            0xb6                182
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$649 = 9
+
+(gdb) p/u bits
+$650 = 182
+
+(gdb) p/x &bits
+$651 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$652 = 15
+
+(gdb) p/x &mask
+$653 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$654 = 182
+
+(gdb) p/x &small
+$655 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$656 = 6
+
+(gdb) p/x &r_and
+$657 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$658 = 191
+
+(gdb) p/x &r_or
+$659 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$660 = 185
+
+(gdb) p/x &r_xor
+$661 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$662 = 4294967113
+
+(gdb) p/x &r_not
+$663 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$664 = 728
+
+(gdb) p/x &r_left
+$665 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$666 = 45
+
+(gdb) p/x &r_right
+$667 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$668 = 0
+
+(gdb) p/x &guarded_shift
+$669 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$670 = 1
+
+(gdb) p/x &r_logical
+$671 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$672 = 0
+
+(gdb) p/x &r_logical_not
+$673 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$674 = -183
+
+(gdb) p/x &promoted_not
+$675 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$676 = 46592
+
+(gdb) p/x &small_shift
+$677 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$678 = 73
+
+(gdb) p/x &narrow_not
+$679 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$680 = 32
+
+(gdb) p/x &shift_count
+$681 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$682 = 1
+
+(gdb) p/x &shift_rejected
+$683 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$684 = 214
+
+(gdb) p/x &u8
+$685 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$686 = -42
+
+(gdb) p/x &s8
+$687 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$688 = 42
+
+(gdb) p/x &magnitude
+$689 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$690 = 0
+
+(gdb) p/x &inverted8
+$691 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$692 = 0
+
+(gdb) p/x &negated8
+$693 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$694 = 127
+
+(gdb) p/x &small_max
+$695 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$696 = -128
+
+(gdb) p/x &small_min
+$697 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$698 = 0
+
+(gdb) p/x &same_encoding
+$699 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$700 = 0
+
+(gdb) p/x &zero_extended
+$701 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$702 = 0
+
+(gdb) p/x &sign_extended
+$703 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$704 = 4660
+
+(gdb) p/x &wide_unsigned
+$705 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$706 = 0
+
+(gdb) p/x &truncated
+$707 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$708 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$709 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$710 = 0
+
+(gdb) p/x &wrapped
+$711 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$712 = 255
+
+(gdb) p/x &u8_max
+$713 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$714 = 0
+
+(gdb) p/x &promoted_256
+$715 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$716 = 0
+
+(gdb) p/x &wrapped8
+$717 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$718 = 2147483647
+
+(gdb) p/x &signed_lhs
+$719 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$720 = 0
+
+(gdb) p/x &signed_result
+$721 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$722 = 0
+
+(gdb) p/x &wide_sum
+$723 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$724 = 0
+
+(gdb) p/x &signed_rejected
+$725 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$726 = 0
+
+(gdb) p/x &promoted_add
+$727 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$728 = 0
+
+(gdb) p/x &promoted_negmin
+$729 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x1                 1
+rdi            0xa                 10
+rsi            0x4                 4
+rdx            0xd6                214
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) p/u phase
+$730 = 10
+
+(gdb) p/u bits
+$731 = 182
+
+(gdb) p/x &bits
+$732 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$733 = 15
+
+(gdb) p/x &mask
+$734 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$735 = 182
+
+(gdb) p/x &small
+$736 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$737 = 6
+
+(gdb) p/x &r_and
+$738 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$739 = 191
+
+(gdb) p/x &r_or
+$740 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$741 = 185
+
+(gdb) p/x &r_xor
+$742 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$743 = 4294967113
+
+(gdb) p/x &r_not
+$744 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$745 = 728
+
+(gdb) p/x &r_left
+$746 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$747 = 45
+
+(gdb) p/x &r_right
+$748 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$749 = 0
+
+(gdb) p/x &guarded_shift
+$750 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$751 = 1
+
+(gdb) p/x &r_logical
+$752 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$753 = 0
+
+(gdb) p/x &r_logical_not
+$754 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$755 = -183
+
+(gdb) p/x &promoted_not
+$756 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$757 = 46592
+
+(gdb) p/x &small_shift
+$758 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$759 = 73
+
+(gdb) p/x &narrow_not
+$760 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$761 = 32
+
+(gdb) p/x &shift_count
+$762 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$763 = 1
+
+(gdb) p/x &shift_rejected
+$764 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$765 = 214
+
+(gdb) p/x &u8
+$766 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$767 = -42
+
+(gdb) p/x &s8
+$768 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$769 = 42
+
+(gdb) p/x &magnitude
+$770 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$771 = 0
+
+(gdb) p/x &inverted8
+$772 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0x00
+
+(gdb) p/u negated8
+$773 = 0
+
+(gdb) p/x &negated8
+$774 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$775 = 127
+
+(gdb) p/x &small_max
+$776 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$777 = -128
+
+(gdb) p/x &small_min
+$778 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$779 = 1
+
+(gdb) p/x &same_encoding
+$780 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$781 = 0
+
+(gdb) p/x &zero_extended
+$782 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$783 = 0
+
+(gdb) p/x &sign_extended
+$784 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$785 = 4660
+
+(gdb) p/x &wide_unsigned
+$786 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$787 = 0
+
+(gdb) p/x &truncated
+$788 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$789 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$790 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$791 = 0
+
+(gdb) p/x &wrapped
+$792 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$793 = 255
+
+(gdb) p/x &u8_max
+$794 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$795 = 0
+
+(gdb) p/x &promoted_256
+$796 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$797 = 0
+
+(gdb) p/x &wrapped8
+$798 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$799 = 2147483647
+
+(gdb) p/x &signed_lhs
+$800 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$801 = 0
+
+(gdb) p/x &signed_result
+$802 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$803 = 0
+
+(gdb) p/x &wide_sum
+$804 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$805 = 0
+
+(gdb) p/x &signed_rejected
+$806 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$807 = 0
+
+(gdb) p/x &promoted_add
+$808 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$809 = 0
+
+(gdb) p/x &promoted_negmin
+$810 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0xffffffd5          4294967253
+rdi            0xb                 11
+rsi            0x4                 4
+rdx            0xd6                214
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) p/u phase
+$811 = 11
+
+(gdb) p/u bits
+$812 = 182
+
+(gdb) p/x &bits
+$813 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$814 = 15
+
+(gdb) p/x &mask
+$815 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$816 = 182
+
+(gdb) p/x &small
+$817 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$818 = 6
+
+(gdb) p/x &r_and
+$819 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$820 = 191
+
+(gdb) p/x &r_or
+$821 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$822 = 185
+
+(gdb) p/x &r_xor
+$823 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$824 = 4294967113
+
+(gdb) p/x &r_not
+$825 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$826 = 728
+
+(gdb) p/x &r_left
+$827 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$828 = 45
+
+(gdb) p/x &r_right
+$829 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$830 = 0
+
+(gdb) p/x &guarded_shift
+$831 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$832 = 1
+
+(gdb) p/x &r_logical
+$833 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$834 = 0
+
+(gdb) p/x &r_logical_not
+$835 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$836 = -183
+
+(gdb) p/x &promoted_not
+$837 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$838 = 46592
+
+(gdb) p/x &small_shift
+$839 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$840 = 73
+
+(gdb) p/x &narrow_not
+$841 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$842 = 32
+
+(gdb) p/x &shift_count
+$843 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$844 = 1
+
+(gdb) p/x &shift_rejected
+$845 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$846 = 214
+
+(gdb) p/x &u8
+$847 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$848 = -42
+
+(gdb) p/x &s8
+$849 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$850 = 42
+
+(gdb) p/x &magnitude
+$851 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$852 = 213
+
+(gdb) p/x &inverted8
+$853 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0xd5
+
+(gdb) p/u negated8
+$854 = 0
+
+(gdb) p/x &negated8
+$855 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0x00
+
+(gdb) p/d small_max
+$856 = 127
+
+(gdb) p/x &small_max
+$857 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$858 = -128
+
+(gdb) p/x &small_min
+$859 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$860 = 1
+
+(gdb) p/x &same_encoding
+$861 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$862 = 0
+
+(gdb) p/x &zero_extended
+$863 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$864 = 0
+
+(gdb) p/x &sign_extended
+$865 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$866 = 4660
+
+(gdb) p/x &wide_unsigned
+$867 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$868 = 0
+
+(gdb) p/x &truncated
+$869 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$870 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$871 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$872 = 0
+
+(gdb) p/x &wrapped
+$873 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$874 = 255
+
+(gdb) p/x &u8_max
+$875 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$876 = 0
+
+(gdb) p/x &promoted_256
+$877 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$878 = 0
+
+(gdb) p/x &wrapped8
+$879 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$880 = 2147483647
+
+(gdb) p/x &signed_lhs
+$881 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$882 = 0
+
+(gdb) p/x &signed_result
+$883 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$884 = 0
+
+(gdb) p/x &wide_sum
+$885 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$886 = 0
+
+(gdb) p/x &signed_rejected
+$887 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$888 = 0
+
+(gdb) p/x &promoted_add
+$889 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$890 = 0
+
+(gdb) p/x &promoted_negmin
+$891 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0xd6                214
+rdi            0xc                 12
+rsi            0x4                 4
+rdx            0xd6                214
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$892 = 12
+
+(gdb) p/u bits
+$893 = 182
+
+(gdb) p/x &bits
+$894 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$895 = 15
+
+(gdb) p/x &mask
+$896 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$897 = 182
+
+(gdb) p/x &small
+$898 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$899 = 6
+
+(gdb) p/x &r_and
+$900 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$901 = 191
+
+(gdb) p/x &r_or
+$902 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$903 = 185
+
+(gdb) p/x &r_xor
+$904 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$905 = 4294967113
+
+(gdb) p/x &r_not
+$906 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$907 = 728
+
+(gdb) p/x &r_left
+$908 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$909 = 45
+
+(gdb) p/x &r_right
+$910 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$911 = 0
+
+(gdb) p/x &guarded_shift
+$912 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$913 = 1
+
+(gdb) p/x &r_logical
+$914 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$915 = 0
+
+(gdb) p/x &r_logical_not
+$916 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$917 = -183
+
+(gdb) p/x &promoted_not
+$918 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$919 = 46592
+
+(gdb) p/x &small_shift
+$920 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$921 = 73
+
+(gdb) p/x &narrow_not
+$922 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$923 = 32
+
+(gdb) p/x &shift_count
+$924 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$925 = 1
+
+(gdb) p/x &shift_rejected
+$926 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$927 = 214
+
+(gdb) p/x &u8
+$928 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$929 = -42
+
+(gdb) p/x &s8
+$930 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$931 = 42
+
+(gdb) p/x &magnitude
+$932 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$933 = 213
+
+(gdb) p/x &inverted8
+$934 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0xd5
+
+(gdb) p/u negated8
+$935 = 214
+
+(gdb) p/x &negated8
+$936 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0xd6
+
+(gdb) p/d small_max
+$937 = 127
+
+(gdb) p/x &small_max
+$938 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$939 = -128
+
+(gdb) p/x &small_min
+$940 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$941 = 1
+
+(gdb) p/x &same_encoding
+$942 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$943 = 0
+
+(gdb) p/x &zero_extended
+$944 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0x00	0x00
+
+(gdb) p/d sign_extended
+$945 = 0
+
+(gdb) p/x &sign_extended
+$946 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0x00	0x00
+
+(gdb) p/u wide_unsigned
+$947 = 4660
+
+(gdb) p/x &wide_unsigned
+$948 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$949 = 0
+
+(gdb) p/x &truncated
+$950 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$951 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$952 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$953 = 0
+
+(gdb) p/x &wrapped
+$954 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$955 = 255
+
+(gdb) p/x &u8_max
+$956 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$957 = 0
+
+(gdb) p/x &promoted_256
+$958 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$959 = 0
+
+(gdb) p/x &wrapped8
+$960 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$961 = 2147483647
+
+(gdb) p/x &signed_lhs
+$962 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$963 = 0
+
+(gdb) p/x &signed_result
+$964 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$965 = 0
+
+(gdb) p/x &wide_sum
+$966 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$967 = 0
+
+(gdb) p/x &signed_rejected
+$968 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$969 = 0
+
+(gdb) p/x &promoted_add
+$970 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$971 = 0
+
+(gdb) p/x &promoted_negmin
+$972 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0xffd6              65494
+rdi            0xd                 13
+rsi            0x4                 4
+rdx            0xd6                214
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$973 = 13
+
+(gdb) p/u bits
+$974 = 182
+
+(gdb) p/x &bits
+$975 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$976 = 15
+
+(gdb) p/x &mask
+$977 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$978 = 182
+
+(gdb) p/x &small
+$979 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$980 = 6
+
+(gdb) p/x &r_and
+$981 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$982 = 191
+
+(gdb) p/x &r_or
+$983 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$984 = 185
+
+(gdb) p/x &r_xor
+$985 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$986 = 4294967113
+
+(gdb) p/x &r_not
+$987 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$988 = 728
+
+(gdb) p/x &r_left
+$989 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$990 = 45
+
+(gdb) p/x &r_right
+$991 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$992 = 0
+
+(gdb) p/x &guarded_shift
+$993 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$994 = 1
+
+(gdb) p/x &r_logical
+$995 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$996 = 0
+
+(gdb) p/x &r_logical_not
+$997 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$998 = -183
+
+(gdb) p/x &promoted_not
+$999 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$1000 = 46592
+
+(gdb) p/x &small_shift
+$1001 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$1002 = 73
+
+(gdb) p/x &narrow_not
+$1003 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$1004 = 32
+
+(gdb) p/x &shift_count
+$1005 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$1006 = 1
+
+(gdb) p/x &shift_rejected
+$1007 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$1008 = 214
+
+(gdb) p/x &u8
+$1009 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$1010 = -42
+
+(gdb) p/x &s8
+$1011 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$1012 = 42
+
+(gdb) p/x &magnitude
+$1013 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$1014 = 213
+
+(gdb) p/x &inverted8
+$1015 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0xd5
+
+(gdb) p/u negated8
+$1016 = 214
+
+(gdb) p/x &negated8
+$1017 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0xd6
+
+(gdb) p/d small_max
+$1018 = 127
+
+(gdb) p/x &small_max
+$1019 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$1020 = -128
+
+(gdb) p/x &small_min
+$1021 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$1022 = 1
+
+(gdb) p/x &same_encoding
+$1023 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$1024 = 214
+
+(gdb) p/x &zero_extended
+$1025 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0xd6	0x00
+
+(gdb) p/d sign_extended
+$1026 = -42
+
+(gdb) p/x &sign_extended
+$1027 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0xd6	0xff
+
+(gdb) p/u wide_unsigned
+$1028 = 4660
+
+(gdb) p/x &wide_unsigned
+$1029 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$1030 = 0
+
+(gdb) p/x &truncated
+$1031 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x00
+
+(gdb) p/u wrap_lhs
+$1032 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$1033 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$1034 = 0
+
+(gdb) p/x &wrapped
+$1035 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$1036 = 255
+
+(gdb) p/x &u8_max
+$1037 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$1038 = 0
+
+(gdb) p/x &promoted_256
+$1039 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$1040 = 0
+
+(gdb) p/x &wrapped8
+$1041 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$1042 = 2147483647
+
+(gdb) p/x &signed_lhs
+$1043 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$1044 = 0
+
+(gdb) p/x &signed_result
+$1045 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$1046 = 0
+
+(gdb) p/x &wide_sum
+$1047 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$1048 = 0
+
+(gdb) p/x &signed_rejected
+$1049 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$1050 = 0
+
+(gdb) p/x &promoted_add
+$1051 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$1052 = 0
+
+(gdb) p/x &promoted_negmin
+$1053 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x1234              4660
+rdi            0xe                 14
+rsi            0x4                 4
+rdx            0xd6                214
+eflags         0x202               [ IF ]
+
+(gdb) p/u phase
+$1054 = 14
+
+(gdb) p/u bits
+$1055 = 182
+
+(gdb) p/x &bits
+$1056 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$1057 = 15
+
+(gdb) p/x &mask
+$1058 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$1059 = 182
+
+(gdb) p/x &small
+$1060 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$1061 = 6
+
+(gdb) p/x &r_and
+$1062 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$1063 = 191
+
+(gdb) p/x &r_or
+$1064 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$1065 = 185
+
+(gdb) p/x &r_xor
+$1066 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$1067 = 4294967113
+
+(gdb) p/x &r_not
+$1068 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$1069 = 728
+
+(gdb) p/x &r_left
+$1070 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$1071 = 45
+
+(gdb) p/x &r_right
+$1072 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$1073 = 0
+
+(gdb) p/x &guarded_shift
+$1074 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$1075 = 1
+
+(gdb) p/x &r_logical
+$1076 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$1077 = 0
+
+(gdb) p/x &r_logical_not
+$1078 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$1079 = -183
+
+(gdb) p/x &promoted_not
+$1080 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$1081 = 46592
+
+(gdb) p/x &small_shift
+$1082 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$1083 = 73
+
+(gdb) p/x &narrow_not
+$1084 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$1085 = 32
+
+(gdb) p/x &shift_count
+$1086 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$1087 = 1
+
+(gdb) p/x &shift_rejected
+$1088 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$1089 = 214
+
+(gdb) p/x &u8
+$1090 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$1091 = -42
+
+(gdb) p/x &s8
+$1092 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$1093 = 42
+
+(gdb) p/x &magnitude
+$1094 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$1095 = 213
+
+(gdb) p/x &inverted8
+$1096 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0xd5
+
+(gdb) p/u negated8
+$1097 = 214
+
+(gdb) p/x &negated8
+$1098 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0xd6
+
+(gdb) p/d small_max
+$1099 = 127
+
+(gdb) p/x &small_max
+$1100 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$1101 = -128
+
+(gdb) p/x &small_min
+$1102 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$1103 = 1
+
+(gdb) p/x &same_encoding
+$1104 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$1105 = 214
+
+(gdb) p/x &zero_extended
+$1106 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0xd6	0x00
+
+(gdb) p/d sign_extended
+$1107 = -42
+
+(gdb) p/x &sign_extended
+$1108 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0xd6	0xff
+
+(gdb) p/u wide_unsigned
+$1109 = 4660
+
+(gdb) p/x &wide_unsigned
+$1110 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$1111 = 52
+
+(gdb) p/x &truncated
+$1112 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x34
+
+(gdb) p/u wrap_lhs
+$1113 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$1114 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$1115 = 0
+
+(gdb) p/x &wrapped
+$1116 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$1117 = 255
+
+(gdb) p/x &u8_max
+$1118 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$1119 = 0
+
+(gdb) p/x &promoted_256
+$1120 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u wrapped8
+$1121 = 0
+
+(gdb) p/x &wrapped8
+$1122 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$1123 = 2147483647
+
+(gdb) p/x &signed_lhs
+$1124 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$1125 = 0
+
+(gdb) p/x &signed_result
+$1126 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$1127 = 0
+
+(gdb) p/x &wide_sum
+$1128 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$1129 = 0
+
+(gdb) p/x &signed_rejected
+$1130 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$1131 = 0
+
+(gdb) p/x &promoted_add
+$1132 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$1133 = 0
+
+(gdb) p/x &promoted_negmin
+$1134 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x100               256
+rdi            0xf                 15
+rsi            0x4                 4
+rdx            0xd6                214
+eflags         0x216               [ PF AF IF ]
+
+(gdb) p/u phase
+$1135 = 15
+
+(gdb) p/u bits
+$1136 = 182
+
+(gdb) p/x &bits
+$1137 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$1138 = 15
+
+(gdb) p/x &mask
+$1139 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$1140 = 182
+
+(gdb) p/x &small
+$1141 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$1142 = 6
+
+(gdb) p/x &r_and
+$1143 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$1144 = 191
+
+(gdb) p/x &r_or
+$1145 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$1146 = 185
+
+(gdb) p/x &r_xor
+$1147 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$1148 = 4294967113
+
+(gdb) p/x &r_not
+$1149 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$1150 = 728
+
+(gdb) p/x &r_left
+$1151 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$1152 = 45
+
+(gdb) p/x &r_right
+$1153 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$1154 = 0
+
+(gdb) p/x &guarded_shift
+$1155 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$1156 = 1
+
+(gdb) p/x &r_logical
+$1157 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$1158 = 0
+
+(gdb) p/x &r_logical_not
+$1159 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$1160 = -183
+
+(gdb) p/x &promoted_not
+$1161 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$1162 = 46592
+
+(gdb) p/x &small_shift
+$1163 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$1164 = 73
+
+(gdb) p/x &narrow_not
+$1165 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$1166 = 32
+
+(gdb) p/x &shift_count
+$1167 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$1168 = 1
+
+(gdb) p/x &shift_rejected
+$1169 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$1170 = 214
+
+(gdb) p/x &u8
+$1171 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$1172 = -42
+
+(gdb) p/x &s8
+$1173 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$1174 = 42
+
+(gdb) p/x &magnitude
+$1175 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$1176 = 213
+
+(gdb) p/x &inverted8
+$1177 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0xd5
+
+(gdb) p/u negated8
+$1178 = 214
+
+(gdb) p/x &negated8
+$1179 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0xd6
+
+(gdb) p/d small_max
+$1180 = 127
+
+(gdb) p/x &small_max
+$1181 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$1182 = -128
+
+(gdb) p/x &small_min
+$1183 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$1184 = 1
+
+(gdb) p/x &same_encoding
+$1185 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$1186 = 214
+
+(gdb) p/x &zero_extended
+$1187 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0xd6	0x00
+
+(gdb) p/d sign_extended
+$1188 = -42
+
+(gdb) p/x &sign_extended
+$1189 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0xd6	0xff
+
+(gdb) p/u wide_unsigned
+$1190 = 4660
+
+(gdb) p/x &wide_unsigned
+$1191 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$1192 = 52
+
+(gdb) p/x &truncated
+$1193 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x34
+
+(gdb) p/u wrap_lhs
+$1194 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$1195 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$1196 = 0
+
+(gdb) p/x &wrapped
+$1197 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$1198 = 255
+
+(gdb) p/x &u8_max
+$1199 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$1200 = 256
+
+(gdb) p/x &promoted_256
+$1201 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x01	0x00	0x00
+
+(gdb) p/u wrapped8
+$1202 = 0
+
+(gdb) p/x &wrapped8
+$1203 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$1204 = 2147483647
+
+(gdb) p/x &signed_lhs
+$1205 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$1206 = 0
+
+(gdb) p/x &signed_result
+$1207 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$1208 = 0
+
+(gdb) p/x &wide_sum
+$1209 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$1210 = 0
+
+(gdb) p/x &signed_rejected
+$1211 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$1212 = 0
+
+(gdb) p/x &promoted_add
+$1213 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$1214 = 0
+
+(gdb) p/x &promoted_negmin
+$1215 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x80000000          2147483648
+rdi            0x10                16
+rsi            0x4                 4
+rdx            0x80000000          2147483648
+eflags         0x246               [ PF ZF IF ]
+
+(gdb) p/u phase
+$1216 = 16
+
+(gdb) p/u bits
+$1217 = 182
+
+(gdb) p/x &bits
+$1218 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$1219 = 15
+
+(gdb) p/x &mask
+$1220 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$1221 = 182
+
+(gdb) p/x &small
+$1222 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$1223 = 6
+
+(gdb) p/x &r_and
+$1224 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$1225 = 191
+
+(gdb) p/x &r_or
+$1226 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$1227 = 185
+
+(gdb) p/x &r_xor
+$1228 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$1229 = 4294967113
+
+(gdb) p/x &r_not
+$1230 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$1231 = 728
+
+(gdb) p/x &r_left
+$1232 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$1233 = 45
+
+(gdb) p/x &r_right
+$1234 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$1235 = 0
+
+(gdb) p/x &guarded_shift
+$1236 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$1237 = 1
+
+(gdb) p/x &r_logical
+$1238 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$1239 = 0
+
+(gdb) p/x &r_logical_not
+$1240 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$1241 = -183
+
+(gdb) p/x &promoted_not
+$1242 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$1243 = 46592
+
+(gdb) p/x &small_shift
+$1244 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$1245 = 73
+
+(gdb) p/x &narrow_not
+$1246 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$1247 = 32
+
+(gdb) p/x &shift_count
+$1248 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$1249 = 1
+
+(gdb) p/x &shift_rejected
+$1250 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$1251 = 214
+
+(gdb) p/x &u8
+$1252 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$1253 = -42
+
+(gdb) p/x &s8
+$1254 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$1255 = 42
+
+(gdb) p/x &magnitude
+$1256 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$1257 = 213
+
+(gdb) p/x &inverted8
+$1258 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0xd5
+
+(gdb) p/u negated8
+$1259 = 214
+
+(gdb) p/x &negated8
+$1260 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0xd6
+
+(gdb) p/d small_max
+$1261 = 127
+
+(gdb) p/x &small_max
+$1262 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$1263 = -128
+
+(gdb) p/x &small_min
+$1264 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$1265 = 1
+
+(gdb) p/x &same_encoding
+$1266 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$1267 = 214
+
+(gdb) p/x &zero_extended
+$1268 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0xd6	0x00
+
+(gdb) p/d sign_extended
+$1269 = -42
+
+(gdb) p/x &sign_extended
+$1270 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0xd6	0xff
+
+(gdb) p/u wide_unsigned
+$1271 = 4660
+
+(gdb) p/x &wide_unsigned
+$1272 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$1273 = 52
+
+(gdb) p/x &truncated
+$1274 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x34
+
+(gdb) p/u wrap_lhs
+$1275 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$1276 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$1277 = 0
+
+(gdb) p/x &wrapped
+$1278 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$1279 = 255
+
+(gdb) p/x &u8_max
+$1280 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$1281 = 256
+
+(gdb) p/x &promoted_256
+$1282 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x01	0x00	0x00
+
+(gdb) p/u wrapped8
+$1283 = 0
+
+(gdb) p/x &wrapped8
+$1284 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$1285 = 2147483647
+
+(gdb) p/x &signed_lhs
+$1286 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$1287 = 0
+
+(gdb) p/x &signed_result
+$1288 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$1289 = 2147483648
+
+(gdb) p/x &wide_sum
+$1290 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x80	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$1291 = 1
+
+(gdb) p/x &signed_rejected
+$1292 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$1293 = 0
+
+(gdb) p/x &promoted_add
+$1294 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$1295 = 0
+
+(gdb) p/x &promoted_negmin
+$1296 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x00	0x00	0x00	0x00
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx eflags
+rip            0x561a2e8d8194      0x561a2e8d8194 <checkpoint+11>
+rsp            0x7ffd57be3f30      0x7ffd57be3f30
+rbp            0x7ffd57be3f30      0x7ffd57be3f30
+rax            0x80                128
+rdi            0x11                17
+rsi            0x4                 4
+rdx            0x80000000          2147483648
+eflags         0x203               [ CF IF ]
+
+(gdb) p/u phase
+$1297 = 17
+
+(gdb) p/u bits
+$1298 = 182
+
+(gdb) p/x &bits
+$1299 = 0x561a2e8db010
+
+(gdb) x/4bx &bits
+0x561a2e8db010 <bits>:	0xb6	0x00	0x00	0x00
+
+(gdb) p/u mask
+$1300 = 15
+
+(gdb) p/x &mask
+$1301 = 0x561a2e8db014
+
+(gdb) x/4bx &mask
+0x561a2e8db014 <mask>:	0x0f	0x00	0x00	0x00
+
+(gdb) p/u small
+$1302 = 182
+
+(gdb) p/x &small
+$1303 = 0x561a2e8db018
+
+(gdb) x/1bx &small
+0x561a2e8db018 <small>:	0xb6
+
+(gdb) p/u r_and
+$1304 = 6
+
+(gdb) p/x &r_and
+$1305 = 0x561a2e8db040
+
+(gdb) x/4bx &r_and
+0x561a2e8db040 <r_and>:	0x06	0x00	0x00	0x00
+
+(gdb) p/u r_or
+$1306 = 191
+
+(gdb) p/x &r_or
+$1307 = 0x561a2e8db044
+
+(gdb) x/4bx &r_or
+0x561a2e8db044 <r_or>:	0xbf	0x00	0x00	0x00
+
+(gdb) p/u r_xor
+$1308 = 185
+
+(gdb) p/x &r_xor
+$1309 = 0x561a2e8db048
+
+(gdb) x/4bx &r_xor
+0x561a2e8db048 <r_xor>:	0xb9	0x00	0x00	0x00
+
+(gdb) p/u r_not
+$1310 = 4294967113
+
+(gdb) p/x &r_not
+$1311 = 0x561a2e8db04c
+
+(gdb) x/4bx &r_not
+0x561a2e8db04c <r_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/u r_left
+$1312 = 728
+
+(gdb) p/x &r_left
+$1313 = 0x561a2e8db050
+
+(gdb) x/4bx &r_left
+0x561a2e8db050 <r_left>:	0xd8	0x02	0x00	0x00
+
+(gdb) p/u r_right
+$1314 = 45
+
+(gdb) p/x &r_right
+$1315 = 0x561a2e8db054
+
+(gdb) x/4bx &r_right
+0x561a2e8db054 <r_right>:	0x2d	0x00	0x00	0x00
+
+(gdb) p/u guarded_shift
+$1316 = 0
+
+(gdb) p/x &guarded_shift
+$1317 = 0x561a2e8db058
+
+(gdb) x/4bx &guarded_shift
+0x561a2e8db058 <guarded_shift>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d r_logical
+$1318 = 1
+
+(gdb) p/x &r_logical
+$1319 = 0x561a2e8db05c
+
+(gdb) x/4bx &r_logical
+0x561a2e8db05c <r_logical>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d r_logical_not
+$1320 = 0
+
+(gdb) p/x &r_logical_not
+$1321 = 0x561a2e8db060
+
+(gdb) x/4bx &r_logical_not
+0x561a2e8db060 <r_logical_not>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d promoted_not
+$1322 = -183
+
+(gdb) p/x &promoted_not
+$1323 = 0x561a2e8db064
+
+(gdb) x/4bx &promoted_not
+0x561a2e8db064 <promoted_not>:	0x49	0xff	0xff	0xff
+
+(gdb) p/d small_shift
+$1324 = 46592
+
+(gdb) p/x &small_shift
+$1325 = 0x561a2e8db068
+
+(gdb) x/4bx &small_shift
+0x561a2e8db068 <small_shift>:	0x00	0xb6	0x00	0x00
+
+(gdb) p/u narrow_not
+$1326 = 73
+
+(gdb) p/x &narrow_not
+$1327 = 0x561a2e8db06c
+
+(gdb) x/1bx &narrow_not
+0x561a2e8db06c <narrow_not>:	0x49
+
+(gdb) p/u shift_count
+$1328 = 32
+
+(gdb) p/x &shift_count
+$1329 = 0x561a2e8db01c
+
+(gdb) x/4bx &shift_count
+0x561a2e8db01c <shift_count>:	0x20	0x00	0x00	0x00
+
+(gdb) p/d shift_rejected
+$1330 = 1
+
+(gdb) p/x &shift_rejected
+$1331 = 0x561a2e8db070
+
+(gdb) x/4bx &shift_rejected
+0x561a2e8db070 <shift_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u u8
+$1332 = 214
+
+(gdb) p/x &u8
+$1333 = 0x561a2e8db020
+
+(gdb) x/1bx &u8
+0x561a2e8db020 <u8>:	0xd6
+
+(gdb) p/d s8
+$1334 = -42
+
+(gdb) p/x &s8
+$1335 = 0x561a2e8db022
+
+(gdb) x/1bx &s8
+0x561a2e8db022 <s8>:	0xd6
+
+(gdb) p/u magnitude
+$1336 = 42
+
+(gdb) p/x &magnitude
+$1337 = 0x561a2e8db021
+
+(gdb) x/1bx &magnitude
+0x561a2e8db021 <magnitude>:	0x2a
+
+(gdb) p/u inverted8
+$1338 = 213
+
+(gdb) p/x &inverted8
+$1339 = 0x561a2e8db074
+
+(gdb) x/1bx &inverted8
+0x561a2e8db074 <inverted8>:	0xd5
+
+(gdb) p/u negated8
+$1340 = 214
+
+(gdb) p/x &negated8
+$1341 = 0x561a2e8db075
+
+(gdb) x/1bx &negated8
+0x561a2e8db075 <negated8>:	0xd6
+
+(gdb) p/d small_max
+$1342 = 127
+
+(gdb) p/x &small_max
+$1343 = 0x561a2e8db023
+
+(gdb) x/1bx &small_max
+0x561a2e8db023 <small_max>:	0x7f
+
+(gdb) p/d small_min
+$1344 = -128
+
+(gdb) p/x &small_min
+$1345 = 0x561a2e8db024
+
+(gdb) x/1bx &small_min
+0x561a2e8db024 <small_min>:	0x80
+
+(gdb) p/d same_encoding
+$1346 = 1
+
+(gdb) p/x &same_encoding
+$1347 = 0x561a2e8db078
+
+(gdb) x/4bx &same_encoding
+0x561a2e8db078 <same_encoding>:	0x01	0x00	0x00	0x00
+
+(gdb) p/u zero_extended
+$1348 = 214
+
+(gdb) p/x &zero_extended
+$1349 = 0x561a2e8db07c
+
+(gdb) x/2bx &zero_extended
+0x561a2e8db07c <zero_extended>:	0xd6	0x00
+
+(gdb) p/d sign_extended
+$1350 = -42
+
+(gdb) p/x &sign_extended
+$1351 = 0x561a2e8db07e
+
+(gdb) x/2bx &sign_extended
+0x561a2e8db07e <sign_extended>:	0xd6	0xff
+
+(gdb) p/u wide_unsigned
+$1352 = 4660
+
+(gdb) p/x &wide_unsigned
+$1353 = 0x561a2e8db028
+
+(gdb) x/4bx &wide_unsigned
+0x561a2e8db028 <wide_unsigned>:	0x34	0x12	0x00	0x00
+
+(gdb) p/u truncated
+$1354 = 52
+
+(gdb) p/x &truncated
+$1355 = 0x561a2e8db080
+
+(gdb) x/1bx &truncated
+0x561a2e8db080 <truncated>:	0x34
+
+(gdb) p/u wrap_lhs
+$1356 = 4294967295
+
+(gdb) p/x &wrap_lhs
+$1357 = 0x561a2e8db02c
+
+(gdb) x/4bx &wrap_lhs
+0x561a2e8db02c <wrap_lhs>:	0xff	0xff	0xff	0xff
+
+(gdb) p/u wrapped
+$1358 = 0
+
+(gdb) p/x &wrapped
+$1359 = 0x561a2e8db084
+
+(gdb) x/4bx &wrapped
+0x561a2e8db084 <wrapped>:	0x00	0x00	0x00	0x00
+
+(gdb) p/u u8_max
+$1360 = 255
+
+(gdb) p/x &u8_max
+$1361 = 0x561a2e8db030
+
+(gdb) x/1bx &u8_max
+0x561a2e8db030 <u8_max>:	0xff
+
+(gdb) p/d promoted_256
+$1362 = 256
+
+(gdb) p/x &promoted_256
+$1363 = 0x561a2e8db08c
+
+(gdb) x/4bx &promoted_256
+0x561a2e8db08c <promoted_256>:	0x00	0x01	0x00	0x00
+
+(gdb) p/u wrapped8
+$1364 = 0
+
+(gdb) p/x &wrapped8
+$1365 = 0x561a2e8db088
+
+(gdb) x/1bx &wrapped8
+0x561a2e8db088 <wrapped8>:	0x00
+
+(gdb) p/d signed_lhs
+$1366 = 2147483647
+
+(gdb) p/x &signed_lhs
+$1367 = 0x561a2e8db034
+
+(gdb) x/4bx &signed_lhs
+0x561a2e8db034 <signed_lhs>:	0xff	0xff	0xff	0x7f
+
+(gdb) p/d signed_result
+$1368 = 0
+
+(gdb) p/x &signed_result
+$1369 = 0x561a2e8db090
+
+(gdb) x/4bx &signed_result
+0x561a2e8db090 <signed_result>:	0x00	0x00	0x00	0x00
+
+(gdb) p/d wide_sum
+$1370 = 2147483648
+
+(gdb) p/x &wide_sum
+$1371 = 0x561a2e8db098
+
+(gdb) x/8bx &wide_sum
+0x561a2e8db098 <wide_sum>:	0x00	0x00	0x00	0x80	0x00	0x00	0x00	0x00
+
+(gdb) p/d signed_rejected
+$1372 = 1
+
+(gdb) p/x &signed_rejected
+$1373 = 0x561a2e8db0a0
+
+(gdb) x/4bx &signed_rejected
+0x561a2e8db0a0 <signed_rejected>:	0x01	0x00	0x00	0x00
+
+(gdb) p/d promoted_add
+$1374 = 128
+
+(gdb) p/x &promoted_add
+$1375 = 0x561a2e8db0a4
+
+(gdb) x/4bx &promoted_add
+0x561a2e8db0a4 <promoted_add>:	0x80	0x00	0x00	0x00
+
+(gdb) p/d promoted_negmin
+$1376 = 128
+
+(gdb) p/x &promoted_negmin
+$1377 = 0x561a2e8db0a8
+
+(gdb) x/4bx &promoted_negmin
+0x561a2e8db0a8 <promoted_negmin>:	0x80	0x00	0x00	0x00
+
+(gdb) delete breakpoints
+
+
+(gdb) continue
+
+
+(gdb) show disable-randomization
+Disabling randomization of debuggee's virtual address space is off.

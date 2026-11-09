@@ -1,0 +1,687 @@
+Captured: 2026-11-08T07:28:53.631Z
+Source SHA256: ed8403fac3a5542a1a455a05127bda05e9d4932db101ecc06ddb76c5cc9a2430
+ELF SHA256: 1870d3ce8becd1a38e324228dbf1c1698316e8292224e2c9741232b24fe2fad9
+gcc -std=c11 -O0 -g3 -fPIE -pie -fno-omit-frame-pointer -fno-optimize-sibling-calls -Wall -Wextra -Wpedantic experiments/control-flow.c -o .trace-build/control-flow/program
+
+(gdb) set pagination off
+
+
+(gdb) set confirm off
+
+
+(gdb) set style enabled off
+
+
+(gdb) set disassembly-flavor att
+
+
+(gdb) set print frame-arguments none
+
+
+(gdb) set disable-randomization off
+
+
+(gdb) handle SIGSEGV stop print pass
+
+
+(gdb) file .trace-build/control-flow/program
+
+
+(gdb) start inspect > .trace-build/control-flow/inspect-stdout.txt
+Temporary breakpoint 1 at 0x1bc3: file experiments/control-flow.c, line 125.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x5e7f562a5414      0x5e7f562a5414 <checkpoint+11>
+rsp            0x7fffcbfc6530      0x7fffcbfc6530
+rbp            0x7fffcbfc6530      0x7fffcbfc6530
+rax            0x0                 0
+rdi            0x1                 1
+rsi            0x5e7f562a61ad      103900999475629
+rdx            0x5e7f562a61ad      103900999475629
+rcx            0x0                 0
+r11            0x246               582
+eflags         0x246               [ PF ZF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x5e7f562a5414 <checkpoint+11>:	mov    -0x4(%rbp),%eax
+
+(gdb) x/3bx $rip
+0x5e7f562a5414 <checkpoint+11>:	0x8b	0x45	0xfc
+
+(gdb) p/d input_a
+$1 = 3
+
+(gdb) p/d input_b
+$2 = 2
+
+(gdb) p/d observed_sum
+$3 = 0
+
+(gdb) p/d observed_pid
+$4 = 0
+
+(gdb) p/d syscall_number
+$5 = 39
+
+(gdb) p/d read_syscall_number
+$6 = 0
+
+(gdb) p/d page_size
+$7 = 0
+
+(gdb) p/d fault_read_complete
+$8 = 0
+
+(gdb) p/d fault_value
+$9 = 0
+
+(gdb) p/x guard_page
+$10 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x5e7f562a541a      0x5e7f562a541a <local_add>
+rsp            0x7fffcbfc6538      0x7fffcbfc6538
+rbp            0x7fffcbfc6540      0x7fffcbfc6540
+rax            0x3                 3
+rdi            0x3                 3
+rsi            0x2                 2
+rdx            0x2                 2
+rcx            0x0                 0
+r11            0x246               582
+eflags         0x246               [ PF ZF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x5e7f562a541a <local_add>:	endbr64
+
+(gdb) x/4bx $rip
+0x5e7f562a541a <local_add>:	0xf3	0x0f	0x1e	0xfa
+
+(gdb) p/d input_a
+$11 = 3
+
+(gdb) p/d input_b
+$12 = 2
+
+(gdb) p/d observed_sum
+$13 = 0
+
+(gdb) p/d observed_pid
+$14 = 0
+
+(gdb) p/d syscall_number
+$15 = 39
+
+(gdb) p/d read_syscall_number
+$16 = 0
+
+(gdb) p/d page_size
+$17 = 0
+
+(gdb) p/d fault_read_complete
+$18 = 0
+
+(gdb) p/d fault_value
+$19 = 0
+
+(gdb) p/x guard_page
+$20 = 0x0
+
+(gdb) x/gx $rsp
+0x7fffcbfc6538:	0x00005e7f562a5497
+
+(gdb) finish
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x5e7f562a5497      0x5e7f562a5497 <inspect+39>
+rsp            0x7fffcbfc6540      0x7fffcbfc6540
+rbp            0x7fffcbfc6540      0x7fffcbfc6540
+rax            0x5                 5
+rdi            0x3                 3
+rsi            0x2                 2
+rdx            0x3                 3
+rcx            0x0                 0
+r11            0x246               582
+eflags         0x206               [ PF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x5e7f562a5497 <inspect+39>:	mov    %eax,0x2b9b(%rip)        # 0x5e7f562a8038 <observed_sum>
+
+(gdb) x/6bx $rip
+0x5e7f562a5497 <inspect+39>:	0x89	0x05	0x9b	0x2b	0x00	0x00
+
+(gdb) p/d input_a
+$22 = 3
+
+(gdb) p/d input_b
+$23 = 2
+
+(gdb) p/d observed_sum
+$24 = 0
+
+(gdb) p/d observed_pid
+$25 = 0
+
+(gdb) p/d syscall_number
+$26 = 39
+
+(gdb) p/d read_syscall_number
+$27 = 0
+
+(gdb) p/d page_size
+$28 = 0
+
+(gdb) p/d fault_read_complete
+$29 = 0
+
+(gdb) p/d fault_value
+$30 = 0
+
+(gdb) p/x guard_page
+$31 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x5e7f562a5414      0x5e7f562a5414 <checkpoint+11>
+rsp            0x7fffcbfc6530      0x7fffcbfc6530
+rbp            0x7fffcbfc6530      0x7fffcbfc6530
+rax            0x5                 5
+rdi            0x2                 2
+rsi            0x2                 2
+rdx            0x3                 3
+rcx            0x0                 0
+r11            0x246               582
+eflags         0x206               [ PF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x5e7f562a5414 <checkpoint+11>:	mov    -0x4(%rbp),%eax
+
+(gdb) x/3bx $rip
+0x5e7f562a5414 <checkpoint+11>:	0x8b	0x45	0xfc
+
+(gdb) p/d input_a
+$32 = 3
+
+(gdb) p/d input_b
+$33 = 2
+
+(gdb) p/d observed_sum
+$34 = 5
+
+(gdb) p/d observed_pid
+$35 = 0
+
+(gdb) p/d syscall_number
+$36 = 39
+
+(gdb) p/d read_syscall_number
+$37 = 0
+
+(gdb) p/d page_size
+$38 = 0
+
+(gdb) p/d fault_read_complete
+$39 = 0
+
+(gdb) p/d fault_value
+$40 = 0
+
+(gdb) p/x guard_page
+$41 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x5e7f562a5446      0x5e7f562a5446 <raw_getpid+20>
+rsp            0x7fffcbfc6530      0x7fffcbfc6530
+rbp            0x7fffcbfc6530      0x7fffcbfc6530
+rax            0x27                39
+rdi            0x2                 2
+rsi            0x2                 2
+rdx            0x3                 3
+rcx            0x0                 0
+r11            0x246               582
+eflags         0x206               [ PF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x5e7f562a5446 <raw_getpid+20>:	syscall
+
+(gdb) x/2bx $rip
+0x5e7f562a5446 <raw_getpid+20>:	0x0f	0x05
+
+(gdb) p/d input_a
+$42 = 3
+
+(gdb) p/d input_b
+$43 = 2
+
+(gdb) p/d observed_sum
+$44 = 5
+
+(gdb) p/d observed_pid
+$45 = 0
+
+(gdb) p/d syscall_number
+$46 = 39
+
+(gdb) p/d read_syscall_number
+$47 = 0
+
+(gdb) p/d page_size
+$48 = 0
+
+(gdb) p/d fault_read_complete
+$49 = 0
+
+(gdb) p/d fault_value
+$50 = 0
+
+(gdb) p/x guard_page
+$51 = 0x0
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x5e7f562a5448      0x5e7f562a5448 <raw_getpid+22>
+rsp            0x7fffcbfc6530      0x7fffcbfc6530
+rbp            0x7fffcbfc6530      0x7fffcbfc6530
+rax            0x1b84cb            1803467
+rdi            0x2                 2
+rsi            0x2                 2
+rdx            0x3                 3
+rcx            0x5e7f562a5448      103900999472200
+r11            0x306               774
+eflags         0x206               [ PF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x5e7f562a5448 <raw_getpid+22>:	mov    %rax,-0x8(%rbp)
+
+(gdb) x/4bx $rip
+0x5e7f562a5448 <raw_getpid+22>:	0x48	0x89	0x45	0xf8
+
+(gdb) p/d input_a
+$52 = 3
+
+(gdb) p/d input_b
+$53 = 2
+
+(gdb) p/d observed_sum
+$54 = 5
+
+(gdb) p/d observed_pid
+$55 = 0
+
+(gdb) p/d syscall_number
+$56 = 39
+
+(gdb) p/d read_syscall_number
+$57 = 0
+
+(gdb) p/d page_size
+$58 = 0
+
+(gdb) p/d fault_read_complete
+$59 = 0
+
+(gdb) p/d fault_value
+$60 = 0
+
+(gdb) p/x guard_page
+$61 = 0x0
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x5e7f562a5414      0x5e7f562a5414 <checkpoint+11>
+rsp            0x7fffcbfc6530      0x7fffcbfc6530
+rbp            0x7fffcbfc6530      0x7fffcbfc6530
+rax            0x1b84cb            1803467
+rdi            0x3                 3
+rsi            0x2                 2
+rdx            0x3                 3
+rcx            0x5e7f562a5448      103900999472200
+r11            0x306               774
+eflags         0x206               [ PF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x5e7f562a5414 <checkpoint+11>:	mov    -0x4(%rbp),%eax
+
+(gdb) x/3bx $rip
+0x5e7f562a5414 <checkpoint+11>:	0x8b	0x45	0xfc
+
+(gdb) p/d input_a
+$62 = 3
+
+(gdb) p/d input_b
+$63 = 2
+
+(gdb) p/d observed_sum
+$64 = 5
+
+(gdb) p/d observed_pid
+$65 = 1803467
+
+(gdb) p/d syscall_number
+$66 = 39
+
+(gdb) p/d read_syscall_number
+$67 = 0
+
+(gdb) p/d page_size
+$68 = 0
+
+(gdb) p/d fault_read_complete
+$69 = 0
+
+(gdb) p/d fault_value
+$70 = 0
+
+(gdb) p/x guard_page
+$71 = 0x0
+
+(gdb) delete breakpoints
+
+
+(gdb) continue
+
+
+(gdb) start fault > .trace-build/control-flow/fault-stdout.txt
+Temporary breakpoint 2 at 0x5e7f562a5bc3: file experiments/control-flow.c, line 125.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x61fc50067414      0x61fc50067414 <checkpoint+11>
+rsp            0x7ffd46c1e3e0      0x7ffd46c1e3e0
+rbp            0x7ffd46c1e3e0      0x7ffd46c1e3e0
+rax            0x79d576664000      133957721407488
+rdi            0x4                 4
+rsi            0x1000              4096
+rdx            0x3                 3
+rcx            0x79d5765255ec      133957720102380
+r11            0x246               582
+eflags         0x213               [ CF AF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x61fc50067414 <checkpoint+11>:	mov    -0x4(%rbp),%eax
+
+(gdb) x/3bx $rip
+0x61fc50067414 <checkpoint+11>:	0x8b	0x45	0xfc
+
+(gdb) p/d input_a
+$72 = 3
+
+(gdb) p/d input_b
+$73 = 2
+
+(gdb) p/d observed_sum
+$74 = 0
+
+(gdb) p/d observed_pid
+$75 = 0
+
+(gdb) p/d syscall_number
+$76 = 39
+
+(gdb) p/d read_syscall_number
+$77 = 0
+
+(gdb) p/d page_size
+$78 = 4096
+
+(gdb) p/d fault_read_complete
+$79 = 0
+
+(gdb) p/d fault_value
+$80 = 0
+
+(gdb) p/x guard_page
+$81 = 0x79d576664000
+
+(gdb) x/1bx guard_page
+0x79d576664000:	0xa5
+
+(gdb) continue
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x61fc50067465      0x61fc50067465 <fault_load+19>
+rsp            0x7ffd46c1e3e0      0x7ffd46c1e3e0
+rbp            0x7ffd46c1e3e0      0x7ffd46c1e3e0
+rax            0x79d576664000      133957721407488
+rdi            0x79d576664000      133957721407488
+rsi            0x1000              4096
+rdx            0x0                 0
+rcx            0x79d576525eeb      133957720104683
+r11            0x213               531
+eflags         0x246               [ PF ZF IF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x61fc50067465 <fault_load+19>:	mov    (%rdi),%al
+
+(gdb) x/2bx $rip
+0x61fc50067465 <fault_load+19>:	0x8a	0x07
+
+(gdb) p/d input_a
+$82 = 3
+
+(gdb) p/d input_b
+$83 = 2
+
+(gdb) p/d observed_sum
+$84 = 0
+
+(gdb) p/d observed_pid
+$85 = 0
+
+(gdb) p/d syscall_number
+$86 = 39
+
+(gdb) p/d read_syscall_number
+$87 = 0
+
+(gdb) p/d page_size
+$88 = 4096
+
+(gdb) p/d fault_read_complete
+$89 = 0
+
+(gdb) p/d fault_value
+$90 = 0
+
+(gdb) p/x guard_page
+$91 = 0x79d576664000
+
+(gdb) info proc mappings
+process 1803470
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x61fc50066000     0x61fc50067000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc50067000     0x61fc50068000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc50068000     0x61fc50069000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc50069000     0x61fc5006a000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc5006a000     0x61fc5006b000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x79d576400000     0x79d576428000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576428000     0x79d5765b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d5765b1000     0x79d576600000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576600000     0x79d576604000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576604000     0x79d576606000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576606000     0x79d576613000     0xd000        0x0  rw-p   
+      0x79d576656000     0x79d576659000     0x3000        0x0  rw-p   
+      0x79d576664000     0x79d576665000     0x1000        0x0  ---p   
+      0x79d576665000     0x79d576667000     0x2000        0x0  rw-p   
+      0x79d576667000     0x79d57666b000     0x4000        0x0  r--p   [vvar]
+      0x79d57666b000     0x79d57666d000     0x2000        0x0  r--p   [vvar_vclock]
+      0x79d57666d000     0x79d57666f000     0x2000        0x0  r-xp   [vdso]
+      0x79d57666f000     0x79d576670000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d576670000     0x79d57669b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d57669b000     0x79d5766a5000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d5766a5000     0x79d5766a7000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d5766a7000     0x79d5766a9000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffd46bff000     0x7ffd46c21000    0x22000        0x0  rw-p   [stack]
+
+(gdb) si
+
+
+(gdb) info registers rip rsp rbp rax rdi rsi rdx rcx r11 eflags cs
+rip            0x61fc50067465      0x61fc50067465 <fault_load+19>
+rsp            0x7ffd46c1e3e0      0x7ffd46c1e3e0
+rbp            0x7ffd46c1e3e0      0x7ffd46c1e3e0
+rax            0x79d576664000      133957721407488
+rdi            0x79d576664000      133957721407488
+rsi            0x1000              4096
+rdx            0x0                 0
+rcx            0x79d576525eeb      133957720104683
+r11            0x213               531
+eflags         0x10246             [ PF ZF IF RF ]
+cs             0x33                51
+
+(gdb) x/i $rip
+=> 0x61fc50067465 <fault_load+19>:	mov    (%rdi),%al
+
+(gdb) x/2bx $rip
+0x61fc50067465 <fault_load+19>:	0x8a	0x07
+
+(gdb) p/d input_a
+$92 = 3
+
+(gdb) p/d input_b
+$93 = 2
+
+(gdb) p/d observed_sum
+$94 = 0
+
+(gdb) p/d observed_pid
+$95 = 0
+
+(gdb) p/d syscall_number
+$96 = 39
+
+(gdb) p/d read_syscall_number
+$97 = 0
+
+(gdb) p/d page_size
+$98 = 4096
+
+(gdb) p/d fault_read_complete
+$99 = 0
+
+(gdb) p/d fault_value
+$100 = 0
+
+(gdb) p/x guard_page
+$101 = 0x79d576664000
+
+(gdb) info proc mappings
+process 1803470
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset  Perms  objfile
+      0x61fc50066000     0x61fc50067000     0x1000        0x0  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc50067000     0x61fc50068000     0x1000     0x1000  r-xp   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc50068000     0x61fc50069000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc50069000     0x61fc5006a000     0x1000     0x2000  r--p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x61fc5006a000     0x61fc5006b000     0x1000     0x3000  rw-p   /home/jason/study/ck_study/animation/.trace-build/control-flow/program
+      0x79d576400000     0x79d576428000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576428000     0x79d5765b1000   0x189000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d5765b1000     0x79d576600000    0x4f000   0x1b1000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576600000     0x79d576604000     0x4000   0x1ff000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576604000     0x79d576606000     0x2000   0x203000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
+      0x79d576606000     0x79d576613000     0xd000        0x0  rw-p   
+      0x79d576656000     0x79d576659000     0x3000        0x0  rw-p   
+      0x79d576664000     0x79d576665000     0x1000        0x0  ---p   
+      0x79d576665000     0x79d576667000     0x2000        0x0  rw-p   
+      0x79d576667000     0x79d57666b000     0x4000        0x0  r--p   [vvar]
+      0x79d57666b000     0x79d57666d000     0x2000        0x0  r--p   [vvar_vclock]
+      0x79d57666d000     0x79d57666f000     0x2000        0x0  r-xp   [vdso]
+      0x79d57666f000     0x79d576670000     0x1000        0x0  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d576670000     0x79d57669b000    0x2b000     0x1000  r-xp   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d57669b000     0x79d5766a5000     0xa000    0x2c000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d5766a5000     0x79d5766a7000     0x2000    0x36000  r--p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x79d5766a7000     0x79d5766a9000     0x2000    0x38000  rw-p   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+      0x7ffd46bff000     0x7ffd46c21000    0x22000        0x0  rw-p   [stack]
+
+(gdb) p $_siginfo.si_signo
+$102 = 11
+
+(gdb) p $_siginfo.si_code
+$103 = 2
+
+(gdb) p/x $_siginfo.si_addr
+$104 = 0x79d576664000
+
+(gdb) delete breakpoints
+
+
+(gdb) continue
+
+
+(gdb) show disable-randomization
+Disabling randomization of debuggee's virtual address space is off.
+
+=== Original GDB batch stdout (including stop/exit notifications) ===
+
+Temporary breakpoint 1, main (argc=..., argv=...) at experiments/control-flow.c:125
+125	int main(int argc, char **argv) {
+
+Breakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25
+25	    __asm__ volatile("" : : "r"(phase) : "memory");
+
+Temporary breakpoint -11, local_add (a=..., b=...) at experiments/control-flow.c:27
+27	__attribute__((noinline)) static int local_add(int a, int b) {
+0x00005e7f562a5497 in inspect () at experiments/control-flow.c:46
+46	    observed_sum = local_add(input_a, input_b);
+Value returned is $21 = 5
+
+Breakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25
+25	    __asm__ volatile("" : : "r"(phase) : "memory");
+
+Temporary breakpoint -12, 0x00005e7f562a5446 in raw_getpid () at experiments/control-flow.c:32
+32	    __asm__ volatile(".globl ec_syscall\nec_syscall:\nsyscall\n"
+0x00005e7f562a5448	32	    __asm__ volatile(".globl ec_syscall\nec_syscall:\nsyscall\n"
+
+Breakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25
+25	    __asm__ volatile("" : : "r"(phase) : "memory");
+[Inferior 1 (process 1803467) exited normally]
+
+Temporary breakpoint 2, main (argc=..., argv=...) at experiments/control-flow.c:125
+125	int main(int argc, char **argv) {
+
+Breakpoint -10, checkpoint (phase=...) at experiments/control-flow.c:25
+25	    __asm__ volatile("" : : "r"(phase) : "memory");
+
+Temporary breakpoint -23, 0x000061fc50067465 in fault_load (p=...) at experiments/control-flow.c:39
+39	    __asm__ volatile(".globl ec_fault\nec_fault:\nmovb (%%rdi), %%al\n"
+
+Program received signal SIGSEGV, Segmentation fault.
+0x000061fc50067465 in fault_load (p=...) at experiments/control-flow.c:39
+39	    __asm__ volatile(".globl ec_fault\nec_fault:\nmovb (%%rdi), %%al\n"
+
+Program terminated with signal SIGSEGV, Segmentation fault.
+The program no longer exists.

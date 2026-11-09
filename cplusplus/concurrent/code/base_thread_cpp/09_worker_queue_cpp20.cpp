@@ -10,27 +10,27 @@ int main()
     std::mutex mutex;
     std::condition_variable_any changed;
     std::deque<int> jobs;
+
     bool closed = false;
     int total = 0; // 只由 worker 写，main 在 join 后读取。
 
-    std::jthread worker([&](std::stop_token stop)
-    {
-        for (;;)
+    std::jthread worker(
+        [&](std::stop_token stop)
         {
-            std::unique_lock lock(mutex);
-            bool available = changed.wait(lock, stop, [&]
+            for (;;)
             {
-                return closed || !jobs.empty();
-            });
-            if (!available || jobs.empty())
-                return;
+                std::unique_lock lock(mutex);
+                bool available = changed.wait(
+                    lock, stop, [&] { return closed || !jobs.empty(); });
+                if (!available || jobs.empty())
+                    return;
 
-            int job = jobs.front();
-            jobs.pop_front();
-            lock.unlock(); // 业务计算放到锁外。
-            total += job;
-        }
-    });
+                int job = jobs.front();
+                jobs.pop_front();
+                lock.unlock(); // 业务计算放到锁外。
+                total += job;
+            }
+        });
 
     for (int value = 1; value <= 5; ++value)
     {
@@ -40,6 +40,7 @@ int main()
         }
         changed.notify_one();
     }
+    
     {
         std::lock_guard lock(mutex);
         closed = true;
